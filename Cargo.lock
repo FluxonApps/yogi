@@ -147,6 +147,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-sandbox"
+version = "0.0.0"
+dependencies = [
+ "being-core-types",
+]
+
+[[package]]
 name = "being-supervisor"
 version = "0.0.0"
 dependencies = [

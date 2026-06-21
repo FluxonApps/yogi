@@ -1,0 +1,12 @@
+[package]
+name = "being-sandbox"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# M4 isolation — the capability broker (pure, loop-safe). Deny-by-default mediation of every effect at
+# the executor boundary (D-M1-3 / D-M4-2). The wasmtime/WASI enforcement backend (guest with no ambient
+# authority; effects only via broker-mediated host imports) plugs in on top — it MECHANISM-enforces what
+# this crate POLICY-defines. No heavy deps here so the policy core stays in the loop's green-gate.
+[dependencies]
+being-core-types = { path = "../being-core-types" }

@@ -97,7 +97,12 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 - [x] `being-loop::self_improve_round` — Improver picks a candidate → injected scorer grades
   incumbent vs candidate genome → Two-Gate → commit or rollback + audit (2 tests, pure). Foreground
   `selfimprove` bin drives it with the real bench as scorer (genome prompt → proposer).
-- [~] isolation upgrade (D-M4-2) — **in progress** (not deferred): WASM-sandbox the executor boundary
+- [~] isolation upgrade (D-M4-2) — **in progress** (not deferred): WASM-sandbox the executor boundary.
+  `being-sandbox` capability broker LIVE (policy core): deny-by-default `Broker::authorize` over a
+  `CapabilitySet` (allowlisted egress, bounded payment, per-kind MemoryWrite/Sign; pure effects free).
+  No self-grant (capabilities operator-owned; `CapabilityGrant` absent from the closed surface) · 5
+  tests. Next: the wasmtime/WASI enforcement backend (executor as a zero-ambient-authority guest;
+  effects only via broker-mediated host imports).
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 
