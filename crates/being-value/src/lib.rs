@@ -48,10 +48,15 @@ pub trait Grader {
     fn accept(&self, task_class: &str, response: &str, ground_truth: &str) -> bool;
 }
 
-/// Deterministic v0 grader: accept iff the response contains the ground-truth substring (case-insensitive).
+/// Deterministic v0 grader: accept iff the response contains the ground-truth substring
+/// (case-insensitive). A blank/empty ground truth is **never** accepted — there is nothing to verify
+/// against, and accepting it would pay out for *any* response (an anti-Goodhart footgun).
 pub struct SubstringGrader;
 impl Grader for SubstringGrader {
     fn accept(&self, _task_class: &str, response: &str, ground_truth: &str) -> bool {
+        if ground_truth.trim().is_empty() {
+            return false;
+        }
         response
             .to_lowercase()
             .contains(&ground_truth.to_lowercase())
@@ -141,6 +146,18 @@ mod tests {
         let g = SubstringGrader;
         assert!(g.accept("q", "The answer is Paris.", "paris"));
         assert!(!g.accept("q", "London", "Paris"));
+    }
+
+    #[test]
+    fn substring_grader_rejects_blank_ground_truth() {
+        // Empty/whitespace ground truth must never accept — otherwise any response would be paid out.
+        let g = SubstringGrader;
+        assert!(!g.accept("q", "literally anything", ""));
+        assert!(!g.accept("q", "anything at all", "   "));
+        // And it does not pay out through the payer either.
+        let mut p = OperatorPayer::new(Tariff::new(1000), SubstringGrader, Treasury::new(1000));
+        assert_eq!(p.settle("q", "anything", ""), 0);
+        assert_eq!(p.treasury.paid(), 0);
     }
 
     #[test]
