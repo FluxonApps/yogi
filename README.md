@@ -37,6 +37,26 @@ A buildable substrate, not a guaranteed digital lifeform:
 The across-generation arm (population + selection) is built as substrate but **selection stays off**
 until the bench shows compounding. That ordering is the whole point.
 
+## Compounding layers (how the being gets better, model held constant)
+
+"Compounding" = does the being improve over time *without* changing the underlying model? Yogi stacks
+several layers, cheapest/safest first. **Token-space layers run with no weight updates; the navigator
+and routing do no model inference at all** (legal inside the automated test loop).
+
+| Layer | What compounds | Status |
+|---|---|---|
+| Episodic memory | retrieval of prior turns (hybrid: embedding + IDF-lexical, so rare/exact tokens hit) | **live, wired** |
+| Verifier-fed skills | generalized lessons, gated on the bench verdict, retrieved into future turns | **live, wired** |
+| Navigator / routing | Think vs NoThink per task — heuristic, plus an outcome-learned router (pass/fail per task-class) | **live** (`being-router`) |
+| Per-domain distillation | weight-space (LoRA/QLoRA on a frozen base) | **deferred** ([D-M3-4](docs/decisions.md)) — only once a domain plateaus in token-space |
+| Population + selection | heredity across generations, selected by fitness | **gated** (`being-lineage` substrate built; selection OFF until the gates fire) |
+
+**Certified ([`docs/FINDINGS.md`](docs/FINDINGS.md)):** on a cold-failing made-up-operation *transfer*
+corpus, a learned rule lifts the being **0.000 → 1.000** (CI=[1,1], `compounds=true`) — genuine
+transfer (new operands; the answer is never stored), end-to-end through the being's own
+retrieve→apply loop. The load-bearing lesson: reasoning tasks must run with **thinking on** (`/no_think`
+strangles rule application).
+
 ## The two master gates
 
 1. **Anti-theater gate** — until it fires, Yogi is honestly "an LLM + accounting + a safety harness,"
