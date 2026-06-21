@@ -422,6 +422,29 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
     }
 }
 
+impl<P: Proposer, C: Committer, Inner: Executor> Being<P, C, SandboxedExecutor<Inner>> {
+    /// Construct a **capability-sandboxed** being (M4 isolation, the default-secure path): its executor
+    /// is wrapped in a [`SandboxedExecutor`], so every committed step is authorized by the broker before
+    /// it runs — fail-closed, deny-by-default. Pass an empty `caps` for a being with no external
+    /// authority at all (only pure effects pass).
+    pub fn from_seed_sandboxed(
+        seed: [u8; 32],
+        supervisor: Arc<dyn SupervisorPort>,
+        proposer: P,
+        committer: C,
+        executor: Inner,
+        caps: being_sandbox::CapabilitySet,
+    ) -> Self {
+        Self::from_seed(
+            seed,
+            supervisor,
+            proposer,
+            committer,
+            SandboxedExecutor::new(executor, caps),
+        )
+    }
+}
+
 /// The default M1 being: echo proposer + pass-through committer + echo executor.
 pub type EchoBeing = Being<EchoProposer, PassThroughCommitter, EchoExecutor>;
 
@@ -473,6 +496,29 @@ mod tests {
         assert!(sx
             .execute(&step("egress", "other.test"))
             .starts_with("[denied:"));
+    }
+
+    #[test]
+    fn sandboxed_being_gates_effects_in_the_live_turn() {
+        let sup = Supervisor::new(Account::new(1_000_000, 0, 1_000_000), i64::MAX, 0);
+        // A sandboxed being with NO capabilities: the broker runs inside the live turn path.
+        let mut being = Being::from_seed_sandboxed(
+            [9u8; 32],
+            Supervisor::as_port(&sup),
+            EchoProposer,
+            PassThroughCommitter,
+            EchoExecutor,
+            being_sandbox::CapabilitySet::none(),
+        );
+        let turn = being.turn("hello", 1);
+        assert!(turn.acted);
+        // EchoProposer emits action "echo" → unclassified → fail-closed → denied at the broker, so the
+        // observation is the denial, not the executed effect. The sandbox is live on the turn path.
+        assert!(
+            turn.observations.iter().any(|o| o.starts_with("[denied")),
+            "expected a broker denial in the turn, got {:?}",
+            turn.observations
+        );
     }
 
     struct KeywordEmbedder;
