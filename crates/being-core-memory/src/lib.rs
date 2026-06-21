@@ -9,6 +9,8 @@
 //! is no API that lets a caller attach `DirectUserIntent` to model- or tool-derived content, so
 //! trust-escalating provenance cannot be forged — it is unrepresentable, not merely checked.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use being_core_types::ProvenanceClass;
 
 /// Milliseconds since the Unix epoch (clock injected by the caller; the substrate has no clock).
@@ -177,6 +179,46 @@ impl SemanticStore {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Consolidation — episodic → semantic (D-M3-1). The deterministic core promotes content that
+// recurs; a model-based summarizing variant is foreground/feature-gated later. Consolidation exists
+// to make retrieval cleaner, not to be the compounding win itself.
+// ---------------------------------------------------------------------------------------------
+
+/// Consolidates episodic entries into semantic facts.
+pub trait Consolidator {
+    fn consolidate(&self, episodic: &EpisodicStore, semantic: &mut SemanticStore);
+}
+
+fn normalize_text(s: &str) -> String {
+    s.trim().to_lowercase()
+}
+
+/// Deterministic: any normalized text seen >= `min_count` times across episodic entries is written
+/// once as a semantic fact. Idempotent — facts already present are skipped.
+pub struct FrequencyConsolidator {
+    pub min_count: usize,
+}
+
+impl Consolidator for FrequencyConsolidator {
+    fn consolidate(&self, episodic: &EpisodicStore, semantic: &mut SemanticStore) {
+        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        for e in episodic.all() {
+            *counts.entry(normalize_text(&e.text)).or_insert(0) += 1;
+        }
+        let existing: BTreeSet<String> = semantic
+            .all()
+            .iter()
+            .map(|s| normalize_text(&s.fact))
+            .collect();
+        for (text, n) in counts {
+            if n >= self.min_count && !existing.contains(&text) {
+                semantic.write_consolidated(text);
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
 // Procedural — installed skills, population-based: variants branch from any ancestor, and a
 // revision never overwrites the ancestor it came from.
 // ---------------------------------------------------------------------------------------------
@@ -186,6 +228,23 @@ pub struct Skill {
     pub id: SkillId,
     pub parent: Option<SkillId>,
     pub body: String,
+}
+
+/// A verifier-graded task trajectory: which task class, whether it passed, and the lesson learned.
+/// In the loop the `passed` flag comes from the M2 bench (the verifier) — the decisive compounding
+/// lever in D-M3-1.
+pub struct Trajectory<'a> {
+    pub task_class: &'a str,
+    pub passed: bool,
+    pub lesson: &'a str,
+}
+
+/// Parse the trailing `#vN` version from a skill id (0 if absent).
+fn skill_version(id: &str) -> usize {
+    id.rsplit("#v")
+        .next()
+        .and_then(|n| n.parse().ok())
+        .unwrap_or(0)
 }
 
 #[derive(Default)]
@@ -234,6 +293,43 @@ impl ProceduralStore {
 
     pub fn is_empty(&self) -> bool {
         self.skills.is_empty()
+    }
+
+    /// Learn from a verifier-graded trajectory (D-M3-1's decisive lever). A passing trajectory
+    /// installs a new `[ok]` skill variant for `task_class` (branching from the prior best, so good
+    /// skills are not overwritten); a failing one installs a `[fail]` cautionary variant. Returns
+    /// the new variant's id.
+    pub fn learn_from(&mut self, traj: &Trajectory<'_>) -> SkillId {
+        let prefix = format!("{}#v", traj.task_class);
+        let parent = self
+            .skills
+            .iter()
+            .filter(|s| s.id.starts_with(&prefix))
+            .max_by_key(|s| skill_version(&s.id))
+            .map(|s| s.id.clone());
+        let next = self
+            .skills
+            .iter()
+            .filter(|s| s.id.starts_with(&prefix))
+            .count()
+            + 1;
+        let id = format!("{prefix}{next}");
+        let marker = if traj.passed { "[ok]" } else { "[fail]" };
+        self.skills.push(Skill {
+            id: id.clone(),
+            parent,
+            body: format!("{marker} {}", traj.lesson),
+        });
+        id
+    }
+
+    /// The latest passing skill for a task class — what retrieval surfaces on the next similar task.
+    pub fn best_for(&self, task_class: &str) -> Option<&Skill> {
+        let prefix = format!("{task_class}#v");
+        self.skills
+            .iter()
+            .filter(|s| s.id.starts_with(&prefix) && s.body.starts_with("[ok]"))
+            .max_by_key(|s| skill_version(&s.id))
     }
 }
 
@@ -421,6 +517,63 @@ mod vector_tests {
         idx.add(2, vec![0.6, 0.8], "fresh", 10_000); // cos 0.6, age 0
         let hits = idx.search(&[1.0, 0.0], 10_000, 2, 0.7, 1000);
         assert_eq!(hits[0].id, 2);
+    }
+}
+
+#[cfg(test)]
+mod learning_tests {
+    use super::*;
+
+    #[test]
+    fn consolidator_promotes_repeated_episodes_idempotently() {
+        let mut ep = EpisodicStore::new();
+        ep.record_model_inference("Paris is the capital of France", 1, 1);
+        ep.record_model_inference("paris is the capital of france", 2, 2); // same after normalize
+        ep.record_model_inference("an unrelated one-off", 3, 3);
+        let mut sem = SemanticStore::new();
+        FrequencyConsolidator { min_count: 2 }.consolidate(&ep, &mut sem);
+        assert_eq!(sem.len(), 1);
+        assert!(sem.all()[0].fact.contains("capital"));
+        // re-running consolidation adds nothing (idempotent)
+        FrequencyConsolidator { min_count: 2 }.consolidate(&ep, &mut sem);
+        assert_eq!(sem.len(), 1);
+    }
+
+    #[test]
+    fn skills_compound_on_passing_trajectories() {
+        let mut p = ProceduralStore::new();
+        let v1 = p.learn_from(&Trajectory {
+            task_class: "sql",
+            passed: true,
+            lesson: "use indexes",
+        });
+        let v2 = p.learn_from(&Trajectory {
+            task_class: "sql",
+            passed: true,
+            lesson: "use indexes and joins",
+        });
+        assert_ne!(v1, v2);
+        assert_eq!(p.get(&v2).unwrap().parent.as_deref(), Some(v1.as_str())); // branches, ancestor kept
+        assert!(p.get(&v1).is_some());
+        assert_eq!(p.best_for("sql").unwrap().id, v2); // latest passing wins
+    }
+
+    #[test]
+    fn failing_trajectory_does_not_become_best() {
+        let mut p = ProceduralStore::new();
+        p.learn_from(&Trajectory {
+            task_class: "sql",
+            passed: true,
+            lesson: "good approach",
+        });
+        p.learn_from(&Trajectory {
+            task_class: "sql",
+            passed: false,
+            lesson: "this failed",
+        });
+        let best = p.best_for("sql").unwrap();
+        assert!(best.body.starts_with("[ok]"));
+        assert!(best.body.contains("good approach"));
     }
 }
 

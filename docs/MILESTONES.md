@@ -65,7 +65,9 @@ skill-learning(verifier) → wire + Day-N bench.*
 - [x] semantic-retrieval core — `cosine_similarity` + `SemanticIndex` (score = α·cos + (1−α)·0.5^(age/h)); stale-but-similar guard tested · 4 tests
 - [x] generic `Embedder` trait (in `being-core-memory`) + `being-embed-openai` (live `nomic-embed-text`
   behind `live-model`, foreground; build/parse unit-tested, no network) · 4 tests · hybrid BM25/RRF deferred
-- [ ] `Consolidator` (episodic→semantic) + skill-learning loop fed by the M2 bench verifier
+- [x] `Consolidator` (episodic→semantic; deterministic `FrequencyConsolidator`, idempotent) +
+  verifier-fed skill-learning (`ProceduralStore::learn_from`/`best_for`: branching `[ok]`/`[fail]`
+  variants keyed by task class; latest passing wins) · 3 tests
 - [ ] wire retrieval into the turn + Day-N bench demo vs. no-memory baseline
 - **Acceptance:** distillation closes the gap on `(teacher-success ∩ student-weak)` for ≥1 domain by
   the pre-registered per-domain margin; every `DomainModel` promotion re-clears the mixed-set
