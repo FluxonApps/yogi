@@ -233,6 +233,54 @@ mod tests {
     }
 
     #[test]
+    fn recovers_a_valid_record_prefix_from_a_crash_at_any_byte_offset() {
+        // Exhaustive crash-recovery: build a log, then simulate a crash truncating the file at EVERY
+        // possible byte offset. Recovery must always yield a whole-record PREFIX (never a misread or
+        // panic), and a post-recovery append must be contiguous and replayable.
+        let records: Vec<Vec<u8>> = vec![
+            b"a".to_vec(),
+            b"bb".to_vec(),
+            b"ccc".to_vec(),
+            vec![7u8; 40],
+        ];
+        let src = temp_path("crash_src");
+        let _ = std::fs::remove_file(&src);
+        {
+            let mut log = DurableLog::open(&src).unwrap();
+            for r in &records {
+                log.append(r).unwrap();
+            }
+        }
+        let full = std::fs::read(&src).unwrap();
+
+        for l in 0..=full.len() {
+            let p = temp_path("crash_at");
+            let _ = std::fs::remove_file(&p);
+            std::fs::write(&p, &full[..l]).unwrap(); // crash truncated the file to l bytes
+
+            // Recovery yields a prefix of the original records — for some k, recovered == records[..k].
+            let recovered = DurableLog::open(&p).unwrap().replay().unwrap();
+            assert_eq!(
+                recovered,
+                records[..recovered.len()].to_vec(),
+                "crash@{l}: not a valid record prefix"
+            );
+
+            // After recovery the torn tail is gone, so a fresh append is contiguous and replayable.
+            DurableLog::open(&p).unwrap().append(b"new").unwrap();
+            let mut expect = recovered.clone();
+            expect.push(b"new".to_vec());
+            assert_eq!(
+                DurableLog::open(&p).unwrap().replay().unwrap(),
+                expect,
+                "crash@{l}: post-recovery append lost or corrupted"
+            );
+            std::fs::remove_file(&p).ok();
+        }
+        std::fs::remove_file(&src).ok();
+    }
+
+    #[test]
     fn append_after_a_torn_tail_does_not_lose_records() {
         // Regression: a crash leaves a torn tail; on reopen it must be truncated so a NEW append is
         // contiguous and replayable (else the new record is stranded after the torn bytes and lost).
