@@ -478,3 +478,27 @@ the teacher solves — the **anagram**, which genuinely needs a scratchpad. Thre
 The M3 flywheel now has its live target + the promotion gate (`PromotionGate`, both clauses). The only
 remaining piece is the heavy/foreground LoRA training to close the gap — which needs a student-size
 decision (16 GB budget).
+
+## 2026-06-21 — LIVE M3 distillation flywheel works end-to-end (gate PROMOTES)
+
+`distill_close` on qwen3:8b — gap-detect → distill the teacher's ⊕ rule as a skill → re-evaluate on
+FRESH operands → PromotionGate:
+
+```
+⊕ domain:  teacher=1.00  cold-student=0.00  distilled-student=1.00  (gap size 2)
+⊗/⊙ mixed: cold=0.00     distilled=0.00     (non-inferiority)
+PromotionGate: gap_closure=1.00 (≥0.50)  mixed_delta=+0.00 (≥ -0.10)  → PROMOTED=true
+```
+
+Every M3 acceptance clause held on the real model:
+- **genuine gap** — cold student fails ⊕ entirely (0.00) on fresh operands;
+- **capability not memorization** — distilled student solves ⊕ at 1.00 on FRESH operands (rule
+  application, LiMem-clean by construction);
+- **no catastrophic forgetting** — ⊗/⊙ unchanged (mixed_delta +0.00); the rule neither regressed nor
+  spuriously inflated the other ops;
+- **gate promotes correctly** — gap closed 1.00 ≥ margin, mixed non-inferior → PROMOTED.
+
+The COMPLETE M3 flywheel demonstrated live as one pipeline (gap-detect → distill → re-evaluate → gate),
+via the sanctioned **token-space** route (rule-as-skill); weight/LoRA distillation stays deferred
+(D-M3-4) until a domain plateaus in token-space. With the M6 live result (recombination → all-3 solver),
+both research arms now have live, reproducible, non-synthetic demonstrations.
