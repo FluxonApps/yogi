@@ -10,6 +10,7 @@ members = [
     "crates/being-core-economy",
     "crates/being-supervisor",
     "crates/being-proposer-openai",
+    "crates/being-bench",
 ]
 
 [workspace.package]

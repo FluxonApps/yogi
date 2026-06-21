@@ -1,0 +1,17 @@
+[package]
+name = "being-bench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# The `bench` binary loads the model when RUN (foreground only). Building/clippy never runs it; the
+# library half (scoring, bootstrap CI, anti-theater) is pure and used by the automated loop's tests.
+[[bin]]
+name = "bench"
+path = "src/bin/bench.rs"
+
+[dependencies]
+being-runtime = { path = "../being-runtime" }
+being-proposer-openai = { path = "../being-proposer-openai" }
+being-supervisor = { path = "../being-supervisor" }
+being-core-economy = { path = "../being-core-economy" }

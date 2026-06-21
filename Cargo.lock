@@ -33,6 +33,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
+name = "being-bench"
+version = "0.0.0"
+dependencies = [
+ "being-core-economy",
+ "being-proposer-openai",
+ "being-runtime",
+ "being-supervisor",
+]
+
+[[package]]
 name = "being-core-economy"
 version = "0.0.0"
 dependencies = [

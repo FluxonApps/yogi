@@ -43,15 +43,17 @@ committed tail is deterministic.* — **met** (26 tests, clippy clean; commits c
   journals a Death event; out-of-band kill meets a measured latency bound; in-flight egress ≤
   `min(B_inflight, per-turn effect-count cap)` under stale-replica fuzzing.
 
-## M2 — Real proposer (Ollama) + the bench  `[~]`
+## M2 — Real proposer (Ollama) + the bench  `[x]`
 *`being-proposer-ollama` (`qwen3:8b` @ localhost:11434) + the falsification bench. Inference is
 foreground/user-run only (16 GB budget); the automated loop never loads a model.*
 
 - [x] `being-proposer-openai` — **generic** OpenAI-compatible chat `Proposer` (Ollama/vLLM/llama.cpp/…);
   backend specifics in `OpenAiChatConfig` with an `ollama_qwen3()` preset; request-build + parse +
   `<think>` strip (6 unit tests, no network); live call behind `live-model` feature, foreground-only
-- [ ] `being-bench` — frozen + rolling bench, paired-bootstrap CI, anti-theater arms (a/b/c); runs as a
-  foreground binary you invoke, holding the model constant across Day-0/Day-N
+- [x] `being-bench` — pure machinery (frozen suite, scoring, **deterministic paired-bootstrap CI**
+  + `improves_monotonically` gate, anti-theater arm comparison) · 6 unit tests, no model; foreground
+  `bench` binary scores a live being (`cargo run -p being-bench --bin bench --release`). Longitudinal
+  Day-N compounding signal is exercised at M3 once learning accrues.
 - **Acceptance:** bench runs Day-0 vs Day-N with the model held constant and emits a paired-bootstrap
   CI; the anti-theater harness runs all three arms and produces a report (null result is valid).
 
