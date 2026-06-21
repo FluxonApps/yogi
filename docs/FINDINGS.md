@@ -150,3 +150,8 @@ the backend was alive and stand. **Code kept (loop-safe, tested, but UN-validate
 until re-run):** the separate `skill_index` with top-1 precise injection, the digit-collision-free
 skill examples, and the multi-skill corpus — all reasonable designs, to be re-certified once the
 backend is back. Model runs are paused until `ollama serve` is confirmed healthy.
+
+**Resolved.** After a full Ollama restart (`pkill ollama` + `ollama serve`), the cheap inference
+returned `model said: hi` and the single-skill e2e **re-certified at 1.000** (CI=[1,1]). The
+skill-index refactor is sound — the 0.000 streak was entirely the dead backend, as diagnosed. The
+real multi-skill cert now runs on a healthy backend.
