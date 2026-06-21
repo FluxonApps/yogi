@@ -502,3 +502,31 @@ The COMPLETE M3 flywheel demonstrated live as one pipeline (gap-detect → disti
 via the sanctioned **token-space** route (rule-as-skill); weight/LoRA distillation stays deferred
 (D-M3-4) until a domain plateaus in token-space. With the M6 live result (recombination → all-3 solver),
 both research arms now have live, reproducible, non-synthetic demonstrations.
+
+## 2026-06-21 — WEIGHT distillation (LoRA) BUILT and run live — and it loses to token-space (validates D-M3-4)
+
+Removed the "weight-distillation gate" by actually doing it: installed `mlx-lm` (Python 3.14 venv),
+generated a held-out ⊕ dataset (44 train / 12 held-out test, teacher-verified labels), LoRA-trained a
+Qwen2.5-0.5B-Instruct-4bit student on Apple Silicon, evaluated cold vs distilled. Reproducible via
+`scripts/distill_lora.sh`. Two configs:
+
+```
+config                              held-out ⊕     general (non-inferiority)
+cold (no adapter)                   0/12           4/5
+aggressive (16 layers, 300it, 2e-4) 0/12           1/5   train loss 0.14
+conservative (4 layers, 120it, 5e-5)0/12           1/5   train loss 0.086
+```
+
+**Naive LoRA fails BOTH M3 clauses on this budget:** it overfits the seen pairs (low train loss) but
+does NOT generalize ⊕ to held-out operands (0/12 — it memorised, didn't learn the rule), AND it
+catastrophically forgets general ability (4/5 → 1/5). So `PromotionGate` correctly **REJECTS** it
+(gap_closure 0.0 < margin; mixed_delta −0.6 < −ε).
+
+**Contrast — token-space distillation PROMOTES** (`distill_close`): rule-in-prompt closes ⊕ on FRESH
+operands (1.00, capability) with zero forgetting → gate promotes, reproduced across seeds.
+
+**Conclusion:** this empirically **validates the spec's D-M3-4** (retrieval-first; weight-distillation
+deferred). On a 0.5B/16 GB budget the token-space route is strictly better — it generalizes and doesn't
+forget, while naive weight-distillation does neither, and the `PromotionGate` is what catches the bad
+weight-distill. The gate is no longer "gated": the capability is built and reproducible; the empirical
+verdict is that it's the wrong tool here. (Open lever: a larger student may generalize ⊕ — testing next.)
