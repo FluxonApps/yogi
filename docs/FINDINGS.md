@@ -707,3 +707,18 @@ gate: the guest is a standalone crate (own [workspace]) whose prebuilt artifact 
 (crates/being-sandbox-wasm/guest.wasm) and include_bytes!'d, so cargo test --all never builds wasm
 (rebuild via scripts/build_guest_wasm.sh). M4 isolation is now real end-to-end: policy (broker) +
 mechanism (real wasm guest) + live wiring (SandboxedExecutor on the turn path).
+
+## 2026-06-22 — remove-the-gate stretch: real wasm, M5 earn-wiring, economic natural selection
+
+Continuing past "comprehensive completion" (the operator kept the loop running) turned out to be right:
+applying *remove-the-gate, don't defer* to the three items I'd flagged as needing direction, all three
+were genuinely buildable and got built — model-free, green:
+1. **Real wasm32 executor** — replaced the M4 WAT stand-in with a real Rust executor compiled to wasm
+   (guest/being-guest-wasm), broker-gated, executes only on grant. Off the green-gate (committed .wasm).
+2. **M5 earn-wiring** — `being_value::earn` credits verified payer revenue to the being's Account; the
+   being earns its keep only by genuinely-verified success against a being-exogenous payer.
+3. **Economic natural selection** — being-colony integration test: earner survives + reproduces (signed
+   fork), loafer is reaped for insolvency. M5 earn × M1 reaper × M6 fork = Darwinian dynamics on beings.
+Plus two real bugs fixed by self-review (DurableLog torn-tail; broker negative-payment). Lesson: on a
+real system there is almost always genuine next work; "needs your direction" was, here, mostly my own
+deferral — the gates were removable. 20 crates, 194 tests, green.

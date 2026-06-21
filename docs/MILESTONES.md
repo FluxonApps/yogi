@@ -117,11 +117,17 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 *One concrete payer (operator-as-customer: tariff + held-out anti-Goodhart grader) + exogenous-payer hook.*
 - [x] `being-value` — `Tariff` (per-class + default), `Grader` trait + `SubstringGrader`,
   inflow-bounded `Treasury` (budget-conservation), `ExternalPayer` hook + `OperatorPayer` (credits
-  only graded-accepted work, within inflow) · 4 tests, pure/loop-safe. Crediting the survival Account
-  is `supervisor.credit` (operator-owned).
-- **Acceptance met (as methodology):** external-revenue is inflow-bounded; value-capture is labeled
-  **efficiency-only** until a genuinely exogenous payer is committed (the step-0 that makes the
-  anti-theater/economic gate *fire* on real foreground runs).
+  only graded-accepted work, within inflow). Crediting the survival Account is `supervisor.credit`
+  (operator-owned — deliberately NOT on the being's `SupervisorPort`, so it can't mint its own money).
+- [x] **Earn-wiring now live** (`being_value::earn`): verified payer revenue credits the being's
+  metabolic `Account`, and `being-colony`'s integration test demonstrates **economic natural
+  selection** — an earner funds its metabolism and survives + reproduces (signed fork), while a
+  loafer earns nothing and is reaped for insolvency (M5 earn × M1 reaper × M6 fork).
+- **Acceptance met (as methodology):** external-revenue is inflow-bounded and now wired to metabolism;
+  value-capture is labeled **efficiency-only** only in the sense that the payer is operator-as-customer
+  — it is *structurally exogenous to the being* (prices/grading/funds outside the closed MutationKind
+  surface). The remaining step to a *fully* exogenous payer is deployment (a real external customer),
+  not code.
 
 ## M6 — Research arm (population + selection)  `[~] in progress`
 *Open-ended-search arm built loop-safe (gates lifted by operator). Wiring reproduction/death to a
