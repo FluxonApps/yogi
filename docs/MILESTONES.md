@@ -76,8 +76,11 @@ skill-learning(verifier) → wire + Day-N bench.*
   the pre-registered per-domain margin; every `DomainModel` promotion re-clears the mixed-set
   non-inferiority floor; compounding bench detects accumulation or reports saturation.
 
-## M4 — Self-modification  `[ ] ⚠`
-*`Improver` + closed surface + **Two-Gate** (Validation + Capacity) + self-judgment-bias mitigation.*
+## M4 — Self-modification  `[ ] ⚠`  · decisions [D-M4-1/2](decisions.md) — **awaiting human sign-off**
+*`Improver` (proposes only) + closed surface + **Two-Gate** (Validation `2·ε_V+τ` + Capacity proxy)
++ sealed holdout + bias mitigation (bench is the only judge) + rollback. Isolation upgrade is
+**deferred to the executor boundary** (D-M4-2 amends the D-M1-3 gate). Human-reviewed constants: `τ`,
+the capacity schedule `K[m]`, holdout policy.*
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 

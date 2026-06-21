@@ -141,3 +141,79 @@ source of new capability.
 
 **Citations.** sciences44/mlx-lora-finetune (real Mac numbers); MLX-LM LoRA.md; InsiderLLM 16 GB table;
 MLX-LM #353 / #1058 (GGUF export limits + Qwen conversion regressions); Agentic KD (arXiv 2602.10869).
+
+---
+
+## D-M4-1 — Bounded self-modification: Improver proposes, the bench alone judges
+
+**Decision.** M4 adds an `Improver` that **only proposes** a closed-surface `MutationKind`; the
+acceptance path is **pure deterministic machinery over recorded bench results — no model inference in
+the loop** (this is both the CLAUDE.md rule and the bias-free configuration the self-preference
+literature endorses). A proposed edit is committed only if it passes BOTH gates, then is audited and
+reversible:
+- **Validation Gate** (the 2510.04399 rule, literally): run the bench on incumbent vs. candidate over
+  the *same* cases; accept iff candidate beats incumbent by **more than `2·ε_V + τ`**, where
+  `ε_V ≈ √((K + ln(1/δ))/n)`. Use a **paired per-case (McNemar) test** on pass/fail (sensitive at
+  small n), optionally an always-valid sequential bound to stop early without p-hacking.
+- **Sealed holdout + adaptive-query budget:** the Improver sees a working bench split; a **sealed
+  split it never sees** re-checks accepted edits before final commit (defeats the documented
+  reusable-holdout overfitting). Sealed-set regression ⇒ rollback.
+- **Capacity Gate** (the proxy the paper leaves open, made concrete for a declarative genome):
+  `B[genome] = weighted Σ(prompt length, #skills, routing rows, decomposition depth, retrieval-k,
+  per-edit edit-distance)`; accept iff `B[new] ≤ K[m]` with `K[m]` a **monotone schedule keyed to
+  accumulated bench evidence**. The closed, non-`#[non_exhaustive]` `MutationKind` is the hard outer
+  capacity bound (already a compile-time invariant).
+- **Bias mitigation by construction:** the verifier is the pass/fail bench, never an LLM judge, in the
+  acceptance loop. Any qualitative score is a *different* model family, foreground, rubric-based, and
+  advisory — never gating.
+- **Rollback + audit + post-accept safety re-check:** append-only log of every proposed/accepted edit
+  (genome diff + bench evidence + B-value), a frozen last-known-good genome, one-call revert, and an
+  automatic re-check (misevolution erodes safety *quietly* even through legitimate prompt/policy edits).
+
+**Human-reviewed constants (⚠):** `τ` (stability margin), the capacity schedule `K[m]`, and the
+holdout/refresh policy are surfaced for human review, not chosen silently.
+
+**Why.** 2510.04399 proves PAC-learnability is preserved under self-modification **iff** reachable
+hypothesis capacity stays bounded; the Validation+Capacity gate pair is its computable guardrail. The
+dominant empirical risk is **not** an over-strict gate — it is a **gamed verifier / inflated
+self-evaluation** (STOP's >1000%-accuracy hack; Shao et al. misevolution: ~55% refusal-rate erosion
+via memory, >76% vulnerable tools). Yogi's closed surface + pass/fail bench already neutralize the
+worst pathways; M4's job is the margin, the capacity proxy, the sealed holdout, and free rollback.
+
+**Citations.** Two-Gate theory (arXiv 2510.04399); STOP (2310.02304); Darwin-Gödel Machine
+(2505.22954); Gödel Agent (2410.04444); Misevolution — *Your Agent May Misevolve* (2509.26354);
+self-preference bias (2410.21819); reusable holdout (1506.02629); OPRO (2309.03409) / EvoPrompt
+(2309.08532) / PromptBreeder.
+
+---
+
+## D-M4-2 — Isolation timing: defer process-split + WASM to the executor boundary (amends D-M1-3)
+
+**Decision.** **Do NOT do the process-split + Wasmtime upgrade before M4.** The in-process reference
+monitor stays *honest* through M4's **bounded, declarative** self-modification, because none of the
+reference-monitor properties (tamper-proof / always-invoked / verifiable) are violated by code that
+only mutates declarative data via a pure `apply()` and never executes attacker/model-influenced
+instructions in the supervisor's address space. The real trigger is **in-address-space execution of
+untrusted code**, which arrives at the *executor* (running tools), not at declarative self-mod.
+
+This **amends the D-M1-3 hard gate**, which conflated two events. The precise trigger:
+> Upgrade to (separate-process supervisor + Wasmtime-sandboxed executor, epoch-interrupt limits)
+> **the moment the executor is about to run any model-generated, externally-fetched, or
+> not-operator-reviewed code — before the first such execution, never after, and not before.**
+Encode it as a hard gate: the executor's "run code" path must be unconstructable while the supervisor
+is in-process (pair `Executor` with `OutOfProcessSupervisor + WasmSandbox` at the type/startup level).
+
+**To stay honest in-process, M4 MUST NOT:** (1) compile/`eval`/link/`dlopen`/jump to any model-produced
+bytes; (2) add a `MutationKind` whose `apply` executes/spawns/shells genome-derived content (`apply`
+stays pure + total, no `_ =>`); (3) let any genome field become a code/command/plugin path; (4)
+introduce the executor running tools/native/fetched code under the in-process supervisor (that *is*
+the trigger); (5) relabel any model-influenced mutation as `DirectUserIntent` (existing no-launder).
+
+**Why.** Anderson/NIST "tamper-proof" presupposes an actor that can issue instructions to overwrite
+the monitor; OpenSSH privsep's whole value is *containing a code-execution compromise* — both are
+absent when the supervised code cannot execute arbitrary instructions. Paying for that isolation now
+buys a defense against an absent threat; deferring it to the executor boundary schedules it at the
+exact event that makes in-process dishonest.
+
+**Citations.** Reference monitor / NEAT (NIST CSRC; Anderson); OpenSSH privsep (Provos; README.privsep);
+Wasmtime security + epoch-vs-fuel (docs.wasmtime.dev); in-process vs process isolation (arXiv 2306.08127).
