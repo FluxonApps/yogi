@@ -39,6 +39,7 @@ fn main() {
         birth_endowment: 200, // offspring starting balance
         reproduce_threshold: 300,
         max_size: 6,
+        sexual: false,
     };
     // Founder 1 = thinking lineage, founder 2 = /no_think lineage; equal starting balance.
     let mut pop = Population::new(

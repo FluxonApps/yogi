@@ -10,7 +10,7 @@ use being_core_id::Signer;
 use being_core_journal::{MemoryJournal, Seq};
 use being_core_mutation::Genome;
 use being_core_types::{Did, Hash, Microdollars};
-use being_lineage::{fork_signed, BeingId, CommitOutcome, ForkSnapshot, Lineage};
+use being_lineage::{fork2_signed, fork_signed, BeingId, CommitOutcome, ForkSnapshot, Lineage};
 use being_persist::{DurableIdSet, DurableLog};
 use being_supervisor::{Supervisor, SupervisorPort};
 use std::sync::Arc;
@@ -255,6 +255,10 @@ pub struct PopulationConfig {
     pub reproduce_threshold: Microdollars,
     /// Hard cap on population size (bounds compute).
     pub max_size: usize,
+    /// If true, solvent members reproduce **sexually** (two-parent recombination via `fork2_signed`,
+    /// the crossover that combines skills across lineages — how M6 illumination found the all-3-skill
+    /// solver). If false, asexual fork (clone). Either way the child is bounded by the closed surface.
+    pub sexual: bool,
 }
 
 /// A live population with **reproduction and death** — the M6 step CLAUDE.md names as deliberate-next:
@@ -271,6 +275,7 @@ pub struct Population<S: Signer> {
     cfg: PopulationConfig,
     next_id: BeingId,
     generation: u64,
+    rng: being_lineage::Rng,
 }
 
 impl<S: Signer> Population<S> {
@@ -303,6 +308,7 @@ impl<S: Signer> Population<S> {
             cfg,
             next_id,
             generation: 0,
+            rng: being_lineage::Rng::new(0x5EED ^ next_id),
         }
     }
 
@@ -322,6 +328,21 @@ impl<S: Signer> Population<S> {
         &self.members
     }
 
+    /// Add a newborn from a fork snapshot: it gets the child lineage + recombined/inherited genome and
+    /// a fresh metabolic account seeded with the birth endowment.
+    fn spawn_child(&mut self, founder: BeingId, snap: &ForkSnapshot) {
+        self.members.push(Member {
+            founder,
+            lineage: snap.child.lineage.clone(),
+            genome: snap.child.genome.clone(),
+            supervisor: Supervisor::new(
+                Account::new(self.cfg.birth_endowment, 0, Microdollars::MAX),
+                i64::MAX,
+                0,
+            ),
+        });
+    }
+
     /// Advance one generation. `revenue(member) -> Microdollars` is each member's verified earnings this
     /// round (caller runs the being — model or canned — and grades the output). Then charge metabolism,
     /// credit revenue, reap the insolvent, and let solvent members reproduce (signed fork) up to
@@ -339,7 +360,7 @@ impl<S: Signer> Population<S> {
         // Death: reaped (insolvent) members leave the population.
         self.members.retain(|m| m.supervisor.death().is_none());
 
-        // Reproduction: solvent members above the threshold each fork one offspring, capped at max_size.
+        // Reproduction: solvent members above the threshold reproduce, capped at max_size.
         let parents: Vec<usize> = self
             .members
             .iter()
@@ -347,30 +368,51 @@ impl<S: Signer> Population<S> {
             .filter(|(_, m)| m.supervisor.balance() >= self.cfg.reproduce_threshold)
             .map(|(i, _)| i)
             .collect();
-        for pi in parents {
-            if self.members.len() >= self.cfg.max_size {
-                break;
+
+        if self.cfg.sexual && parents.len() >= 2 {
+            // Sexual: pair eligible parents; each pair recombines into one child (two-parent fork).
+            let mut i = 0;
+            while i + 1 < parents.len() && self.members.len() < self.cfg.max_size {
+                let child_id = self.next_id;
+                self.next_id += 1;
+                let (founder, snap) = {
+                    let a = &self.members[parents[i]];
+                    let b = &self.members[parents[i + 1]];
+                    (
+                        a.founder,
+                        fork2_signed(
+                            &a.lineage,
+                            &a.genome,
+                            &b.lineage,
+                            &b.genome,
+                            child_id,
+                            &self.signer,
+                            &mut self.rng,
+                        ),
+                    )
+                };
+                let _ = self.ledger.commit(&snap);
+                self.spawn_child(founder, &snap);
+                i += 2;
             }
-            let child_id = self.next_id;
-            self.next_id += 1;
-            let (founder, snap) = {
-                let parent = &self.members[pi];
-                (
-                    parent.founder,
-                    fork_signed(&parent.lineage, &parent.genome, child_id, &self.signer),
-                )
-            };
-            let _ = self.ledger.commit(&snap); // signed, durable, at-most-once heredity record
-            self.members.push(Member {
-                founder,
-                lineage: snap.child.lineage.clone(),
-                genome: snap.child.genome.clone(),
-                supervisor: Supervisor::new(
-                    Account::new(self.cfg.birth_endowment, 0, Microdollars::MAX),
-                    i64::MAX,
-                    0,
-                ),
-            });
+        } else {
+            // Asexual: each eligible parent forks one offspring (genome inherited verbatim).
+            for pi in parents {
+                if self.members.len() >= self.cfg.max_size {
+                    break;
+                }
+                let child_id = self.next_id;
+                self.next_id += 1;
+                let (founder, snap) = {
+                    let parent = &self.members[pi];
+                    (
+                        parent.founder,
+                        fork_signed(&parent.lineage, &parent.genome, child_id, &self.signer),
+                    )
+                };
+                let _ = self.ledger.commit(&snap); // signed, durable, at-most-once heredity record
+                self.spawn_child(founder, &snap);
+            }
         }
         self.generation += 1;
     }
@@ -611,6 +653,7 @@ mod tests {
             birth_endowment: 100,
             reproduce_threshold: 200,
             max_size: 16,
+            sexual: false,
         };
         // Founder 1 = earner (earns 200/gen), founder 2 = loafer (earns 0).
         let mut pop = Population::new(
@@ -630,6 +673,50 @@ mod tests {
         );
         assert!(pop.len() > 1, "the earner lineage reproduced");
         assert_eq!(pop.generation(), 6);
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn sexual_reproduction_recombines_skills_across_lineages() {
+        use being_core_id::Ed25519Signer;
+        use being_core_mutation::{apply, Genome, MutationKind};
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        let ledger = DurableForkLedger::open(&path).unwrap();
+        // Two lineages each carrying a DIFFERENT skill — neither parent has both.
+        let a = apply(
+            MutationKind::SkillInstall("alpha".into()),
+            Genome::default(),
+        )
+        .unwrap();
+        let b = apply(MutationKind::SkillInstall("beta".into()), Genome::default()).unwrap();
+        let cfg = PopulationConfig {
+            turn_cost: 50,
+            birth_endowment: 300,
+            reproduce_threshold: 250,
+            max_size: 12,
+            sexual: true,
+        };
+        let mut pop = Population::new(
+            vec![(1, a, 400), (2, b, 400)],
+            Ed25519Signer::from_seed([14; 32]),
+            ledger,
+            cfg,
+        );
+        // Both lineages stay solvent (both earn), so they reproduce sexually — recombination crosses
+        // the two skills, so a child carrying BOTH should emerge (the all-3-solver mechanism, in a
+        // live economically-selected population).
+        for t in 0..6 {
+            pop.advance(t, |_| 200);
+        }
+        let has_both = pop.members().iter().any(|m| {
+            m.genome.installed_skills.contains("alpha")
+                && m.genome.installed_skills.contains("beta")
+        });
+        assert!(
+            has_both,
+            "sexual recombination should produce a child carrying BOTH parents' skills"
+        );
         std::fs::remove_file(&path).ok();
     }
 }
