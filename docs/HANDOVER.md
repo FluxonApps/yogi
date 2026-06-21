@@ -9,12 +9,26 @@ Read this, then `CLAUDE.md`, then `docs/MILESTONES.md`.
 An independent, self-evolving being built as a **trust-native, self-distilling agent runtime with a
 falsification bench**. Remove the model and a coherent skeleton remains: it types inputs, remembers,
 enforces policy, **maintains its budget, and lives or dies by a fitness function** — that invariant is
-the whole point. The honest framing: the headline "metabolism / evolution" claims stay **suspended**
-until the bench's anti-theater gate fires (see Gates).
+the whole point. The honest framing: the headline "metabolism / evolution" *language* stays calibrated
+to what the bench certifies — demonstrated where evidence is live, "efficiency-only" where it isn't yet
+(see Gates).
 
-## Current state (M0–M5 built, M6 gated)
+## Current state (M0–M6 all built; selection live)
 
-15 crates, ~79 tests, clippy clean, all committed under the operator's gitconfig.
+22 crates, 206 tests, clippy clean, all committed under the operator's gitconfig. The operator lifted
+the M6 selection gate, so the open-ended-search arm is on. Beyond the M0–M5 spine, this session added:
+- **M6 live** (`being-lineage`, `being-colony`): MAP-Elites illumination + a live economic `Population`
+  with the full operator set — mutation + crossover (sexual `fork2`) + selection (by solvency) + death
+  (reaper) — over durable signed heredity.
+- **Both distillation routes** (`being-distill` + `scripts/distill_lora.sh`): token-space (in-loop) and
+  weight/LoRA (foreground; 0→8/12 held-out), each through a promotion gate.
+- **M4 isolation** (`being-sandbox`, `being-sandbox-wasm`): capability broker + a **real `wasm32`
+  executor guest** (zero ambient authority) + `Being::from_seed_sandboxed` on the live turn path.
+- **Durable persistence** (`being-persist`, `being-colony`): crash-safe append-log; durable journal /
+  fork-ledger / dedup-ledger; a live **crash-recoverable** being (`durable_being`).
+- **§3.9 trust model** (`being-core-policy`): `Beta`-per-`EffectClass`, earn-slow/lose-fast, statrs.
+- **Policy gate** (`being-runtime::RiskPolicyCommitter`): static risk-ceiling self-restraint.
+- **Real W3C `did:key`** identity; the **`yogi` CLI** (`being-bin`); `being-router` outcome-learned routing.
 
 | Milestone | crate(s) | what it gives the being |
 |---|---|---|
@@ -24,7 +38,7 @@ until the bench's anti-theater gate fires (see Gates).
 | **M3** compounding | `being-embed-openai` + memory/runtime | semantic retrieval (cosine + recency), consolidation, verifier-fed skill-learning; retrieval wired into the turn so memory accumulates |
 | **M4** self-modification `⚠` | `being-loop` | Two-Gate (Validation `2·ε_V+τ` + Capacity proxy) + epsilon-greedy Improver + `self_improve_round` (commit-or-rollback + audit) |
 | **M5** value source `⚠` | `being-value` | operator-as-customer payer: tariff + held-out grader + inflow-bounded treasury + `ExternalPayer` hook |
-| **M6** population/selection | `being-lineage` | **GATED.** Heredity substrate only (`Lineage` + `fork`, child inherits genome, gen+1); **selection/fitness/death OFF** until the entry gate. See Gates. |
+| **M6** population/selection | `being-lineage`, `being-colony` | **LIVE** (gate lifted). Heredity (`Lineage`/`fork`/`fork2`) + MAP-Elites illumination + a live economic `Population`: mutation + crossover + selection (solvency) + death (reaper), over durable signed heredity. Selection-vs-drift acceptance = principled null (see Gates). |
 
 Post-M5 hardening (all green): **hybrid IDF-lexical + embedding retrieval** wired into the turn (rare
 symbols like `⊕` retrieve reliably); `ollama_qwen3_thinking()` proposer preset.
@@ -69,18 +83,21 @@ cargo run  -p being-bench --bin compound     --release                      # Da
 cargo run  -p being-bench --bin selfimprove  --release                      # bounded self-modification demo
 ```
 
-## The Gates (what must hold before the risky steps)
+## The Gates (status — operator lifted the build gates; claims stay calibrated)
 
-1. **Anti-theater gate (master).** Until a real bench run shows the harness does causal work (not just
-   a budget cap), the "metabolism/evolution/being" language stays suspended (build-spec §7, arch §13.1).
-2. **M6 selection stays OFF** until the compounding bench shows accumulation **AND** the anti-theater
-   gate fires. Both need real foreground runs — so M6 is correctly *not built*. When the gate opens,
-   build fork/lineage substrate first, selection second, behind the simulation-gate discipline.
-3. **Isolation upgrade (D-M4-2):** move the supervisor to a separate process + Wasmtime sandbox
-   **before the executor runs any model-generated / external / tool code — never before.** Encode it
-   as a hard gate pairing `Executor` with `OutOfProcessSupervisor + WasmSandbox`.
-4. **Exogenous-payer step-0 (D-M5-1):** value-capture claims are **efficiency-only** until a payer the
-   operator cannot reprice is committed. That commitment is what makes the economic gate *fire*.
+1. **Anti-theater gate (master).** The operator lifted the "research arm stays off" build gate, so
+   selection is built; but the *claims* stay bench-calibrated. Live: compounding (0→1 transfer) and
+   open-ended recombination (all-3-skill solver) are demonstrated. The selection-vs-drift acceptance
+   ran live and returned a **principled null** (selection ≡ drift where the niche determines fitness),
+   so don't claim selection-beats-drift — the open-ended-search result rests on illumination/recombination.
+2. **M6 selection: LIVE** (`being-colony::Population`) — gate lifted. The closed mutation surface still
+   bounds every child, so no forbidden power is representable regardless of selection being on.
+3. **Isolation upgrade (D-M4-2): DONE.** `being-sandbox` (broker) + `being-sandbox-wasm` (a real wasm32
+   executor guest, zero ambient authority) + `Being::from_seed_sandboxed` gate effects on the live turn
+   path. (Out-of-process supervisor remains a deployment hardening, not v0 code.)
+4. **Exogenous-payer step-0 (D-M5-1):** the payer is **wired to metabolism** (`being_value::earn` →
+   `supervisor.credit`; a being earns its keep only by verified success). Value-capture stays
+   **efficiency-only** until a payer the operator *cannot reprice* is **deployed** — that's deployment.
 
 ## Two senses of "self-improvement" (don't conflate)
 
@@ -89,12 +106,19 @@ cargo run  -p being-bench --bin selfimprove  --release                      # bo
   closed-surface genome edits, the bench verifies, the Two-Gate accepts only real gains, else rolls
   back — all audited. This is bounded, reversible, and operator-gated by construction.
 
-## Immediate next steps (in order)
+## Immediate next steps (the v0 build is complete; remainder is not v0 code)
 
-1. **Run the foreground bench/compound/selfimprove** to get the first *real* anti-theater + compounding
-   numbers (the build loop can't — they need the model). Record results; they decide whether the
-   metabolism/evolution language un-suspends and whether M6's gate can open.
-2. If compounding + anti-theater hold → build M6 substrate (fork/lineage), selection still gated behind
-   the simulation-gate discipline.
-3. When the executor / tool-running lands → do the isolation upgrade (D-M4-2) first.
-4. If a real exogenous payer becomes available → wire it via `ExternalPayer` (D-M5-1 step-0).
+The substantive v0 spec is built (every named crate, all M0–M6 milestones, all evolutionary operators,
+all three safety invariants test-encoded — verified by a workspace-vs-spec diff). What remains:
+
+1. **Foreground validation (run-on-demand, the build loop can't — needs the model):** `yogi run`, and
+   `cargo run -p being-bench --bin {full_being,population_live,evolve_transfer,compound}`. These produce
+   live evidence; they're not run in the automated loop (they load the model).
+2. **Deployment, not code:** a genuinely external (operator-unrepriceable) payer to fire the economic
+   gate; OS-keystore key storage. Until then value-capture stays efficiency-only.
+3. **Post-v0 integrations:** trust→lane gating (v0 fixes `lane_count=1`, so the §3.9 trust ledger is
+   built as an isolated leaf — wiring it into the core would spread `nalgebra` workspace-wide for no v0
+   benefit; do it when lanes>1 is actually needed).
+4. **If continuing autonomously:** re-scan for genuine gaps (placeholders/`lands later` markers, spec
+   acceptance criteria, self-review of fast-built code) before concluding there's nothing to do — that
+   discipline repeatedly surfaced real work this session (see `docs/FINDINGS.md`).
