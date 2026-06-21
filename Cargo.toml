@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/being-core-types",
     "crates/being-core-mutation",
+    "crates/being-core-id",
 ]
 
 [workspace.package]
