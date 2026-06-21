@@ -97,6 +97,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-lineage"
+version = "0.0.0"
+dependencies = [
+ "being-core-mutation",
+]
+
+[[package]]
 name = "being-loop"
 version = "0.0.0"
 dependencies = [
