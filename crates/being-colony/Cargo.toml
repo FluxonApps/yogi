@@ -15,8 +15,8 @@ being-core-journal = { path = "../being-core-journal" }
 being-core-id = { path = "../being-core-id" }
 being-runtime = { path = "../being-runtime" }
 being-supervisor = { path = "../being-supervisor" }
-
-[dev-dependencies]
 being-core-mutation = { path = "../being-core-mutation" }
 being-core-economy = { path = "../being-core-economy" }
+
+[dev-dependencies]
 being-value = { path = "../being-value" }

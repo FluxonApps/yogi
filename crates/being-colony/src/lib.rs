@@ -5,11 +5,15 @@
 use std::io;
 use std::path::Path;
 
+use being_core_economy::{Account, SpendCategory};
 use being_core_id::Signer;
 use being_core_journal::{MemoryJournal, Seq};
-use being_core_types::{Did, Hash};
-use being_lineage::{CommitOutcome, ForkSnapshot};
+use being_core_mutation::Genome;
+use being_core_types::{Did, Hash, Microdollars};
+use being_lineage::{fork_signed, BeingId, CommitOutcome, ForkSnapshot, Lineage};
 use being_persist::{DurableIdSet, DurableLog};
+use being_supervisor::{Supervisor, SupervisorPort};
+use std::sync::Arc;
 
 // ---------------------------------------------------------------------------------------------
 // Durable signed journal: the in-memory hash-chained journal made restart-survivable.
@@ -224,6 +228,151 @@ impl DurableForkLedger {
 
     pub fn is_empty(&self) -> bool {
         self.ids.is_empty()
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Live model-backed population: reproduction + death (the M6 next step named in CLAUDE.md).
+// ---------------------------------------------------------------------------------------------
+
+/// A live member of the population: its heredity (founding ancestor, lineage, genome) and its metabolic
+/// life (a real [`Supervisor`]/Account with reaper authority).
+pub struct Member {
+    pub founder: BeingId,
+    pub lineage: Lineage,
+    pub genome: Genome,
+    pub supervisor: Arc<Supervisor>,
+}
+
+/// Tunables for the population dynamics.
+#[derive(Clone, Copy, Debug)]
+pub struct PopulationConfig {
+    /// Metabolic cost charged to each member per generation.
+    pub turn_cost: Microdollars,
+    /// Starting balance granted to a newborn offspring.
+    pub birth_endowment: Microdollars,
+    /// A member reproduces only if its balance is at least this (must be able to afford raising young).
+    pub reproduce_threshold: Microdollars,
+    /// Hard cap on population size (bounds compute).
+    pub max_size: usize,
+}
+
+/// A live population with **reproduction and death** — the M6 step CLAUDE.md names as deliberate-next:
+/// "wiring reproduction/death to a live model-backed population". Each generation: the caller supplies
+/// every member's verified revenue (running its being — the live model plugs in *there*), the
+/// supervisor charges metabolism and credits the revenue, **insolvent members are reaped** (real death
+/// via the reaper), and **solvent members reproduce** via a signed fork committed to the durable ledger.
+/// Selection is purely economic: lineages that earn more than they burn persist and spread; the rest
+/// die out. The engine is loop-safe (no model) — revenue is injected, so it runs under `cargo test`.
+pub struct Population<S: Signer> {
+    members: Vec<Member>,
+    signer: S,
+    ledger: DurableForkLedger,
+    cfg: PopulationConfig,
+    next_id: BeingId,
+    generation: u64,
+}
+
+impl<S: Signer> Population<S> {
+    /// Found a population from `(founder_id, genome, starting_balance)` seeds.
+    pub fn new(
+        founders: impl IntoIterator<Item = (BeingId, Genome, Microdollars)>,
+        signer: S,
+        ledger: DurableForkLedger,
+        cfg: PopulationConfig,
+    ) -> Self {
+        let mut members = Vec::new();
+        let mut next_id: BeingId = 0;
+        for (id, genome, balance) in founders {
+            next_id = next_id.max(id + 1);
+            members.push(Member {
+                founder: id,
+                lineage: Lineage::founder(id),
+                genome,
+                supervisor: Supervisor::new(
+                    Account::new(balance, 0, Microdollars::MAX),
+                    i64::MAX,
+                    0,
+                ),
+            });
+        }
+        Self {
+            members,
+            signer,
+            ledger,
+            cfg,
+            next_id,
+            generation: 0,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.members.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.members.is_empty()
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    pub fn members(&self) -> &[Member] {
+        &self.members
+    }
+
+    /// Advance one generation. `revenue(member) -> Microdollars` is each member's verified earnings this
+    /// round (caller runs the being — model or canned — and grades the output). Then charge metabolism,
+    /// credit revenue, reap the insolvent, and let solvent members reproduce (signed fork) up to
+    /// `max_size`.
+    pub fn advance(&mut self, now_ms: i64, mut revenue: impl FnMut(&Member) -> Microdollars) {
+        for m in &self.members {
+            m.supervisor
+                .reserve(SpendCategory::Operating, self.cfg.turn_cost, now_ms);
+            let rev = revenue(m);
+            if rev > 0 {
+                m.supervisor.credit(rev);
+            }
+            m.supervisor.tick(now_ms);
+        }
+        // Death: reaped (insolvent) members leave the population.
+        self.members.retain(|m| m.supervisor.death().is_none());
+
+        // Reproduction: solvent members above the threshold each fork one offspring, capped at max_size.
+        let parents: Vec<usize> = self
+            .members
+            .iter()
+            .enumerate()
+            .filter(|(_, m)| m.supervisor.balance() >= self.cfg.reproduce_threshold)
+            .map(|(i, _)| i)
+            .collect();
+        for pi in parents {
+            if self.members.len() >= self.cfg.max_size {
+                break;
+            }
+            let child_id = self.next_id;
+            self.next_id += 1;
+            let (founder, snap) = {
+                let parent = &self.members[pi];
+                (
+                    parent.founder,
+                    fork_signed(&parent.lineage, &parent.genome, child_id, &self.signer),
+                )
+            };
+            let _ = self.ledger.commit(&snap); // signed, durable, at-most-once heredity record
+            self.members.push(Member {
+                founder,
+                lineage: snap.child.lineage.clone(),
+                genome: snap.child.genome.clone(),
+                supervisor: Supervisor::new(
+                    Account::new(self.cfg.birth_endowment, 0, Microdollars::MAX),
+                    i64::MAX,
+                    0,
+                ),
+            });
+        }
+        self.generation += 1;
     }
 }
 
@@ -445,6 +594,42 @@ mod tests {
         let mut ledger = DurableForkLedger::open(&path).unwrap();
         let snap = fork_signed(&parent, &child, 2, &signer);
         assert_eq!(ledger.commit(&snap).unwrap(), CommitOutcome::Committed);
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn population_selects_for_earners_over_generations() {
+        use being_core_id::Ed25519Signer;
+        use being_core_mutation::{apply, MutationKind};
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        let ledger = DurableForkLedger::open(&path).unwrap();
+        let earner = apply(MutationKind::Prompt("earner".into()), Genome::default()).unwrap();
+        let loafer = apply(MutationKind::Prompt("loafer".into()), Genome::default()).unwrap();
+        let cfg = PopulationConfig {
+            turn_cost: 50,
+            birth_endowment: 100,
+            reproduce_threshold: 200,
+            max_size: 16,
+        };
+        // Founder 1 = earner (earns 200/gen), founder 2 = loafer (earns 0).
+        let mut pop = Population::new(
+            vec![(1, earner, 100), (2, loafer, 100)],
+            Ed25519Signer::from_seed([13; 32]),
+            ledger,
+            cfg,
+        );
+        for t in 0..6 {
+            pop.advance(t, |m| if m.founder == 1 { 200 } else { 0 });
+        }
+        // The loafer lineage starved to extinction; the earner lineage reproduced and fills the niche.
+        assert!(!pop.is_empty());
+        assert!(
+            pop.members().iter().all(|m| m.founder == 1),
+            "only earner-descended members survive selection"
+        );
+        assert!(pop.len() > 1, "the earner lineage reproduced");
+        assert_eq!(pop.generation(), 6);
         std::fs::remove_file(&path).ok();
     }
 }
