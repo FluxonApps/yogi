@@ -369,3 +369,27 @@ honest options: (a) a behavior descriptor decorrelated from fitness that genuine
 *subset* of tasks a genome passes), and/or (b) a task distribution with real behavioral variety. Until
 the descriptor spreads, the drift-acceptance gate would compare two ~0.90 single-cell arms and
 correctly NOT fire — so fixing the descriptor is the prerequisite for a meaningful live M6 acceptance.
+
+## 2026-06-21 — live M6 follow-up: the bottleneck is the OPERATOR+SUITE, not the descriptor
+
+Re-ran with a building-block behavior axis (first-half vs second-half passes) instead of length:
+
+```
+7 evaluations, 1 improvement, 0 recombinations, 1 niche filled (coverage 5%)
+QD-score=0.900  mean-fitness=0.900  — every genome lands in the SAME cell
+```
+
+So the pass-split descriptor collapses too. Diagnosis (now firm): the frozen suite is **saturated**
+(qwen3:8b@temp-0 passes 9/10 = 0.900 with the *empty* prompt) and the variation operator (append a
+style directive to the system prompt) is **behaviorally inert** on it — every variant passes the exact
+same 9 tasks, so there is zero behavioral spread for MAP-Elites to illuminate, under *any* descriptor.
+The QD machinery is correct; the task+operator give it nothing to work with. (Greedy temp-0 also means
+no stochastic spread.)
+
+**Conclusion — what a live multi-niche M6 actually needs:** a setting where the genome genuinely changes
+behavior. That is exactly the **transfer corpus** (CERT1–3): a made-up operation the model fails cold
+(0.000) and solves only when the right rule is in its prompt (1.000) — a huge behavioral range. There,
+different rule-sets in the genome → different operations solved → genuine niches, and recombination
+combines rule-sets (the live multi-skill top-2 composition already hinted at this). Next experiment:
+a Colony over rule-carrying genomes scored on the transfer corpus, niched by which operations pass.
+The saturated frozen suite was the wrong substrate for open-ended search — a real, non-obvious result.

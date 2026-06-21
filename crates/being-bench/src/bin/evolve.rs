@@ -20,8 +20,10 @@ use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::{Being, EchoExecutor, PassThroughCommitter};
 use being_supervisor::Supervisor;
 
-/// Bench a genome: fitness = frozen-suite pass-rate; behavior = mean response length (chars). Loads
-/// the model — foreground only.
+/// Bench a genome: fitness = frozen-suite pass-rate; behavior = (passes in the first half, passes in
+/// the second half of the suite). Two genomes that solve *different* tasks land in different niches —
+/// the building-block axis MAP-Elites can actually illuminate (a length axis collapses on this terse
+/// suite; see FINDINGS 2026-06-21). Loads the model — foreground only.
 struct BenchEvaluator;
 impl Evaluator for BenchEvaluator {
     fn evaluate(&mut self, genome: &Genome) -> Evaluation {
@@ -38,18 +40,22 @@ impl Evaluator for BenchEvaluator {
             PassThroughCommitter,
             EchoExecutor,
         );
-        let (mut passes, mut total_len) = (0usize, 0usize);
+        let half = suite.len().div_ceil(2);
+        let (mut p_first, mut p_second) = (0usize, 0usize);
         for (i, t) in suite.iter().enumerate() {
             let resp = being.turn(&t.prompt, i as i64).observations.join(" ");
-            total_len += resp.len();
             if score_response(t, &resp) > 0.5 {
-                passes += 1;
+                if i < half {
+                    p_first += 1;
+                } else {
+                    p_second += 1;
+                }
             }
         }
         let n = suite.len().max(1);
         Evaluation {
-            fitness: passes as f64 / n as f64,
-            behavior: vec![(total_len / n) as f64],
+            fitness: (p_first + p_second) as f64 / n as f64,
+            behavior: vec![p_first as f64, p_second as f64],
         }
     }
 }
@@ -77,8 +83,9 @@ impl Variator for PromptVariator {
 
 fn main() {
     eprintln!("M6 illumination (foreground — loads qwen3:8b repeatedly) ...");
-    // Verbosity niches: 30 bands of 20 chars (0..600), bounded so coverage is a fraction.
-    let descriptor = BehaviorDescriptor::bounded([(0.0, 20.0, 30)]).unwrap();
+    // Building-block niches: (first-half passes, second-half passes). 7 tasks → 4 + 3 → 5×4 = 20 cells.
+    let descriptor =
+        BehaviorDescriptor::bounded([(0.0, 1.0, 5), (0.0, 1.0, 4)]).unwrap();
     let iterations = std::env::var("EVOLVE_ITERS")
         .ok()
         .and_then(|s| s.parse().ok())
