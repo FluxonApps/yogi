@@ -50,6 +50,21 @@ impl OpenAiChatConfig {
             user_prefix: "/no_think\n".to_string(),
         }
     }
+
+    /// Thinking-mode preset: reasoning ON (no `/no_think`), qwen3 thinking-mode sampling, token
+    /// headroom. Use for tasks that need step-by-step reasoning — the falsification bench certified
+    /// that `/no_think` breaks rule application (FINDINGS 2026-06-21), so compounding/reasoning work
+    /// must run with thinking on. `/no_think` is only for trivial recall where latency matters.
+    pub fn ollama_qwen3_thinking() -> Self {
+        Self {
+            temperature: 0.6,
+            top_p: 0.95,
+            top_k: 20,
+            max_tokens: 2048,
+            user_prefix: String::new(),
+            ..Self::ollama_qwen3()
+        }
+    }
 }
 
 impl Default for OpenAiChatConfig {
@@ -213,6 +228,14 @@ mod tests {
         let user = v["messages"][1]["content"].as_str().unwrap();
         assert!(!user.contains("/no_think")); // generic backend: no qwen3 quirk
         assert!(user.contains("hello"));
+    }
+
+    #[test]
+    fn thinking_preset_enables_reasoning() {
+        let cfg = OpenAiChatConfig::ollama_qwen3_thinking();
+        assert!(cfg.user_prefix.is_empty()); // no /no_think
+        assert!(cfg.temperature > 0.0); // not greedy (qwen3 thinking guidance)
+        assert!(cfg.max_tokens >= 1024); // room for reasoning
     }
 
     #[test]

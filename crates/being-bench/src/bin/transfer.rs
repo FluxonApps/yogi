@@ -20,12 +20,7 @@ const VOTES: usize = 1; // self-consistency (1 = fast directional read; raise fo
 
 /// A qwen3 proposer in **thinking mode** (the research's prime fix for rule application).
 fn thinking_proposer() -> OpenAiChatProposer {
-    let mut cfg = OpenAiChatConfig::ollama_qwen3();
-    cfg.user_prefix = String::new(); // thinking ON — drop /no_think
-    cfg.temperature = 0.6; // qwen3 thinking-mode params (never greedy)
-    cfg.top_p = 0.95;
-    cfg.top_k = 20;
-    cfg.max_tokens = 2048; // room for reasoning + the answer
+    let mut cfg = OpenAiChatConfig::ollama_qwen3_thinking();
     cfg.system_prompt =
         "You are a careful calculator. Reason step by step, then end with a line exactly like \
          'ANSWER: <number>'."
