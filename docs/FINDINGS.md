@@ -676,3 +676,22 @@ This is the integration proof: the learning/distillation/evolution/isolation/per
 just unit-tested in isolation — they compose into one being that runs, persists, and recovers. With the
 M6 + M3 live demonstrations and the durable crash-recoverable being, the local Yogi build is a coherent,
 end-to-end trust-native self-evolving being.
+
+## 2026-06-22 — self-review of the session's fast-built code (2 real bugs + 1 hardening)
+
+After building the persistence + sandbox-wiring crates quickly, a focused correctness review found and
+fixed genuine issues (not padding) — validating that reviewing fast-built code pays off:
+1. **DurableLog torn-tail-then-append (durability bug, cross-cutting).** After a crash left a torn
+   tail, replay stopped there correctly — but a *subsequent* append wrote *after* the torn bytes, so
+   the next replay halted at the old torn region and silently lost the new records. Fix: `open()`
+   truncates the torn tail. Hardened with an *exhaustive* crash-point test (truncate at every byte
+   offset → recovery is always a valid record prefix) and a signed-journal crash-recovery test.
+   Cross-cutting: fixes all durable types (journal, fork-ledger, dedup-ledger, id-set).
+2. **Broker granted negative payments (fail-open edge).** The cap check was only `microdollars <= max`,
+   so a negative charge (a refund/credit) passed unconditionally. Fix: require `0 <= microdollars <=
+   cap`. The WASM mechanism routes through the same `Broker`, so it inherited the fix (and its ABI is
+   unsigned, so negatives can't even be expressed there).
+3. **Silent length truncation (hardening).** `DurableLog::append` framed the length as u32; a >4GB
+   record would truncate silently. Now an explicit `InvalidInput` error.
+Verified safe: `classify_effect` fail-closed, out-of-range WASM host index → denied, WASM `.expect`s
+are const-WAT setup invariants. Net: the new infrastructure is reviewed and solid; 191 tests green.
