@@ -310,3 +310,19 @@ the behavior space preserves building-block diversity (otherwise it's eval overh
    beings and death/reaper — the most safety-sensitive step, deferred deliberately.
 The pure substrate has been taken as far as it productively goes; further in-loop additions would be
 speculative (no landscape to validate them). Awaiting a foreground run or a new direction.
+
+## 2026-06-21 — safety-critical edge hardening + a noted grader footgun
+
+Broadened from M6 to genuine cross-workspace hardening once the M6 loop-safe surface was exhausted.
+Added boundary/edge tests to the safety-critical accounting + value crates (no bugs found; closes
+off-by-one and conservation regression gaps): being-core-economy 6→10 (exact reserve-floor and
+per-charge-cap boundaries, insolvent-account maintenance-first, credit non-positive guard),
+being-supervisor 6→10 (Refused doesn't reap, strict watchdog `>` boundary, insolvent-at-construction,
+death-none-while-alive), being-value 4→7 (negative-inflow/draw clamps, zero-price, exhausted payout).
+
+**Footgun flagged for human review (NOT changed unilaterally — it is the anti-Goodhart surface):**
+`being_value::SubstringGrader::accept` returns `true` for an **empty `ground_truth`** (because
+`response.contains("")` is always true), so a misconfigured/empty expected answer would grade *any*
+response as accepted and pay out the tariff. Defensible fix: reject empty ground truth (can't verify →
+don't pay). Left to the operator since it changes payer-acceptance semantics on the load-bearing
+anti-Goodhart grader.
