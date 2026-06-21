@@ -147,6 +147,10 @@ const RETRIEVAL_HALF_LIFE_MS: i64 = 14 * 24 * 60 * 60 * 1000;
 /// Lexical weight in the hybrid blend (D-M3-3): moderate, so rare/exact tokens (symbols, IDs) surface
 /// reliably without overriding semantic similarity.
 const RETRIEVAL_LEX_WEIGHT: f32 = 0.3;
+/// How many skills to inject per turn. 2 so a multi-symbol task (e.g. `(a⊕b)⊗c`) gets BOTH needed
+/// rules (FINDINGS: top-1 certifies single-op but starves composition). Still small to limit
+/// distraction; the lexical channel ranks the relevant rules first.
+const SKILL_RETRIEVAL_K: usize = 2;
 
 /// A metabolic being: identity-bound journal + episodic & semantic memory + the seam + an
 /// operator-owned supervisor (held only as the narrow `SupervisorPort`).
@@ -154,9 +158,9 @@ pub struct Being<P: Proposer, C: Committer, E: Executor> {
     journal: MemoryJournal<Ed25519Signer>,
     episodic: EpisodicStore,
     index: SemanticIndex,
-    /// Skills live in their OWN index, retrieved at high precision (top-1), separate from broad
-    /// memory retrieval — multi-skill transfer collapses if several rules are injected at once
-    /// (FINDINGS: skill interference). The lexical channel already ranks the right rule first.
+    /// Skills live in their OWN index, retrieved at high precision (top-`SKILL_RETRIEVAL_K`), separate
+    /// from broad memory retrieval. Few skills, ranked by the lexical channel so the relevant rule(s)
+    /// lead — single-symbol tasks get the right rule first; multi-symbol tasks get both (FINDINGS).
     skill_index: SemanticIndex,
     embedder: Option<Arc<dyn Embedder>>,
     supervisor: Arc<dyn SupervisorPort>,
@@ -237,7 +241,7 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
                         &qv,
                         input,
                         now_ms,
-                        1,
+                        SKILL_RETRIEVAL_K,
                         RETRIEVAL_ALPHA,
                         RETRIEVAL_HALF_LIFE_MS,
                         RETRIEVAL_LEX_WEIGHT,
@@ -417,9 +421,10 @@ mod tests {
     }
 
     #[test]
-    fn only_the_matching_skill_is_injected_no_interference() {
-        // With several learned skills, retrieval must inject ONLY the matching one (top-1) — the fix
-        // for multi-skill interference (FINDINGS). Here "cat" embeds [1,0], everything else [0,1].
+    fn skill_retrieval_ranks_matching_skill_first() {
+        // Top-k (k=2) skill injection may include a distractor, but the MATCHING skill must rank
+        // first — single-symbol tasks still lead with the right rule, while multi-symbol tasks can
+        // get a second rule (FINDINGS: composition needs two). "cat" embeds [1,0], else [0,1].
         let sup = Supervisor::new(Account::new(10_000_000, 0, 1_000_000), i64::MAX, 0);
         let mut b = Being::from_seed(
             [9u8; 32],
@@ -432,10 +437,13 @@ mod tests {
         b.learn_skill("cat rule: cats purr", true, 1); // embeds [1,0]
         b.learn_skill("dog rule: dogs bark", true, 2); // embeds [0,1]
         let resp = b.turn("a cat question", 3).observations.join(" ");
-        assert!(resp.contains("cats purr"), "matching skill missing: {resp}");
+        let cat = resp
+            .find("cats purr")
+            .expect("matching skill must be retrieved");
+        // A distractor may appear (top-2) but the matching skill ranks first.
         assert!(
-            !resp.contains("dogs bark"),
-            "interfering skill injected: {resp}"
+            resp.find("dogs bark").is_none_or(|dog| cat < dog),
+            "matching skill must rank before the distractor: {resp}"
         );
     }
 
