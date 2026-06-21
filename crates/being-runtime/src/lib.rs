@@ -154,6 +154,10 @@ pub struct Being<P: Proposer, C: Committer, E: Executor> {
     journal: MemoryJournal<Ed25519Signer>,
     episodic: EpisodicStore,
     index: SemanticIndex,
+    /// Skills live in their OWN index, retrieved at high precision (top-1), separate from broad
+    /// memory retrieval — multi-skill transfer collapses if several rules are injected at once
+    /// (FINDINGS: skill interference). The lexical channel already ranks the right rule first.
+    skill_index: SemanticIndex,
     embedder: Option<Arc<dyn Embedder>>,
     supervisor: Arc<dyn SupervisorPort>,
     proposer: P,
@@ -173,6 +177,7 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
             journal: MemoryJournal::new(Ed25519Signer::from_seed(seed)),
             episodic: EpisodicStore::new(),
             index: SemanticIndex::new(),
+            skill_index: SemanticIndex::new(),
             embedder: None,
             supervisor,
             proposer,
@@ -211,8 +216,9 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
         }
         if let Some(embedder) = self.embedder.clone() {
             if let Ok(v) = embedder.embed(lesson) {
-                let id = self.index.len() as u64 + 1;
-                self.index.add(id, v, format!("[skill] {lesson}"), now_ms);
+                let id = self.skill_index.len() as u64 + 1;
+                self.skill_index
+                    .add(id, v, format!("[skill] {lesson}"), now_ms);
             }
         }
     }
@@ -223,16 +229,37 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
     fn retrieve_context(&mut self, input: &str, now_ms: Ms) -> Vec<String> {
         if let Some(embedder) = self.embedder.clone() {
             if let Ok(qv) = embedder.embed(input) {
-                let hits = self.index.search_hybrid(
-                    &qv,
-                    input,
-                    now_ms,
-                    4,
-                    RETRIEVAL_ALPHA,
-                    RETRIEVAL_HALF_LIFE_MS,
-                    RETRIEVAL_LEX_WEIGHT,
+                // High-precision skill retrieval: only the single best-matching rule, so multiple
+                // learned skills don't interfere (FINDINGS: 3 rules injected -> the model conflates).
+                let mut texts: Vec<String> = self
+                    .skill_index
+                    .search_hybrid(
+                        &qv,
+                        input,
+                        now_ms,
+                        1,
+                        RETRIEVAL_ALPHA,
+                        RETRIEVAL_HALF_LIFE_MS,
+                        RETRIEVAL_LEX_WEIGHT,
+                    )
+                    .into_iter()
+                    .map(|h| h.text)
+                    .collect();
+                // Broad memory retrieval.
+                texts.extend(
+                    self.index
+                        .search_hybrid(
+                            &qv,
+                            input,
+                            now_ms,
+                            4,
+                            RETRIEVAL_ALPHA,
+                            RETRIEVAL_HALF_LIFE_MS,
+                            RETRIEVAL_LEX_WEIGHT,
+                        )
+                        .into_iter()
+                        .map(|h| h.text),
                 );
-                let texts: Vec<String> = hits.into_iter().map(|h| h.text).collect();
                 let id = self.index.len() as u64 + 1;
                 self.index.add(id, qv, input, now_ms);
                 return texts;
