@@ -25,6 +25,11 @@ path = "src/bin/selfimprove.rs"
 name = "transfer"
 path = "src/bin/transfer.rs"
 
+# End-to-end transfer cert through the full being (hybrid retrieval + thinking). Foreground only.
+[[bin]]
+name = "transfer_e2e"
+path = "src/bin/transfer_e2e.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }
