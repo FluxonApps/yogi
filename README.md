@@ -13,8 +13,15 @@ being" language stays suspended until the bench's anti-theater gate fires.
 
 ## Status
 
-**Pre-alpha. No code yet.** This repository currently holds the specifications. Building starts at
-milestone M0 (see the build spec).
+**Pre-alpha, building.** Milestones **M0–M5 are built** (15 crates, ~79 tests, clippy clean); **M6
+(population + selection) is gated off** by design. The substrate, metabolism (it lives and dies by
+its budget), real-model proposer + falsification bench, semantic-memory compounding, bounded
+self-modification (Two-Gate), and the operator-as-customer value source all exist. The headline
+metabolism/evolution claims stay **suspended** until a real foreground bench run fires the
+anti-theater gate.
+
+**To continue the project autonomously, read [`docs/HANDOVER.md`](docs/HANDOVER.md)** (the runbook),
+then [`CLAUDE.md`](CLAUDE.md) and [`docs/MILESTONES.md`](docs/MILESTONES.md).
 
 ## What is actually being built first (v0)
 
@@ -43,6 +50,9 @@ until the bench shows compounding. That ordering is the whole point.
 |---|---|
 | [`docs/architecture.md`](docs/architecture.md) | **Canonical architecture & research spec.** The full design, including its own falsification targets and the open trade-space (nothing pre-rejected). |
 | [`docs/build-spec.md`](docs/build-spec.md) | **Buildable v0 spec.** Committed decisions, crate DAG, interface contracts, SQLite schema, the per-step state machine, milestones M0–M6 with acceptance tests, and the gates that unlock the research arm. |
+| [`docs/HANDOVER.md`](docs/HANDOVER.md) | **The runbook** — how to continue the project autonomously: current state, the loop, the hard rules, the gates, foreground commands. Read this first. |
+| [`docs/MILESTONES.md`](docs/MILESTONES.md) | Durable milestone tracker (M0–M6), the source of truth for "what's next". |
+| [`docs/decisions.md`](docs/decisions.md) | Append-only decision log (D-M1…D-M5), web-researched, with citations + revisit triggers. |
 | [`docs/architecture-annotated.md`](docs/architecture-annotated.md) | *Internal.* The earlier annotated draft, kept only for its source citations and provenance map. Superseded by `architecture.md`. |
 
 ## Build order (from the build spec)
