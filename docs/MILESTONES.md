@@ -92,12 +92,15 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 
-## M5 — Value source (makes the economic gate live)  `[ ] ⚠`
-*One concrete payer (operator-as-customer: tariff + arrival + held-out anti-Goodhart grader) +
-exogenous-payer hook.*
-- **Acceptance:** external-revenue ledger live and bounded by inflow; the anti-theater gate moves
-  from methodology to a live derived threshold; value-capture claims labeled efficiency-only until an
-  exogenous payer is committed.
+## M5 — Value source (makes the economic gate live)  `[x] ⚠`  · decision [D-M5-1](decisions.md)
+*One concrete payer (operator-as-customer: tariff + held-out anti-Goodhart grader) + exogenous-payer hook.*
+- [x] `being-value` — `Tariff` (per-class + default), `Grader` trait + `SubstringGrader`,
+  inflow-bounded `Treasury` (budget-conservation), `ExternalPayer` hook + `OperatorPayer` (credits
+  only graded-accepted work, within inflow) · 4 tests, pure/loop-safe. Crediting the survival Account
+  is `supervisor.credit` (operator-owned).
+- **Acceptance met (as methodology):** external-revenue is inflow-bounded; value-capture is labeled
+  **efficiency-only** until a genuinely exogenous payer is committed (the step-0 that makes the
+  anti-theater/economic gate *fire* on real foreground runs).
 
 ## M6 — Research arm (population + selection)  `[ ] 🔒`
 *Fork saga + lineage built as substrate; **selection stays OFF** until the entry gate holds.*

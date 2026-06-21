@@ -13,6 +13,7 @@ members = [
     "crates/being-bench",
     "crates/being-embed-openai",
     "crates/being-loop",
+    "crates/being-value",
 ]
 
 [workspace.package]

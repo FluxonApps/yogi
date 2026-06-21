@@ -217,3 +217,27 @@ exact event that makes in-process dishonest.
 
 **Citations.** Reference monitor / NEAT (NIST CSRC; Anderson); OpenSSH privsep (Provos; README.privsep);
 Wasmtime security + epoch-vs-fuel (docs.wasmtime.dev); in-process vs process isolation (arXiv 2306.08127).
+
+---
+
+## D-M5-1 — Value source: operator-as-customer payer, inflow-bounded, efficiency-only
+
+**Decision.** M5 ships **one concrete payer — operator-as-customer (v0)**: a published per-task-class
+**Tariff** + an operator-owned **Grader** (grades against held-out ground truth the being cannot
+observe at decision time; a deterministic substring grader is the v0 stand-in) + an **inflow-bounded
+Treasury** (total credits can never exceed the committed external inflow — budget-conservation). On a
+graded-accepted delivery the operator credits the **survival Account** (`supervisor.credit`). An
+`ExternalPayer` trait is the **hook** so a genuinely exogenous payer (one the operator cannot
+reprice) drops in later. Until that exists, **value-capture claims are labeled EFFICIENCY-ONLY**.
+
+**Why.** On a local 16 GB build there is no real marketplace, and the prior economic analysis is
+explicit: under operator-as-customer the value gradient is operator-internal, so selection results
+are *void as economics* until a genuinely exogenous payer exists — which is exactly the precondition
+the M6 anti-theater/economic gate depends on. The **grader is the load-bearing Goodhart surface**, so
+it is operator-owned, held-out, and non-stationary-capable; revenue (not savings) defines surplus so
+a being cannot grow its budget by burning slower. This makes the economic gate **live as methodology**;
+the §13.1 anti-theater + compounding gates only *fire* on real foreground runs.
+
+**Status.** Engineering call grounded in the prior economic analysis (D-M1-2 + the architecture's
+exogenous-payer derivation); no new web research. The exogenous-payer commitment remains the step-0
+that turns the economic gate from methodology into a live, derived threshold.
