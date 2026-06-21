@@ -57,8 +57,15 @@ foreground/user-run only (16 GB budget); the automated loop never loads a model.
 - **Acceptance:** bench runs Day-0 vs Day-N with the model held constant and emits a paired-bootstrap
   CI; the anti-theater harness runs all three arms and produces a report (null result is valid).
 
-## M3 — Learning layer  `[ ]`
-*Consolidation + per-domain distillation flywheel + navigator/routing + forgetting gate.*
+## M3 — Learning layer  `[~]`  · decisions [D-M3-1/2](decisions.md) (retrieval-first; distillation gated)
+*Token-space compounding first (retrieval + consolidation + verifier-fed skills); per-domain
+distillation is an optional foreground arm. Build order: retrieval → embedder → consolidation →
+skill-learning(verifier) → wire + Day-N bench.*
+
+- [x] semantic-retrieval core — `cosine_similarity` + `SemanticIndex` (score = α·cos + (1−α)·0.5^(age/h)); stale-but-similar guard tested · 4 tests
+- [ ] generic `Embedder` (live `nomic-embed-text` behind a feature) + hybrid BM25/RRF
+- [ ] `Consolidator` (episodic→semantic) + skill-learning loop fed by the M2 bench verifier
+- [ ] wire retrieval into the turn + Day-N bench demo vs. no-memory baseline
 - **Acceptance:** distillation closes the gap on `(teacher-success ∩ student-weak)` for ≥1 domain by
   the pre-registered per-domain margin; every `DomainModel` promotion re-clears the mixed-set
   non-inferiority floor; compounding bench detects accumulation or reports saturation.

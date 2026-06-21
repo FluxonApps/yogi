@@ -237,6 +237,164 @@ impl ProceduralStore {
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Semantic retrieval — the highest-ROI compounding lever (D-M3-1). Cosine over L2-normalized
+// embeddings, blended with a recency prior so stale-but-similar entries don't crowd out fresh ones
+// (LongMemEval: retrieval quality dominates). Pure + deterministic; the live `nomic-embed-text` that
+// produces the vectors is wired separately (foreground/feature-gated), never in the automated loop.
+// ---------------------------------------------------------------------------------------------
+
+/// Cosine similarity of two equal-length vectors. Returns 0.0 on length mismatch or a zero vector.
+pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+    if a.len() != b.len() {
+        return 0.0;
+    }
+    let mut dot = 0.0f32;
+    let mut na = 0.0f32;
+    let mut nb = 0.0f32;
+    for (x, y) in a.iter().zip(b) {
+        dot += x * y;
+        na += x * x;
+        nb += y * y;
+    }
+    if na <= 0.0 || nb <= 0.0 {
+        0.0
+    } else {
+        dot / (na.sqrt() * nb.sqrt())
+    }
+}
+
+/// Recency prior in (0,1]: `0.5^(age/half_life)`. Future/equal timestamps and a non-positive
+/// half-life both give 1.0 (recency neutral).
+fn recency_weight(now_ms: Ms, valid_at_ms: Ms, half_life_ms: i64) -> f32 {
+    if half_life_ms <= 0 {
+        return 1.0;
+    }
+    let age = (now_ms - valid_at_ms).max(0) as f64;
+    0.5f64.powf(age / half_life_ms as f64) as f32
+}
+
+/// One embedded memory item.
+#[derive(Clone, Debug, PartialEq)]
+pub struct VectorItem {
+    pub id: u64,
+    pub embedding: Vec<f32>,
+    pub text: String,
+    pub valid_at_ms: Ms,
+}
+
+/// A retrieval hit with its blended score.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Hit {
+    pub id: u64,
+    pub text: String,
+    pub score: f32,
+}
+
+/// A flat semantic index. `search` blends similarity with recency:
+/// `score = alpha*cos + (1-alpha)*0.5^(age/half_life)` (D-M3-1; alpha≈0.7, half_life≈14d).
+#[derive(Default)]
+pub struct SemanticIndex {
+    items: Vec<VectorItem>,
+}
+
+impl SemanticIndex {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add(&mut self, id: u64, embedding: Vec<f32>, text: impl Into<String>, valid_at_ms: Ms) {
+        self.items.push(VectorItem {
+            id,
+            embedding,
+            text: text.into(),
+            valid_at_ms,
+        });
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    /// Top-`k` hits by blended cosine + recency score, highest first.
+    pub fn search(
+        &self,
+        query: &[f32],
+        now_ms: Ms,
+        k: usize,
+        alpha: f32,
+        half_life_ms: i64,
+    ) -> Vec<Hit> {
+        let mut scored: Vec<Hit> = self
+            .items
+            .iter()
+            .map(|it| {
+                let cos = cosine_similarity(query, &it.embedding);
+                let recency = recency_weight(now_ms, it.valid_at_ms, half_life_ms);
+                Hit {
+                    id: it.id,
+                    text: it.text.clone(),
+                    score: alpha * cos + (1.0 - alpha) * recency,
+                }
+            })
+            .collect();
+        scored.sort_by(|a, b| b.score.total_cmp(&a.score));
+        scored.truncate(k);
+        scored
+    }
+}
+
+#[cfg(test)]
+mod vector_tests {
+    use super::*;
+
+    const EPS: f32 = 1e-6;
+
+    #[test]
+    fn cosine_basics() {
+        assert!((cosine_similarity(&[1.0, 0.0], &[1.0, 0.0]) - 1.0).abs() < EPS);
+        assert!(cosine_similarity(&[1.0, 0.0], &[0.0, 1.0]).abs() < EPS); // orthogonal
+        assert!(cosine_similarity(&[1.0], &[1.0, 2.0]).abs() < EPS); // length mismatch → 0
+        assert!(cosine_similarity(&[0.0, 0.0], &[1.0, 1.0]).abs() < EPS); // zero vector → 0
+    }
+
+    #[test]
+    fn search_returns_most_similar_first() {
+        let mut idx = SemanticIndex::new();
+        idx.add(1, vec![1.0, 0.0], "a", 0);
+        idx.add(2, vec![0.0, 1.0], "b", 0);
+        idx.add(3, vec![0.9, 0.1], "c", 0);
+        let hits = idx.search(&[1.0, 0.0], 0, 2, 1.0, 1000); // alpha=1 → pure cosine
+        assert_eq!(hits.len(), 2);
+        assert_eq!(hits[0].id, 1);
+        assert_eq!(hits[1].id, 3);
+    }
+
+    #[test]
+    fn recency_breaks_ties_on_equal_similarity() {
+        let mut idx = SemanticIndex::new();
+        idx.add(1, vec![1.0, 0.0], "old", 0);
+        idx.add(2, vec![1.0, 0.0], "new", 1000);
+        let hits = idx.search(&[1.0, 0.0], 1000, 2, 0.5, 1000);
+        assert_eq!(hits[0].id, 2); // equally similar, but fresher wins
+    }
+
+    #[test]
+    fn fresh_moderate_beats_stale_exact() {
+        // The stale-but-similar guard: a perfectly-similar but very old item must not crowd out a
+        // fresh, only-moderately-similar one once the recency prior is in play.
+        let mut idx = SemanticIndex::new();
+        idx.add(1, vec![1.0, 0.0], "stale exact", 0); // cos 1.0, age 10 half-lives
+        idx.add(2, vec![0.6, 0.8], "fresh", 10_000); // cos 0.6, age 0
+        let hits = idx.search(&[1.0, 0.0], 10_000, 2, 0.7, 1000);
+        assert_eq!(hits[0].id, 2);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

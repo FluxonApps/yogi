@@ -73,3 +73,71 @@ any model-generated/native code executes — whichever comes first.**
 
 **Citations.** Reference monitor (NIST SP 800-53 AC-25; Anderson); OpenSSH privsep; Wasmtime security
 model; in-process isolation limits (USENIX Sec'23, arXiv 2306.08127); watchdog-timer pattern.
+
+---
+
+## D-M3-1 — Compounding leads in token-space (memory), not weights
+
+**Decision.** M3's primary, always-on compounding mechanism is **token-space**: episodic→semantic
+**consolidation** + **embedding retrieval** (the `nomic-embed-text` shared embedding). Per-domain
+**weight distillation** is a *secondary, optional, foreground-only* arm — a small student
+(≤ ~1.7B, e.g. a small qwen3) trained via MLX LoRA with `qwen3:8b` as teacher, loaded sequentially,
+never concurrently — and is **deferred** until token-space compounding is shown to saturate on the
+bench.
+
+**Why.** On 16 GB unified memory, LoRA-training `qwen3:8b` is infeasible (the fp16 weights alone are
+~16 GB; QLoRA + optimizer state + activations does not fit alongside the OS). Small-student training
+is possible but heavy and occasional, so it cannot be the everyday path. Token-space compounding
+needs no training, is loop-safe (the embedding model is ~0.3 GB and is still only ever called
+foreground/runtime, never in `cargo test`/hooks), and can produce a measurable Day-N bench signal
+first. This matches architecture §15 (token-space compounds today; weight-space is the harder bet)
+and CLAUDE.md's one-model-at-a-time / no-inference-in-the-loop rules.
+
+**Status.** Confirmed + sharpened by web research (citations below).
+
+**Key refinements from research — retrieval and verifier-fed skills are the real levers:**
+- **Retrieval quality dominates consolidation.** LongMemEval: the same fixed model loses 30–60% when
+  forced to read full history vs. oracle retrieval; retrieval-stage optimizations contribute far more
+  than ingestion. ⇒ build retrieval first; consolidation exists to make retrieval *cleaner*, not to be
+  the win itself.
+- **The decisive compounding lever is skill-learning with a verifier signal.** Letta Skill Learning:
+  +9% absolute on a fixed model from trajectory-derived skills, rising to **+15.7% when error/verifier
+  feedback is folded in.** Yogi already has that verifier — the M2 bench pass/fail. Wire it in.
+- **Local RAG specifics (`nomic-embed-text`):** 768-dim, cosine on L2-normalized vectors; hybrid
+  dense+BM25 via reciprocal-rank fusion (+15–30% recall, esp. code/identifiers); recency prior
+  `score = α·cos + (1−α)·0.5^(age/half_life)`, α≈0.7, half-life≈14d (α≥0.9 surfaces stale facts).
+- **Failure modes to encode as tests:** stale-but-similar (require the temporal prior; never ship pure
+  cosine), retrieval drift as memory grows (no naive FIFO eviction), fact supersession (test
+  knowledge-update queries explicitly).
+
+**M3 build order (loop-safe; retrieval-first):** (1) semantic-retrieval core — cosine + recency-prior
+vector index, pure + tested; (2) generic `Embedder` (live `nomic-embed-text` behind a feature,
+foreground) + hybrid BM25/RRF; (3) `Consolidator` (episodic→semantic; deterministic core, model
+variant behind a feature); (4) skill-learning loop fed by the M2 bench verifier; (5) wire retrieval
+into the turn + a Day-N bench demo vs. a no-memory baseline. Distillation = a later optional foreground
+tool (D-M3-2).
+
+**Citations.** LongMemEval (arXiv 2410.10813); Letta Skill Learning + Continual Learning in Token
+Space; Mem0/LoCoMo/BEAM (mem0.ai); A-MEM (arXiv 2502.12110); nomic-embed-text (HF; arXiv 2402.01613);
+recency prior + drift limits (arXiv 2509.19376).
+
+---
+
+## D-M3-2 — Weight distillation: small-student MLX QLoRA, foreground & gated
+
+**Decision.** When distillation is warranted (a domain proven valuable on the bench), it is a **rare,
+foreground, user-initiated** operation: teacher `qwen3:8b` (Ollama) generates quality-filtered traces
+→ `ollama stop` → train a **small student via QLoRA in MLX-LM** → fuse → **serve via MLX directly**.
+Default student **Qwen3 1.7B** (~6 GB peak, ~8 min/domain LoRA); 0.6B for cheap domains; 4B as a tight
+upper bound (~11 GB). Never train the 8B; teacher and student are **never co-resident** (16 GB).
+
+**Why.** Real Mac LoRA peaks: 0.8B ≈ 3.9 GB, 2B ≈ 5.9 GB, 4B ≈ 11.1 GB; 8B QLoRA only "fits" with
+almost no headroom — fragile for a loop. MLX-LM is the only first-class Apple-Silicon LoRA path
+(unsloth is CUDA-only; PyTorch-MPS / candle / llama.cpp-finetune not viable). Qwen3 is **not** in MLX's
+GGUF export, and HF→GGUF conversion of merged Qwen adapters has reported correctness regressions — so
+serve the fused student **via MLX**, not an Ollama GGUF, unless a post-conversion behavioral validation
+passes. Distillation is **latency/cost compression of already-proven token-space skills**, never the
+source of new capability.
+
+**Citations.** sciences44/mlx-lora-finetune (real Mac numbers); MLX-LM LoRA.md; InsiderLLM 16 GB table;
+MLX-LM #353 / #1058 (GGUF export limits + Qwen conversion regressions); Agentic KD (arXiv 2602.10869).
