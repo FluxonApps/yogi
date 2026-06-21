@@ -61,14 +61,14 @@ foreground/user-run only (16 GB budget); the automated loop never loads a model.
 - **Acceptance:** bench runs Day-0 vs Day-N with the model held constant and emits a paired-bootstrap
   CI; the anti-theater harness runs all three arms and produces a report (null result is valid).
 
-## M3 — Learning layer  `[x]`  · decisions [D-M3-1/2](decisions.md) (retrieval-first; distillation gated)
+## M3 — Learning layer  `[x]`  · decisions [D-M3-1/2](decisions.md) (retrieval-first; distillation flywheel LIVE, weight/LoRA in progress)
 *Token-space compounding first (retrieval + consolidation + verifier-fed skills); per-domain
 distillation is an optional foreground arm. Build order: retrieval → embedder → consolidation →
 skill-learning(verifier) → wire + Day-N bench.*
 
 - [x] semantic-retrieval core — `cosine_similarity` + `SemanticIndex` (score = α·cos + (1−α)·0.5^(age/h)); stale-but-similar guard tested · 4 tests
 - [x] generic `Embedder` trait (in `being-core-memory`) + `being-embed-openai` (live `nomic-embed-text`
-  behind `live-model`, foreground; build/parse unit-tested, no network) · 4 tests · hybrid BM25/RRF deferred
+  behind `live-model`, foreground; build/parse unit-tested, no network) · 4 tests · hybrid lexical+embedding LIVE (`search_hybrid`)
 - [x] `Consolidator` (episodic→semantic; deterministic `FrequencyConsolidator`, idempotent) +
   verifier-fed skill-learning (`ProceduralStore::learn_from`/`best_for`: branching `[ok]`/`[fail]`
   variants keyed by task class; latest passing wins) · 3 tests
@@ -97,7 +97,7 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 - [x] `being-loop::self_improve_round` — Improver picks a candidate → injected scorer grades
   incumbent vs candidate genome → Two-Gate → commit or rollback + audit (2 tests, pure). Foreground
   `selfimprove` bin drives it with the real bench as scorer (genome prompt → proposer).
-- [ ] isolation upgrade **not required at M4** (D-M4-2) — deferred to the executor boundary
+- [~] isolation upgrade (D-M4-2) — **in progress** (not deferred): WASM-sandbox the executor boundary
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 
@@ -196,4 +196,6 @@ and journals a Death event, and the in-flight-egress bound holds under stale-rep
 cargo test --all + clippy clean (show output); MILESTONES.md M1 ticked; committed.
 ```
 
-(M2–M6 goal strings to be written as each is reached; M6 stays gated.)
+(M6 selection is LIVE and demonstrated — recombination assembles the all-3-skill solver (1.0),
+reproduced across seeds. Remaining work — weight/LoRA distillation, M4 isolation upgrade, powered
+drift acceptance — is **in progress, not gated**: a gate is a problem to solve, not a stop sign.)

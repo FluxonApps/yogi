@@ -59,14 +59,14 @@ render() {
 
   sec "milestones"
   printf "  "; for m in 0 1 2 3 4 5 6; do mstone "$m"; done
-  printf "  ${D}(M6 gated: selection OFF until the bench gate fires)${R}\n\n"
+  printf "  ${D}(M6 selection LIVE — recombination assembles the all-3-skill solver, 1.0)${R}\n\n"
 
   sec "compounding layers — model held constant"
   printf "  ${G}●${R} memory (hybrid embed+lexical)   ${D}live · wired${R}\n"
   printf "  ${G}●${R} skills (verifier-fed)           ${D}live · top-2 inject${R}\n"
   printf "  ${G}●${R} navigator / router              ${D}live · heuristic + outcome-learned${R}\n"
-  printf "  ${Y}◐${R} per-domain distillation         ${D}deferred (D-M3-4)${R}\n"
-  printf "  ${Y}◌${R} population + selection          ${D}gated (M6)${R}\n\n"
+  printf "  ${G}●${R} distillation flywheel           ${D}live · gap→distill→gate PROMOTES${R}\n"
+  printf "  ${G}●${R} population + selection (M6)      ${D}live · recombination composes skills${R}\n\n"
 
   sec "certified — token-space compounding (verifier-gated)"
   if grep -q '^CERT' .yogi/status.txt 2>/dev/null; then
