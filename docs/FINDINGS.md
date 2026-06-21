@@ -695,3 +695,15 @@ fixed genuine issues (not padding) — validating that reviewing fast-built code
    record would truncate silently. Now an explicit `InvalidInput` error.
 Verified safe: `classify_effect` fail-closed, out-of-range WASM host index → denied, WASM `.expect`s
 are const-WAT setup invariants. Net: the new infrastructure is reviewed and solid; 191 tests green.
+
+## 2026-06-22 — real wasm32 executor guest (M4 stand-in gate removed)
+
+Per "remove the gate, don't defer it", replaced the WAT stand-in with a REAL Rust executor compiled to
+wasm32-unknown-unknown (guest/being-guest-wasm). It runs under wasmtime with zero ambient authority
+(sole import host.request_effect), routes every effect through being_sandbox::Broker, and only performs
+the effect when granted — Sandbox::execute returns the guest's computed result (arg*2 on grant, -1 on
+denial), proving compiled-Rust logic ran under the boundary and obeyed the verdict. Kept off the green-
+gate: the guest is a standalone crate (own [workspace]) whose prebuilt artifact is committed
+(crates/being-sandbox-wasm/guest.wasm) and include_bytes!'d, so cargo test --all never builds wasm
+(rebuild via scripts/build_guest_wasm.sh). M4 isolation is now real end-to-end: policy (broker) +
+mechanism (real wasm guest) + live wiring (SandboxedExecutor on the turn path).
