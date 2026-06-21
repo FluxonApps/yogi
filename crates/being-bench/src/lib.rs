@@ -274,10 +274,13 @@ pub fn multi_skill_corpus(n: usize, seed: u64) -> MultiSkillCorpus {
         2 * (a + b)
     }
 
+    // Example numbers are two-digit (10,20,30) so they never collide with the single-digit operands
+    // (2..=9) of the test tasks — otherwise a query's digit lexically matches the wrong rule's example
+    // and top-1 skill retrieval returns the wrong rule (FINDINGS: multi-skill digit collision).
     let skills = vec![
-        "Rule for ⊕: a ⊕ b = (a×b) + a + b. Example: 2 ⊕ 3 = 2*3+2+3 = 11.".to_string(),
-        "Rule for ⊗: a ⊗ b = (a×b) − a − b. Example: 4 ⊗ 5 = 4*5-4-5 = 11.".to_string(),
-        "Rule for ⊙: a ⊙ b = 2 × (a + b). Example: 3 ⊙ 4 = 2*(3+4) = 14.".to_string(),
+        "Rule for ⊕: a ⊕ b = (a×b) + a + b. Example: 10 ⊕ 20 = 10*20+10+20 = 230.".to_string(),
+        "Rule for ⊗: a ⊗ b = (a×b) − a − b. Example: 10 ⊗ 20 = 10*20-10-20 = 170.".to_string(),
+        "Rule for ⊙: a ⊙ b = 2 × (a + b). Example: 10 ⊙ 20 = 2*(10+20) = 60.".to_string(),
     ];
 
     let mut rng = Xorshift64::new(seed);
