@@ -86,14 +86,80 @@ impl Proposer for EchoProposer {
     }
 }
 
-/// Pass-through policy committer. The real policy gate (trust + risk) lands later; budget is the
-/// supervisor's job and is filled into `budget_verdict` by the turn.
+/// Pass-through policy committer: commits every candidate step (budget is the supervisor's job, filled
+/// into `budget_verdict` by the turn). Use [`RiskPolicyCommitter`] for a being-level risk gate.
 pub struct PassThroughCommitter;
 impl Committer for PassThroughCommitter {
     fn commit(&mut self, proposal: &Proposal, _ctx: &ContextPack) -> Commitment {
         Commitment {
             committed_steps: proposal.candidate_steps.clone(),
             rejected: Vec::new(),
+            continue_loop: false,
+            budget_verdict: BudgetVerdict::WithinBudget,
+        }
+    }
+}
+
+/// Risk tier of a step's effect, ordered lowest → highest. Pure effects carry no external authority;
+/// the rest escalate by blast radius (memory write < egress < sign < payment).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum RiskTier {
+    Pure,
+    MemoryWrite,
+    Egress,
+    Sign,
+    Payment,
+}
+
+/// Classify a step's risk by its action — **fail-closed**: an unrecognized action is treated as the
+/// highest tier, so an unknown effect is only ever committed by a being that tolerates `Payment`-level
+/// risk. (Mirrors `classify_effect`'s fail-closed stance, but for the commit-stage policy gate.)
+pub fn step_risk(step: &PlanStep) -> RiskTier {
+    match step.action.as_str() {
+        "respond" | "error" | "" => RiskTier::Pure,
+        "memory_write" | "remember" => RiskTier::MemoryWrite,
+        "egress" | "http" | "fetch" => RiskTier::Egress,
+        "sign" => RiskTier::Sign,
+        _ => RiskTier::Payment, // "pay"/"payment" and anything unrecognized → highest (fail-closed)
+    }
+}
+
+/// The real trust+risk policy gate (the deferred committer): commits only steps **at or below** a
+/// configured risk `ceiling`; higher-risk steps are refused and recorded in `Commitment.rejected` with
+/// a reason. This is the being's OWN self-restraint — defense-in-depth *upstream* of (and independent
+/// from) the operator capability sandbox: e.g. a `Pure`-ceiling being is read-only by its own policy
+/// even if granted egress capability, so a prompt-injected "fetch evil.test" never reaches the broker.
+pub struct RiskPolicyCommitter {
+    pub ceiling: RiskTier,
+}
+
+impl RiskPolicyCommitter {
+    pub fn new(ceiling: RiskTier) -> Self {
+        Self { ceiling }
+    }
+}
+
+impl Committer for RiskPolicyCommitter {
+    fn commit(&mut self, proposal: &Proposal, _ctx: &ContextPack) -> Commitment {
+        let mut committed_steps = Vec::new();
+        let mut rejected = Vec::new();
+        for step in &proposal.candidate_steps {
+            let risk = step_risk(step);
+            if risk <= self.ceiling {
+                committed_steps.push(step.clone());
+            } else {
+                rejected.push((
+                    step.clone(),
+                    format!(
+                        "step risk {risk:?} exceeds the being's ceiling {:?}",
+                        self.ceiling
+                    ),
+                ));
+            }
+        }
+        Commitment {
+            committed_steps,
+            rejected,
             continue_loop: false,
             budget_verdict: BudgetVerdict::WithinBudget,
         }
@@ -569,6 +635,57 @@ mod tests {
             "expected a broker denial in the turn, got {:?}",
             turn.observations
         );
+    }
+
+    #[test]
+    fn risk_policy_committer_gates_by_ceiling() {
+        fn plan(actions: &[&str]) -> Proposal {
+            Proposal {
+                intent: "t".into(),
+                candidate_steps: actions
+                    .iter()
+                    .map(|a| PlanStep {
+                        action: a.to_string(),
+                        arg: String::new(),
+                    })
+                    .collect(),
+                preferred: 0,
+                est_cost: 1,
+            }
+        }
+        let ctx = ContextPack {
+            input: String::new(),
+            retrieved: Vec::new(),
+        };
+
+        // A Pure-ceiling being is read-only by its own policy: it commits "respond" but refuses every
+        // effectful step (and an unknown action, fail-closed) — recording each refusal with a reason.
+        let mut pure = RiskPolicyCommitter::new(RiskTier::Pure);
+        let c = pure.commit(&plan(&["respond", "egress", "pay", "weird"]), &ctx);
+        assert_eq!(c.committed_steps.len(), 1);
+        assert_eq!(c.committed_steps[0].action, "respond");
+        assert_eq!(c.rejected.len(), 3);
+        assert!(c.rejected.iter().all(|(_, why)| why.contains("exceeds")));
+
+        // An Egress-ceiling being commits up to egress, still refuses sign/payment.
+        let mut egress = RiskPolicyCommitter::new(RiskTier::Egress);
+        let c = egress.commit(
+            &plan(&["respond", "remember", "egress", "sign", "pay"]),
+            &ctx,
+        );
+        let committed: Vec<_> = c
+            .committed_steps
+            .iter()
+            .map(|s| s.action.as_str())
+            .collect();
+        assert_eq!(committed, vec!["respond", "remember", "egress"]);
+        assert_eq!(c.rejected.len(), 2);
+
+        // A Payment-ceiling being tolerates everything, including unknown (highest-tier) actions.
+        let mut top = RiskPolicyCommitter::new(RiskTier::Payment);
+        let c = top.commit(&plan(&["respond", "egress", "sign", "pay", "weird"]), &ctx);
+        assert_eq!(c.committed_steps.len(), 5);
+        assert!(c.rejected.is_empty());
     }
 
     struct KeywordEmbedder;
