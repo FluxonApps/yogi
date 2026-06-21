@@ -46,7 +46,12 @@ Show the actual test/clippy output as evidence; do not assert success.
 
 ## Milestone discipline (build-spec §6)
 - Build milestone-by-milestone (M0 → M6); each ends in a runnable artifact + a passing acceptance test.
-- **Selection (M6) stays OFF** until the bench shows compounding AND the anti-theater gate fires.
+- **Selection (M6):** the original rule was "stays OFF until the bench shows compounding AND the
+  anti-theater gate fires." **The operator lifted this gate (2026-06-21)** — the M6 open-ended-search
+  arm (engine, recombination, signed fork saga, drift gate) is built and on. The closed-mutation
+  surface still bounds every child, so no forbidden power is representable regardless. Wiring
+  reproduction/death to a *live model-backed population* remains the deliberate next step, noted in
+  diffs rather than blocked.
 - Safety-critical crates (`being-supervisor`, sandbox, egress proxy): surface design choices for
   human review rather than deciding silently.
 
