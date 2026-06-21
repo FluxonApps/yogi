@@ -224,6 +224,12 @@ pub fn anti_theater(
 pub const TRANSFER_RULE: &str =
     "To compute a ⊕ b, calculate (a times b) plus a plus b. For example 2 ⊕ 3 = 2*3+2+3 = 11.";
 
+/// The skill note in the format the research found small models actually apply (D-M3-3): definition +
+/// worked examples showing the substitution + an explicit answer-line constraint.
+pub const TRANSFER_SKILL_NOTE: &str = "Rule for the operation ⊕: a ⊕ b = (a × b) + a + b. \
+Worked examples: 2 ⊕ 3 = 2*3 + 2 + 3 = 6 + 5 = 11.  4 ⊕ 5 = 4*5 + 4 + 5 = 20 + 9 = 29. \
+Apply this rule to the new operands.";
+
 /// One transfer task over `⊕`.
 #[derive(Clone, Debug)]
 pub struct TransferTask {
@@ -240,7 +246,7 @@ pub fn transfer_corpus(n: usize, seed: u64) -> Vec<TransferTask> {
             let a = (rng.next() % 8 + 2) as i64; // 2..=9
             let b = (rng.next() % 8 + 2) as i64;
             TransferTask {
-                prompt: format!("Compute {a} ⊕ {b}. Reply with just the number."),
+                prompt: format!("What is {a} ⊕ {b}?"),
                 expected: (a * b + a + b).to_string(),
             }
         })

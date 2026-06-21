@@ -25,8 +25,12 @@ pub struct OpenAiChatConfig {
     pub system_prompt: String,
     pub max_tokens: u32,
     /// Sampling temperature. 0.0 = greedy/deterministic — the default, so the falsification bench
-    /// measures capability rather than sampling noise.
+    /// measures capability rather than sampling noise. (qwen3 thinking mode wants ~0.6, not greedy.)
     pub temperature: f32,
+    /// Nucleus sampling. qwen3 thinking-mode guidance: 0.95.
+    pub top_p: f32,
+    /// Top-k sampling (Ollama-native; ignored by strict OpenAI endpoints). qwen3 thinking: 20.
+    pub top_k: u32,
     /// Optional prefix prepended to the user message (e.g. qwen3's `"/no_think\n"`). Empty = none.
     pub user_prefix: String,
 }
@@ -41,6 +45,8 @@ impl OpenAiChatConfig {
                 .to_string(),
             max_tokens: 256,
             temperature: 0.0,
+            top_p: 0.95,
+            top_k: 20,
             user_prefix: "/no_think\n".to_string(),
         }
     }
@@ -88,6 +94,8 @@ impl OpenAiChatProposer {
             "stream": false,
             "max_tokens": self.config.max_tokens,
             "temperature": self.config.temperature,
+            "top_p": self.config.top_p,
+            "top_k": self.config.top_k,
             "messages": [
                 {"role": "system", "content": self.config.system_prompt},
                 {"role": "user", "content": user},
@@ -194,6 +202,8 @@ mod tests {
             system_prompt: "sys".into(),
             max_tokens: 64,
             temperature: 0.0,
+            top_p: 0.95,
+            top_k: 20,
             user_prefix: String::new(),
         };
         let p = OpenAiChatProposer::new(cfg);
