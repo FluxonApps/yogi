@@ -198,4 +198,25 @@ mod tests {
         let j = journal();
         assert!(j.did().0.starts_with("did:key:"));
     }
+
+    #[test]
+    fn tampered_signature_alone_breaks_verification() {
+        // Corrupt ONLY the signature, leaving payload/seq/prev_hash/entry_hash intact. The sequence,
+        // linkage, and hash-recompute checks all pass, so this isolates the signature-verification
+        // branch of verify_chain (which the payload-tamper test never reaches).
+        let mut j = journal();
+        j.append("step", b"genuine".to_vec());
+        j.append("step", b"more".to_vec());
+        assert!(j.verify_chain());
+        j.entries[1].sig = being_core_types::Sig(vec![0u8; 64]); // valid length, wrong signature
+        assert!(!j.verify_chain());
+    }
+
+    #[test]
+    fn empty_chain_verifies_vacuously() {
+        let j = journal();
+        assert_eq!(j.len(), 0);
+        assert!(j.verify_chain());
+        assert_eq!(j.head(), (0, GENESIS_PREV));
+    }
 }
