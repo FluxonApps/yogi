@@ -15,6 +15,7 @@ members = [
     "crates/being-loop",
     "crates/being-value",
     "crates/being-lineage",
+    "crates/being-router",
 ]
 
 [workspace.package]

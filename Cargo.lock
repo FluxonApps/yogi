@@ -120,6 +120,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-router"
+version = "0.0.0"
+
+[[package]]
 name = "being-runtime"
 version = "0.0.0"
 dependencies = [
