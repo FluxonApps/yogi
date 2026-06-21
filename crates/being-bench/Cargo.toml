@@ -30,6 +30,11 @@ path = "src/bin/transfer.rs"
 name = "transfer_e2e"
 path = "src/bin/transfer_e2e.rs"
 
+# Multi-skill + compositional transfer cert (3 learned skills; loads qwen3:8b + nomic). Foreground only.
+[[bin]]
+name = "multi_skill"
+path = "src/bin/multi_skill.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }
