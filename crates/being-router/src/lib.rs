@@ -235,4 +235,47 @@ mod tests {
         }
         assert_eq!(r.route(task), ReasoningMode::NoThink); // equal accuracy → cheaper wins
     }
+
+    // Record `passes` successes out of `n` outcomes for `mode` on `task`.
+    fn record_n(
+        r: &mut OutcomeLearnedRouter,
+        task: &str,
+        mode: ReasoningMode,
+        n: u32,
+        passes: u32,
+    ) {
+        for i in 0..n {
+            r.record(task, mode, i < passes);
+        }
+    }
+
+    #[test]
+    fn lambda_gates_accuracy_gains_smaller_than_the_cost() {
+        let task = "describe the vibe"; // class "plain"
+
+        // Think is 0.10 more accurate, exactly the λ cost → NOT worth it; cheaper NoThink wins.
+        // value(Think)=1.00-0.10=0.90, value(NoThink)=0.90 → tie → NoThink.
+        let mut within = OutcomeLearnedRouter::new(20, 0.10);
+        record_n(&mut within, task, ReasoningMode::NoThink, 20, 18); // 0.90
+        record_n(&mut within, task, ReasoningMode::Think, 20, 20); // 1.00
+        assert_eq!(within.route(task), ReasoningMode::NoThink);
+
+        // Think is 0.20 more accurate, beyond the λ cost → worth paying for: Think wins.
+        // value(Think)=1.00-0.10=0.90, value(NoThink)=0.80 → Think.
+        let mut beyond = OutcomeLearnedRouter::new(20, 0.10);
+        record_n(&mut beyond, task, ReasoningMode::NoThink, 20, 16); // 0.80
+        record_n(&mut beyond, task, ReasoningMode::Think, 20, 20); // 1.00
+        assert_eq!(beyond.route(task), ReasoningMode::Think);
+    }
+
+    #[test]
+    fn partial_cold_start_falls_back_to_heuristic() {
+        // Only ONE mode reaches min_samples; the class hasn't graduated, so route still defers to the
+        // heuristic and the class is absent from learned_decisions.
+        let mut r = OutcomeLearnedRouter::new(3, 0.05);
+        let task = "What is 5 ⊕ 6?"; // class "math" → heuristic says Think
+        record_n(&mut r, task, ReasoningMode::NoThink, 3, 0); // only NoThink sampled
+        assert_eq!(r.route(task), HeuristicRouter.route(task)); // == Think (fallback)
+        assert!(!r.learned_decisions().contains_key("math"));
+    }
 }
