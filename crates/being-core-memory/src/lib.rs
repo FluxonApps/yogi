@@ -377,6 +377,18 @@ fn recency_weight(now_ms: Ms, valid_at_ms: Ms, half_life_ms: i64) -> f32 {
     0.5f64.powf(age / half_life_ms as f64) as f32
 }
 
+/// Whitespace tokens, lowercased, ASCII-punctuation trimmed from the ends — but symbols like `⊕`
+/// (non-ASCII) survive, which is exactly what the lexical channel needs to catch.
+fn lexical_tokens(s: &str) -> BTreeSet<String> {
+    s.split_whitespace()
+        .map(|t| {
+            t.trim_matches(|c: char| c.is_ascii_punctuation())
+                .to_lowercase()
+        })
+        .filter(|t| !t.is_empty())
+        .collect()
+}
+
 /// One embedded memory item.
 #[derive(Clone, Debug, PartialEq)]
 pub struct VectorItem {
@@ -449,6 +461,66 @@ impl SemanticIndex {
         scored.truncate(k);
         scored
     }
+
+    /// Hybrid retrieval: blends the semantic+recency score with an IDF-weighted lexical match so
+    /// rare/exact tokens (symbols like `⊕`, IDs, code names) retrieve reliably — embedding-only search
+    /// misses these (D-M3-3 research). `lex_weight` in [0,1] mixes the lexical channel in; the lexical
+    /// score is the rarest matched query token's IDF, normalized by the rarest indexable query token.
+    #[allow(clippy::too_many_arguments)]
+    pub fn search_hybrid(
+        &self,
+        query: &[f32],
+        query_text: &str,
+        now_ms: Ms,
+        k: usize,
+        alpha: f32,
+        half_life_ms: i64,
+        lex_weight: f32,
+    ) -> Vec<Hit> {
+        let q = lexical_tokens(query_text);
+        let item_tokens: Vec<BTreeSet<String>> = self
+            .items
+            .iter()
+            .map(|it| lexical_tokens(&it.text))
+            .collect();
+        let n = self.items.len().max(1) as f32;
+        let idf = |tok: &str| -> f32 {
+            let df = item_tokens.iter().filter(|s| s.contains(tok)).count();
+            ((n + 1.0) / (df as f32 + 1.0)).ln()
+        };
+        // Normalizer: the rarest query token that appears anywhere in the index (so a single rare
+        // exact match scores ~1.0). 1e-6 floor avoids div-by-zero when nothing matches.
+        let norm = q
+            .iter()
+            .filter(|t| item_tokens.iter().any(|s| s.contains(*t)))
+            .map(|t| idf(t))
+            .fold(0.0f32, f32::max)
+            .max(1e-6);
+        let mut scored: Vec<Hit> = self
+            .items
+            .iter()
+            .enumerate()
+            .map(|(i, it)| {
+                let cos = cosine_similarity(query, &it.embedding);
+                let recency = recency_weight(now_ms, it.valid_at_ms, half_life_ms);
+                let sem = alpha * cos + (1.0 - alpha) * recency;
+                let lex = q
+                    .iter()
+                    .filter(|t| item_tokens[i].contains(*t))
+                    .map(|t| idf(t))
+                    .fold(0.0f32, f32::max)
+                    / norm;
+                Hit {
+                    id: it.id,
+                    text: it.text.clone(),
+                    score: (1.0 - lex_weight) * sem + lex_weight * lex,
+                }
+            })
+            .collect();
+        scored.sort_by(|a, b| b.score.total_cmp(&a.score));
+        scored.truncate(k);
+        scored
+    }
 }
 
 #[cfg(test)]
@@ -477,6 +549,17 @@ mod vector_tests {
         let q = e.embed("a cat question").unwrap();
         let hits = idx.search(&q, 0, 1, 1.0, 1000);
         assert_eq!(hits[0].id, 1);
+    }
+
+    #[test]
+    fn hybrid_surfaces_rare_symbol_when_embeddings_miss() {
+        let mut idx = SemanticIndex::new();
+        idx.add(1, vec![0.0, 1.0], "Rule for ⊕: a ⊕ b = a*b + a + b", 0);
+        idx.add(2, vec![1.0, 0.0], "unrelated note about the weather", 0);
+        let q = vec![1.0, 0.0]; // cosine favors item 2
+        assert_eq!(idx.search(&q, 0, 1, 1.0, 1000)[0].id, 2); // pure semantic misses the rule
+        let hyb = idx.search_hybrid(&q, "what is 5 ⊕ 6?", 0, 1, 1.0, 1000, 0.7);
+        assert_eq!(hyb[0].id, 1); // lexical ⊕ match pulls the rule to the top
     }
 
     #[test]
