@@ -45,6 +45,11 @@ path = "src/bin/evolve.rs"
 name = "evolve_transfer"
 path = "src/bin/evolve_transfer.rs"
 
+# M3 gap detection: which tasks the teacher (thinking) solves but the student (no-think) fails.
+[[bin]]
+name = "distill"
+path = "src/bin/distill.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }
@@ -57,3 +62,5 @@ being-loop = { path = "../being-loop" }
 being-lineage = { path = "../being-lineage" }
 # Ed25519 signer for the Colony's signed fork ledger (evolve bin).
 being-core-id = { path = "../being-core-id" }
+# M3 gap detection / promotion gate (distill bin).
+being-distill = { path = "../being-distill" }

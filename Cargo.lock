@@ -39,6 +39,7 @@ dependencies = [
  "being-core-economy",
  "being-core-id",
  "being-core-mutation",
+ "being-distill",
  "being-embed-openai",
  "being-lineage",
  "being-loop",
