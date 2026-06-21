@@ -4,6 +4,7 @@ members = [
     "crates/being-core-types",
     "crates/being-core-mutation",
     "crates/being-core-id",
+    "crates/being-core-journal",
 ]
 
 [workspace.package]
