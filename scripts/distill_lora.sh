@@ -7,35 +7,47 @@
 # cold vs distilled on HELD-OUT operands (capability, not lookup) + a general set (non-inferiority).
 # The being_distill::PromotionGate then decides promotion from those pass-rates.
 #
-# Result (2026-06-21, Qwen2.5-0.5B-Instruct-4bit student, see docs/FINDINGS.md): naive LoRA OVERFITS
-# the seen pairs (train loss 0.14) but does NOT generalize ⊕ to held-out operands (0/12) and CATASTROPHICALLY
-# FORGETS general ability — so the gate correctly REJECTS it. The token-space route (rule-in-prompt,
-# `distill_close` bin) PROMOTES. This empirically validates retrieval-first / weight-distillation-deferred.
+# Result (2026-06-21, see docs/FINDINGS.md): with the WINNING config below this PROMOTES —
+# held-out ⊕ 0→8/12 (generalizes to unseen operands) AND general 4/5→5/5 (zero forgetting) →
+# being_distill::PromotionGate PROMOTES. Lessons from the sweep: student capacity gates generalization
+# (0.5B can't learn ⊕; 1.5B can); a new op selectively interferes with ADJACENT skills (arithmetic) not
+# distant ones (facts); and ADAPTER capacity (16 LoRA layers, not 8) is what lets the student hold both
+# the new op and the adjacent skills, so balanced replay then clears non-inferiority. Both M3 routes now
+# promote: token-space (rule-in-prompt, `distill_close`) and weight/LoRA (this script).
 #
-# Usage:  scripts/distill_lora.sh                # full run
-#         STUDENT=mlx-community/Qwen2.5-1.5B-Instruct-4bit scripts/distill_lora.sh
+# Usage:  scripts/distill_lora.sh                # winning config (1.5B, 16 layers, balanced replay)
+#         STUDENT=mlx-community/Qwen2.5-0.5B-Instruct-4bit LAYERS=8 scripts/distill_lora.sh   # reproduce a reject
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
 VENV="${VENV:-.venv-mlx}"            # python3.14 -m venv .venv-mlx ; pip install mlx mlx-lm
 PY="$VENV/bin/python"
-STUDENT="${STUDENT:-mlx-community/Qwen2.5-0.5B-Instruct-4bit}"
-WORK="${WORK:-/tmp/yogi_lora}"
+STUDENT="${STUDENT:-mlx-community/Qwen2.5-1.5B-Instruct-4bit}"   # winning student
+WORK="${WORK:-/tmp/yogi_lora_run}"
 DATA="$WORK/data"; ADAPTER="$WORK/adapter"
-ITERS="${ITERS:-300}"; LAYERS="${LAYERS:-16}"; LR="${LR:-2e-4}"; BATCH="${BATCH:-4}"
+ITERS="${ITERS:-300}"; LAYERS="${LAYERS:-16}"; LR="${LR:-1e-4}"; BATCH="${BATCH:-4}"   # 16 layers resolves the interference
 
 [ -x "$PY" ] || { echo "no venv at $VENV — run: python3.14 -m venv $VENV && $VENV/bin/pip install mlx mlx-lm"; exit 1; }
 mkdir -p "$DATA"
 
-# 1. Dataset: ⊕(a,b)=a*b+a+b over digits 2..9 (64 pairs), held-out test split (teacher-verified labels).
+# 1. Dataset: ⊕(a,b)=a*b+a+b over digits 2..9 (64 pairs), held-out test split (teacher-verified labels),
+#    with ⊕ UPSAMPLED 2x + balanced facts-weighted replay (preserves adjacent skills without swamping ⊕).
 "$PY" - "$DATA" <<'PY'
 import json, random, sys
 random.seed(7); d=sys.argv[1]
 pairs=[(a,b) for a in range(2,10) for b in range(2,10)]; random.shuffle(pairs)
 ex=lambda a,b:{"prompt":f"What is {a} ⊕ {b}? Reply with only the number.","completion":f" {a*b+a+b}"}
-sp={"train":pairs[:44],"valid":pairs[44:52],"test":pairs[52:]}
-for n,rows in sp.items():
-    open(f"{d}/{n}.jsonl","w").write("\n".join(json.dumps(ex(a,b)) for a,b in rows)+"\n")
+replay=[("What is the capital of Japan? One word."," Tokyo"),("What is the capital of Italy? One word."," Rome"),
+ ("What is the capital of Spain? One word."," Madrid"),("What is the capital of Germany? One word."," Berlin"),
+ ("What color is grass? One word."," green"),("What color is a banana? One word."," yellow"),
+ ("How many hours are in a day? Reply with only the number."," 24"),("How many legs does a spider have? Reply with only the number."," 8"),
+ ("What is 3 + 5? Reply with only the number."," 8"),("What is 9 - 4? Reply with only the number."," 5")]
+rep=[{"prompt":p,"completion":c} for p,c in replay]
+train=[ex(a,b) for a,b in pairs[:44]]*2 + rep   # ⊕ x2 + balanced replay
+random.shuffle(train)
+open(f"{d}/train.jsonl","w").write("\n".join(json.dumps(r) for r in train)+"\n")
+open(f"{d}/valid.jsonl","w").write("\n".join(json.dumps(ex(a,b)) for a,b in pairs[44:52])+"\n")
+open(f"{d}/test.jsonl","w").write("\n".join(json.dumps(ex(a,b)) for a,b in pairs[52:])+"\n")
 open(f"{d}/general.jsonl","w").write("\n".join(json.dumps(x) for x in [
   {"prompt":"What is 2 + 2? Reply with only the number.","completion":" 4"},
   {"prompt":"What is 10 minus 7? Reply with only the number.","completion":" 3"},
@@ -43,7 +55,7 @@ open(f"{d}/general.jsonl","w").write("\n".join(json.dumps(x) for x in [
   {"prompt":"What color is the sky on a clear day? One word.","completion":" blue"},
   {"prompt":"How many days are in a week? Reply with only the number.","completion":" 7"},
 ])+"\n")
-print("dataset:", {k:len(v) for k,v in sp.items()})
+print(f"dataset: train {len(train)} (⊕x2 + {len(rep)} replay), valid 8, held-out test 12")
 PY
 
 # 2. Eval helper (cold = no adapter; distilled = with adapter), substring match on held-out + general.

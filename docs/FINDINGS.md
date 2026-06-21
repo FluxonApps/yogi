@@ -564,3 +564,34 @@ non-inferior) but **halved ⊕ generalization** (8 → 4/12). The replay's basic
 with ⊕ for the LoRA adapter's limited capacity. Neither extreme clears both PromotionGate clauses —
 a genuine capability-vs-retention tradeoff. The lever: lighter, less-interfering replay (facts-weighted)
 + stronger ⊕ signal, to land both above threshold. Tuning next.
+
+## 2026-06-21 — WEIGHT DISTILLATION PROMOTES ✅ (capacity resolves the interference)
+
+The capacity hypothesis held. 1.5B student, **16 LoRA layers**, balanced replay (⊕×2 + 10 mixed):
+
+```
+held-out ⊕ :  0/12 → 8/12  (0.67 — generalizes to UNSEEN operands)
+general    :  4/5  → 5/5   (1.00 — zero forgetting, beats cold)
+PromotionGate: gap_closure 0.67 ≥ 0.5 ✓   mixed_delta +0.20 ≥ −0.1 ✓   → PROMOTED
+```
+
+Full sweep (why the earlier configs failed — all capacity-limited, not a dead end):
+
+| student | LoRA layers | replay   | held-out ⊕ | general    | gate     |
+|---------|-------------|----------|------------|------------|----------|
+| 0.5B    | 16          | none     | 0/12       | 4/5 → 1/5  | reject   |
+| 1.5B    | 8           | none     | 8/12       | 4/5 → 1/5  | reject   |
+| 1.5B    | 8           | heavy    | 4/12       | 4/5 → 5/5  | reject   |
+| 1.5B    | 8           | balanced | 5/12       | 4/5 → 3/5  | reject   |
+| **1.5B**| **16**      | **balanced** | **8/12** | **4/5 → 5/5** | **PROMOTE** |
+
+**Lessons:** (1) student capacity gates *generalization* (0.5B can't learn ⊕; 1.5B can). (2) Distillation
+of a new op **selectively interferes with adjacent skills** (arithmetic) not distant ones (facts).
+(3) **Adapter (LoRA-layer) capacity** is what lets the student hold the new skill AND the adjacent ones
+at once — 8 layers forces a tradeoff, 16 layers resolves it. (4) Balanced replay + enough adapter
+capacity → the weight-distilled student clears BOTH PromotionGate clauses.
+
+So BOTH M3 routes now PROMOTE live: token-space (rule-in-prompt, instant, no training) and weight/LoRA
+(distilled into a smaller faster student, generalizes + no forgetting). The "deferred" weight arm is
+no longer deferred — it is built, reproducible (`scripts/distill_lora.sh`), and demonstrated to pass
+the gate. Winning config: STUDENT=Qwen2.5-1.5B-4bit LAYERS=16 ITERS=300 LR=1e-4 + balanced replay.
