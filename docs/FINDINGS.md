@@ -530,3 +530,23 @@ deferred). On a 0.5B/16 GB budget the token-space route is strictly better — i
 forget, while naive weight-distillation does neither, and the `PromotionGate` is what catches the bad
 weight-distill. The gate is no longer "gated": the capability is built and reproducible; the empirical
 verdict is that it's the wrong tool here. (Open lever: a larger student may generalize ⊕ — testing next.)
+
+## 2026-06-21 — weight distillation GENERALIZES at 1.5B; remaining blocker is forgetting (fix: replay)
+
+Re-ran the LoRA pipeline with a larger student (Qwen2.5-1.5B-Instruct-4bit):
+
+```
+                 held-out ⊕      general
+cold             0/12            4/5
+distilled(1.5B)  8/12 (0.67!)    1/5
+```
+
+**Capacity solved generalization:** the 1.5B student learns the ⊕ rule and applies it to UNSEEN
+operands (0 → 8/12) — genuine capability transfer via weights, not lookup. The 0.5B student couldn't
+(0/12); 1.5B can. So weight-distillation *works* given enough student capacity.
+
+**But naive LoRA still forgets** (general 4/5 → 1/5), so `PromotionGate` REJECTS on the non-inferiority
+clause alone (gap_closure 0.67 ✓, mixed_delta −0.6 ✗). The blocker is now precisely catastrophic
+forgetting, whose standard fix is **replay** — mixing general examples into the training set. Testing
+that next: if replay preserves the general set while keeping ⊕ generalization, the gate should finally
+PROMOTE a weight-distilled student.
