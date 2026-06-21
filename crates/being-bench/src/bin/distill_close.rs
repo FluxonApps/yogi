@@ -39,7 +39,11 @@ fn run(tasks: &[(String, String)], rules: &str) -> Vec<bool> {
 
 fn main() {
     eprintln!("M3 distillation flywheel (foreground — qwen3:8b thinking, cold vs distilled) ...");
-    let corpus = multi_skill_corpus(2, 7); // 2 fresh tasks per op
+    let seed = std::env::var("EVOLVE_SEED")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(7);
+    let corpus = multi_skill_corpus(2, seed); // 2 fresh tasks per op
     let oplus_rule = corpus.skills[0].clone(); // "Rule for ⊕: …"
 
     // Split the single-op tasks into the ⊕ DOMAIN and the ⊗/⊙ MIXED set (operations alternate ⊕,⊗,⊙).
