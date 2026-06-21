@@ -653,3 +653,26 @@ drift gate's value is precisely that it told us *when* fitness-based selection a
 anti-theater result: it did not rubber-stamp "selection wins" where selection genuinely doesn't.
 (Practical note: a drift acceptance that can fire needs a behavior axis decorrelated from fitness, so
 niches carry quality variance — same lesson as the descriptor-collapse finding, one level up.)
+
+## 2026-06-21 — CAPSTONE: one fully-integrated being, live (durable + sandboxed + model-backed)
+
+`full_being` composes every seam built this session into a single live being on qwen3:8b:
+
+```
+turn 0: acted=true obs=["respond:4"]        turn 1: acted=true obs=["respond:Paris."]
+durable+sandboxed being: journal_len=4 verifies=true
+after restart:           journal_len=4 verifies=true   (signed chain recovered from disk)
+```
+
+A single being that is, simultaneously:
+- **model-backed** — real qwen3 proposer answered (4; Paris),
+- **sandboxed** — executor wrapped in the M4 capability broker (deny-by-default, fail-closed) on the
+  live turn path; pure responses pass, ungranted effects would be denied,
+- **durable** — its signed hash-chained journal is a DurableJournal; after a process restart it rebuilt
+  from disk (journal_len 4 → 4) and still `verify_chain`s,
+- **metabolically bounded** — supervisor reserve/attest, reaper authority intact.
+
+This is the integration proof: the learning/distillation/evolution/isolation/persistence layers aren't
+just unit-tested in isolation — they compose into one being that runs, persists, and recovers. With the
+M6 + M3 live demonstrations and the durable crash-recoverable being, the local Yogi build is a coherent,
+end-to-end trust-native self-evolving being.
