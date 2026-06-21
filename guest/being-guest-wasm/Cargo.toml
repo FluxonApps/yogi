@@ -1,0 +1,19 @@
+# Standalone (its own [workspace], excluded from the parent) — builds ONLY for wasm32-unknown-unknown.
+# The parent workspace never compiles this; its prebuilt artifact is committed into
+# ../../crates/being-sandbox-wasm/guest.wasm and loaded there via include_bytes!, so the green-gate
+# (cargo test --all on the host target) never builds wasm. Rebuild with scripts/build_guest_wasm.sh.
+[package]
+name = "being-guest-wasm"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+panic = "abort"
+strip = true
+
+[workspace]

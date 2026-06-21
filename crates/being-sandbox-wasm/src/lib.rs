@@ -8,24 +8,19 @@
 //! function routes every request through [`being_sandbox::Broker::authorize`]. So a compromised or
 //! self-modified executor still can only do what the operator granted.
 //!
-//! Here the "guest" is a tiny WAT module standing in for the executor: it forwards an `(kind, arg)`
-//! effect request to the host import and returns the verdict. The point being demonstrated is the
-//! *boundary*, not the guest's logic — [`Sandbox::guest_imports`] proves the guest's only authority is
-//! the broker call.
+//! The guest here is the **real executor compiled to wasm32** (`guest/being-guest-wasm`, prebuilt into
+//! [`GUEST_WASM`]): actual Rust executor logic that routes each effect through the broker and only
+//! *performs* it when granted. [`Sandbox::guest_imports`] proves its only authority is the broker call;
+//! [`Sandbox::execute`] returns the guest's computed result, showing real compiled-Rust logic ran under
+//! the boundary (not just a forwarding stub).
 
 use being_sandbox::{Authorization, Broker, CapabilitySet, EffectRequest};
 use wasmtime::{Caller, Engine, Linker, Module, Store};
 
-// The guest's ONLY import is `host.request_effect`. No WASI, no memory exports, nothing else — so it
-// has zero ambient authority and can only act by asking the broker-mediated host function.
-const GUEST_WAT: &str = r#"
-(module
-  (import "host" "request_effect" (func $req (param i32 i32) (result i32)))
-  (func (export "act") (param i32 i32) (result i32)
-    local.get 0
-    local.get 1
-    call $req))
-"#;
+// The real executor guest, compiled from `guest/being-guest-wasm` to wasm32 and committed here (rebuild
+// with `scripts/build_guest_wasm.sh`). Embedded so the green-gate never builds wasm. Its ONLY import is
+// `host.request_effect` — no WASI, no memory exports, nothing else — so it has zero ambient authority.
+const GUEST_WASM: &[u8] = include_bytes!("../guest.wasm");
 
 /// Effect-kind codes the guest passes across the i32 ABI.
 pub const KIND_QUERY: i32 = 0;
@@ -57,7 +52,8 @@ impl Default for Sandbox {
 impl Sandbox {
     pub fn new() -> Self {
         let engine = Engine::default();
-        let module = Module::new(&engine, GUEST_WAT).expect("guest WAT is valid");
+        let module =
+            Module::from_binary(&engine, GUEST_WASM).expect("committed guest.wasm is valid");
         Self { engine, module }
     }
 
@@ -80,6 +76,19 @@ impl Sandbox {
         kind: i32,
         arg: i32,
     ) -> Authorization {
+        self.execute(caps, hosts, kind, arg).0
+    }
+
+    /// Like [`request`](Self::request) but also returns the guest's own computed result from `act` — the
+    /// real executor's output: `> 0` when it performed the (granted) effect, `-1` when the broker denied
+    /// it. Demonstrates that real compiled-Rust logic ran inside the sandbox and obeyed the verdict.
+    pub fn execute(
+        &self,
+        caps: CapabilitySet,
+        hosts: Vec<String>,
+        kind: i32,
+        arg: i32,
+    ) -> (Authorization, i32) {
         let mut store = Store::new(
             &self.engine,
             SandboxState {
@@ -121,12 +130,13 @@ impl Sandbox {
         let act = instance
             .get_typed_func::<(i32, i32), i32>(&mut store, "act")
             .expect("guest exports act");
-        act.call(&mut store, (kind, arg)).expect("guest call");
-        store
+        let result = act.call(&mut store, (kind, arg)).expect("guest call");
+        let auth = store
             .data()
             .last
             .clone()
-            .unwrap_or(Authorization::Denied("guest requested no effect"))
+            .unwrap_or(Authorization::Denied("guest requested no effect"));
+        (auth, result)
     }
 }
 
@@ -146,6 +156,28 @@ mod tests {
         // The whole point: the guest's ONLY import is the broker-mediated host fn — no WASI, no fs/net.
         let sb = Sandbox::new();
         assert_eq!(sb.guest_imports(), vec!["host::request_effect".to_string()]);
+    }
+
+    #[test]
+    fn real_guest_executes_on_grant_and_not_on_denial() {
+        // The compiled-Rust guest performs the effect (returns arg*2 > 0) only when the broker grants,
+        // and returns -1 when denied — proving real executor logic ran inside the sandbox and obeyed
+        // the verdict (not just a forwarding stub).
+        // Use KIND_PAYMENT, whose `arg` is a numeric value (egress overloads `arg` as a host index).
+        let sb = Sandbox::new();
+        let caps = CapabilitySet::granted([Capability::Payment {
+            max_microdollars: 1000,
+        }]);
+        let (granted, result) = sb.execute(caps, vec![], KIND_PAYMENT, 21);
+        assert!(granted.is_granted());
+        assert_eq!(
+            result, 42,
+            "guest should have performed the granted effect (21*2)"
+        );
+
+        let (denied, result) = sb.execute(CapabilitySet::none(), vec![], KIND_PAYMENT, 21);
+        assert!(!denied.is_granted());
+        assert_eq!(result, -1, "guest must NOT perform a denied effect");
     }
 
     #[test]
