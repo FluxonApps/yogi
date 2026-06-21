@@ -57,3 +57,32 @@ skill-transfer (~0.8+).** Prime suspects, in order:
 realized effect at 8B + no_think is too small. The bench correctly refused to certify, and the
 negative result names the next experiments. This is the project's ethos working — it won't lie to
 itself about compounding.
+
+## 2026-06-21 — transfer-compounding CERTIFIED (the /no_think fix)
+
+Applied the research's cheapest-first fixes (thinking ON: drop `/no_think`, temp 0.6 / top_p 0.95 /
+top_k 20, max_tokens 2048; deterministic rule injection; a worked-example skill note). Re-ran the
+same 15-task cold-failing ⊕ transfer corpus:
+
+```
+cold (no rule)     mean 0.000
+with injected rule mean 1.000
+paired delta +1.000  CI [1.000, 1.000]  compounds=TRUE  -> CERTIFIED
+```
+
+**The prime hypothesis was right: `/no_think` removed the reasoning scratchpad needed to APPLY a
+rule.** With thinking enabled the being applies a learned rule to 15 brand-new operand pairs
+perfectly. This is the **first certified token-space compounding result** — a learned skill causally
+lifts cold-failing *transfer* tasks (new operands; the answer is never stored) from 0 to 1, CI
+excludes zero. The compounding gate fires on this task.
+
+**Honest scope.** Controlled synthetic operation + *deterministic* rule injection (to isolate the
+APPLY mechanism from retrieval). It certifies that the being can apply a learned skill to genuinely
+new inputs once allowed to reason — not yet that the full retrieval→apply loop self-certifies on a
+messy corpus. Next: certify end-to-end through the (now hybrid-wired) retrieval path, and on a
+less-synthetic task. The 8B "weak ICL" caveat is mooted for this rule-application class when thinking
+is on.
+
+**Config lesson (load-bearing).** Never `/no_think` a task that needs reasoning. The being's proposer
+should run in thinking mode for reasoning/compounding work; `/no_think` is only for trivial recall
+where latency matters.
