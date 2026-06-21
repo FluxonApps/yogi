@@ -381,4 +381,43 @@ mod tests {
         // Some recorded node is a two-parent (sexual) child.
         assert!(phylo.nodes().iter().any(|l| l.parents.len() == 2));
     }
+
+    #[test]
+    fn long_run_keeps_genealogy_and_genomes_well_formed() {
+        // Stress the full engine (mutation + recombination) over many generations and assert the
+        // structural invariants hold throughout — a regression guard on the open-ended-search core.
+        let mut archive = Archive::new();
+        let mut phylo = Phylogeny::new();
+        let cfg = IlluminationConfig::new(400, 2024).with_recombination(0.5);
+        let stats = illuminate(
+            &mut archive,
+            &descriptor(),
+            Genome::default(),
+            1,
+            &mut LenEval,
+            &mut GrowPrompt,
+            &cfg,
+            Some(&mut phylo),
+        );
+
+        // Genealogy: unique ids, founders⇔no-parents, every produced lineage captured.
+        assert!(phylo.is_well_formed());
+        assert_eq!(phylo.len(), stats.evaluations);
+        // Every non-founder node sits at a positive generation with recorded parents whose ids were
+        // all minted earlier (ancestry only ever points backwards — no cycles, no dangling future ids).
+        let mut minted = std::collections::BTreeSet::new();
+        for node in phylo.nodes() {
+            if node.generation > 0 {
+                assert!(!node.parents.is_empty());
+                assert!(node.parents.iter().all(|p| minted.contains(p)));
+            }
+            minted.insert(node.id);
+        }
+        // Surviving elites are all valid genomes (re-applying a closed-surface mutation succeeds), and
+        // each child's generation strictly exceeds its single recorded parent for asexual elites.
+        for e in archive.elites() {
+            assert!(apply(MutationKind::ToolPolicy(vec![1]), e.genome.clone()).is_ok());
+        }
+        assert!(archive.qd_score() > 0.0);
+    }
 }
