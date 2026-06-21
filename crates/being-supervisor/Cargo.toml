@@ -1,0 +1,9 @@
+[package]
+name = "being-supervisor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+being-core-types = { path = "../being-core-types" }
+being-core-economy = { path = "../being-core-economy" }

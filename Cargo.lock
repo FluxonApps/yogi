@@ -73,6 +73,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-supervisor"
+version = "0.0.0"
+dependencies = [
+ "being-core-economy",
+ "being-core-types",
+]
+
+[[package]]
 name = "blake3"
 version = "1.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

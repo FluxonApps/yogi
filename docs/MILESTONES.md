@@ -34,7 +34,7 @@ committed tail is deterministic.* — **met** (26 tests, clippy clean; commits c
 *Account + supervisor `reserve`/`settle` + the per-step state machine + the **reaper**.*
 
 - [x] `being-core-economy` — single-ledger Account: maintenance-first, `reserve_floor` + per-bet cap, category telemetry, credit-only inflow (D-M1-2) · 6 tests
-- [ ] `being-supervisor` — `SupervisorPort` façade, private authority, out-of-band watchdog kill, irreversible `Death`/reaper (D-M1-1, D-M1-3)
+- [x] `being-supervisor` — `SupervisorPort` façade, private authority, out-of-band watchdog thread, irreversible `Death`/reaper (insolvency · timeout · operator kill), first-cause-wins (D-M1-1, D-M1-3) · 6 tests
 - [ ] per-step state machine + crash recovery
 - [ ] wire into `being-runtime` turn (committer reserves; turn debits; insolvency → reaper)
 
