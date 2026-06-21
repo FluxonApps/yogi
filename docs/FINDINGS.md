@@ -194,3 +194,29 @@ degrade, so top-2 is a strict win over top-1: it adds composition at no cost to 
 This is **L0/L1 self-improvement composing into genuinely new behavior** without any code-writing — the
 primitives+skills thesis (D-RSI-1) demonstrated: memory + verifier-fed skills + precise-but-plural
 retrieval = transfer *and* composition, certified, on a local 8B. `SKILL_RETRIEVAL_K=2` kept.
+
+## 2026-06-21 — M6 engine + entry gate built and the acceptance experiment FIRES (loop-safe, no model)
+
+Built the open-ended-search engine and its honesty gate, then ran the M6 acceptance methodology
+end-to-end without any inference (synthetic landscape; the loop never loads a model):
+
+- **`being-lineage::illuminate`** — MAP-Elites illumination: sample a parent elite (branch from any
+  ancestor), fork, vary via the **closed `MutationKind` surface**, evaluate (injected `Evaluator`),
+  place the child in its behavior cell. `BehaviorDescriptor` maps behavior→cell; QD-score/mean-fitness
+  report progress. Variation can never escape the sanctioned set — the M0 safety invariant holds across
+  generations by construction.
+- **`being-bench::neutral_drift_gate`** — the M6 entry gate. Pairs the selection arm against a matched
+  **neutral-drift control** (identical eval budget + variation; only retention differs) via the
+  existing paired-bootstrap CI. Fires iff selection beats drift by a margin — else reports the honest
+  breeding-program-not-evolution null. (`Retention::{Elitist,NeutralDrift}` is the one knob that
+  differs between arms.)
+- **Integration experiment** (`being-bench/tests/m6_acceptance.rs`): on a noisy landscape, elitist
+  retention captures each niche's max (mean-fitness ~0.96) while drift random-walks around the mean
+  (~0.5). Across 12 paired replicates the advantage CI excludes the margin → **gate FIRES**.
+
+**Interpretation.** This is a *methodology* proof, not yet a real-being result: it shows the engine and
+the gate compose to detect genuine selection signal and to reject drift — the machinery is correct and
+fires only when selection actually does work. The real M6 result (signal vs drift on a model-scored
+landscape, fork as a signed crash-recoverable snapshot) is the next foreground step. The dangerous
+parts — reproduction/death wired to a live population — remain a deliberate, reviewable boundary even
+though the gate now demonstrably distinguishes signal from drift.

@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use being_core_mutation::Genome;
 
 mod evolve;
-pub use evolve::{illuminate, Evaluation, Evaluator, IlluminationStats, Rng, Variator};
+pub use evolve::{illuminate, Evaluation, Evaluator, IlluminationStats, Retention, Rng, Variator};
 
 /// Identifies a being within a lineage (the operator/registry assigns ids; this crate only records).
 pub type BeingId = u64;
@@ -121,6 +121,29 @@ impl Archive {
                 true
             }
         }
+    }
+
+    /// **Neutral-drift retention** — always install the candidate as the cell's occupant, *ignoring*
+    /// fitness (latest-wins random walk within each cell). This is the matched control arm for the M6
+    /// gate: identical eval budget and variation as elitist [`consider`](Archive::consider), the ONLY
+    /// difference being that retention is not fitness-based. Returns `true` iff it opened a new cell.
+    pub fn consider_latest(
+        &mut self,
+        cell: Cell,
+        lineage: Lineage,
+        genome: Genome,
+        fitness: f64,
+    ) -> bool {
+        let is_new = !self.cells.contains_key(&cell);
+        self.cells.insert(
+            cell,
+            Elite {
+                lineage,
+                genome,
+                fitness,
+            },
+        );
+        is_new
     }
 
     pub fn elite(&self, cell: &[i64]) -> Option<&Elite> {

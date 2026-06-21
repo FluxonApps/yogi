@@ -65,6 +65,15 @@ impl Rng {
     }
 }
 
+/// Which retention rule the illumination loop uses when placing a child in its cell.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Retention {
+    /// Keep the best-per-cell (real MAP-Elites selection) — fitness decides who survives.
+    Elitist,
+    /// Latest-wins, fitness ignored (the matched neutral-drift control for the M6 gate).
+    NeutralDrift,
+}
+
 /// A summary of one illumination run (reported, not acted on — selection retention happens inside the
 /// archive; nothing is killed).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -92,7 +101,12 @@ pub fn illuminate(
     variator: &mut dyn Variator,
     iterations: usize,
     seed: u64,
+    retention: Retention,
 ) -> IlluminationStats {
+    let consider = |archive: &mut Archive, cell, lineage, genome, fitness| match retention {
+        Retention::Elitist => archive.consider(cell, lineage, genome, fitness),
+        Retention::NeutralDrift => archive.consider_latest(cell, lineage, genome, fitness),
+    };
     let mut rng = Rng::new(seed);
     let mut next_id = founder_id;
     let mut stats = IlluminationStats {
@@ -105,7 +119,8 @@ pub fn illuminate(
         next_id = founder_id + 1;
         let ev = evaluator.evaluate(&seed_genome);
         stats.evaluations += 1;
-        if archive.consider(
+        if consider(
+            archive,
             descriptor.cell(&ev.behavior),
             founder,
             seed_genome,
@@ -141,7 +156,8 @@ pub fn illuminate(
 
         let ev = evaluator.evaluate(&genome);
         stats.evaluations += 1;
-        if archive.consider(
+        if consider(
+            archive,
             descriptor.cell(&ev.behavior),
             child.lineage,
             genome,
@@ -200,6 +216,7 @@ mod tests {
             &mut GrowPrompt,
             50,
             123,
+            Retention::Elitist,
         );
         // Seed + 50 candidates were evaluated.
         assert_eq!(stats.evaluations, 51);
@@ -227,6 +244,7 @@ mod tests {
                 &mut GrowPrompt,
                 30,
                 77,
+                Retention::Elitist,
             );
             (s, a.len(), a.qd_score(), a.best().unwrap().fitness)
         };
@@ -257,6 +275,7 @@ mod tests {
             &mut GrowPrompt,
             20,
             5,
+            Retention::Elitist,
         );
         assert_eq!(archive.len(), 1); // one niche
         let elite = archive.elite(&[0]).unwrap();

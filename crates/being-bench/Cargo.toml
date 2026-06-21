@@ -43,3 +43,7 @@ being-supervisor = { path = "../being-supervisor" }
 being-core-economy = { path = "../being-core-economy" }
 being-core-mutation = { path = "../being-core-mutation" }
 being-loop = { path = "../being-loop" }
+
+[dev-dependencies]
+# M6 acceptance integration test: drive the real MAP-Elites engine through the real drift gate.
+being-lineage = { path = "../being-lineage" }
