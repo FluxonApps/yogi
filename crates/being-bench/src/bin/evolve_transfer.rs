@@ -105,6 +105,10 @@ fn main() {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8);
+    let seed = std::env::var("EVOLVE_SEED")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(42);
 
     let corpus = multi_skill_corpus(1, 7); // 1 task per op → 3 single-op tasks (⊕,⊗,⊙)
     let tasks: Vec<(String, String)> = corpus
@@ -120,7 +124,7 @@ fn main() {
     // 3 binary niche axes (one per op solved) → 8 reachable cells.
     let descriptor =
         BehaviorDescriptor::bounded([(0.0, 1.0, 2), (0.0, 1.0, 2), (0.0, 1.0, 2)]).unwrap();
-    let cfg = IlluminationConfig::new(iters, 42).with_recombination(0.5);
+    let cfg = IlluminationConfig::new(iters, seed).with_recombination(0.5);
     let mut colony = Colony::new(descriptor.clone(), Ed25519Signer::from_seed([42; 32]), 1);
 
     let stats = colony.run(
