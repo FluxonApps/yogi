@@ -87,6 +87,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-colony"
+version = "0.0.0"
+dependencies = [
+ "being-core-id",
+ "being-core-mutation",
+ "being-core-types",
+ "being-lineage",
+ "being-persist",
+]
+
+[[package]]
 name = "being-core-economy"
 version = "0.0.0"
 dependencies = [
