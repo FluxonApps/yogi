@@ -20,6 +20,11 @@ path = "src/bin/compound.rs"
 name = "selfimprove"
 path = "src/bin/selfimprove.rs"
 
+# Transfer-compounding certification (made-up operation; loads qwen3:8b + nomic). Foreground only.
+[[bin]]
+name = "transfer"
+path = "src/bin/transfer.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }

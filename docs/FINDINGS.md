@@ -32,3 +32,28 @@ A larger, harder, provenance-isolated corpus the model reliably fails cold on a 
 sized with enough tasks + replications to beat run-to-run variance (the derived replication count of
 build-spec §7). This is corpus-curation + foreground-run work, not loop-buildable; it's the concrete
 next step toward un-suspending the metabolism/evolution language and opening the M6 gate.
+
+## 2026-06-21 — transfer-compounding certification (NEGATIVE, informative)
+
+Built a real transfer corpus (D-M3-3): a made-up operation a (+) b = a*b + a + b the model cannot know
+cold, 20 seeded cold-failing tasks, fresh being per task, **cold vs. with the learned RULE skill**.
+
+```
+cold (no skill)    mean 0.000   (correct — the op is unknowable cold)
+with learned skill mean 0.100   (the rule helped only 2/20)
+paired delta +0.100  CI [0.000, 0.250]  compounds=FALSE  -> NOT certified
+```
+
+**The transfer mechanism is wired and directionally real (0.00 -> 0.10), but far below a working
+skill-transfer (~0.8+).** Prime suspects, in order:
+1. **`/no_think` sabotages reasoning** — the proposer prefixes `/no_think` (for latency), but applying
+   a*b+a+b needs step-by-step computation; greedy no-think blurts a wrong number even with the rule in
+   context. **Next: re-run with thinking ON.**
+2. **Retrieval miss** — `nomic-embed-text` may not place the query near the rule note (rare symbol);
+   diagnostic: inject the skill deterministically to isolate retrieval-vs-application.
+3. **8B in-context-learning ceiling** (research caveat) — qwen3:8b may apply a told rule weakly.
+
+**Honest status:** token-space skill-transfer is **not yet certified**; the mechanism works but the
+realized effect at 8B + no_think is too small. The bench correctly refused to certify, and the
+negative result names the next experiments. This is the project's ethos working — it won't lie to
+itself about compounding.

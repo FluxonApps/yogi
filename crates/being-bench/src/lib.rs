@@ -213,6 +213,40 @@ pub fn anti_theater(
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Transfer corpus (D-M3-3): measures TRANSFER, not answer-lookup. A made-up operation the model
+// cannot know cold; instances use fresh seeded operands, so passing requires APPLYING a learned
+// rule to new inputs (the rule is the skill; the answer is never stored). Deterministic generator.
+// ---------------------------------------------------------------------------------------------
+
+/// The learnable rule (the skill). Self-contained + retrievable; the answer to any specific instance
+/// is NOT here — only the method, so solving a new operand pair is transfer, not recall.
+pub const TRANSFER_RULE: &str =
+    "To compute a ⊕ b, calculate (a times b) plus a plus b. For example 2 ⊕ 3 = 2*3+2+3 = 11.";
+
+/// One transfer task over `⊕`.
+#[derive(Clone, Debug)]
+pub struct TransferTask {
+    pub prompt: String,
+    pub expected: String,
+}
+
+/// `n` deterministic transfer tasks (seeded operands). Each answer = `a*b + a + b`; a cold guess of
+/// `a+b` or `a*b` is always wrong (they differ by ≥4), so the bare model reliably fails without the rule.
+pub fn transfer_corpus(n: usize, seed: u64) -> Vec<TransferTask> {
+    let mut rng = Xorshift64::new(seed);
+    (0..n)
+        .map(|_| {
+            let a = (rng.next() % 8 + 2) as i64; // 2..=9
+            let b = (rng.next() % 8 + 2) as i64;
+            TransferTask {
+                prompt: format!("Compute {a} ⊕ {b}. Reply with just the number."),
+                expected: (a * b + a + b).to_string(),
+            }
+        })
+        .collect()
+}
+
 /// A small frozen suite for the foreground demo (provenance-isolated: fixed here, never from the
 /// being's own failures).
 pub fn default_frozen_suite() -> Vec<BenchTask> {
@@ -267,6 +301,19 @@ pub fn default_frozen_suite() -> Vec<BenchTask> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn transfer_corpus_is_deterministic_and_well_formed() {
+        let c1 = transfer_corpus(10, 7);
+        let c2 = transfer_corpus(10, 7);
+        assert_eq!(c1.len(), 10);
+        let p1: Vec<&str> = c1.iter().map(|t| t.prompt.as_str()).collect();
+        let p2: Vec<&str> = c2.iter().map(|t| t.prompt.as_str()).collect();
+        assert_eq!(p1, p2); // deterministic for a seed
+        assert!(c1
+            .iter()
+            .all(|t| t.expected.parse::<i64>().map(|v| v >= 8).unwrap_or(false)));
+    }
 
     #[test]
     fn cold_failing_indices_selects_only_failures() {
