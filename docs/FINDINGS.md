@@ -734,3 +734,16 @@ committed to the durable ledger (capped at max_size). Selection is purely econom
 generations an earner lineage reproduces and fills the niche while a loafer lineage starves to
 extinction. Distinct from the genome-archive Colony (QD search, no economy/death) — this is Darwinian
 selection by solvency on live beings. 20 crates, 195 tests, green.
+
+## 2026-06-22 — sexual reproduction (recombination) in the live economic Population
+
+Extended being_colony::Population with sexual reproduction (cfg.sexual): two solvent parents recombine
+via fork2_signed (per-skill crossover over the union — the mechanism M6 illumination used to assemble
+the all-3-skill solver), else asexual fork. So recombination now runs inside a LIVE, economically-
+selected population (death by insolvency, reproduction by signed fork), not just the genome archive.
+Test: two lineages each carrying a different skill, both kept solvent, produce a recombinant child
+carrying BOTH skills. The closed MutationKind surface still bounds every child. Evolutionary operators
+now in the live population: selection (economic) + crossover (sexual) + death (reaper). The remaining
+operator — point mutation of offspring via the closed surface — is the next buildable increment (a
+caller-supplied Variator over offspring genomes); recombination already supplies variation meanwhile.
+20 crates, 196 tests, green.
