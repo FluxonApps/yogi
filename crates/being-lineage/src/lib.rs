@@ -11,6 +11,8 @@
 //! inherits the genome verbatim; it varies later only through the closed [`being_core_mutation`]
 //! surface, so the safety invariant (no forbidden mutation is representable) holds across generations.
 
+use std::collections::BTreeMap;
+
 use being_core_mutation::Genome;
 
 /// Identifies a being within a lineage (the operator/registry assigns ids; this crate only records).
@@ -60,6 +62,80 @@ pub fn fork(parent: &Lineage, parent_genome: &Genome, child_id: BeingId) -> Offs
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// MAP-Elites archive (M6 substrate; GATED). DGM/AlphaEvolve keep an archive and branch off any
+// ancestor — the engine of *open-ended* search (keep diverse stepping-stones, not one hill-climb).
+// This stores the best member per behavior-descriptor cell. **SELECTION IS OFF**: it only stores and
+// queries; it never reproduces, scores, or kills. Pure. Driving reproduction/death from this archive
+// is the gated step that needs human review before it is enabled.
+// ---------------------------------------------------------------------------------------------
+
+/// A behavior-descriptor cell key (discretized behavior coordinates). Two members in the same cell
+/// compete; different cells coexist (that is what preserves diversity).
+pub type Cell = Vec<i64>;
+
+/// The best member found so far for one cell.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Elite {
+    pub lineage: Lineage,
+    pub genome: Genome,
+    pub fitness: f64,
+}
+
+/// A MAP-Elites archive: best-per-cell store. No selection loop — storage + queries only.
+#[derive(Default)]
+pub struct Archive {
+    cells: BTreeMap<Cell, Elite>,
+}
+
+impl Archive {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.cells.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.cells.is_empty()
+    }
+
+    /// Consider a member for its cell; keep it iff the cell is empty or it strictly beats the current
+    /// elite. Returns `true` if it became (or replaced) the cell's elite. (Pure storage — no death.)
+    pub fn consider(&mut self, cell: Cell, lineage: Lineage, genome: Genome, fitness: f64) -> bool {
+        match self.cells.get(&cell) {
+            Some(e) if e.fitness >= fitness => false,
+            _ => {
+                self.cells.insert(
+                    cell,
+                    Elite {
+                        lineage,
+                        genome,
+                        fitness,
+                    },
+                );
+                true
+            }
+        }
+    }
+
+    pub fn elite(&self, cell: &[i64]) -> Option<&Elite> {
+        self.cells.get(cell)
+    }
+
+    pub fn elites(&self) -> impl Iterator<Item = &Elite> {
+        self.cells.values()
+    }
+
+    /// The highest-fitness elite across all cells (the current global best — *reported*, not selected).
+    pub fn best(&self) -> Option<&Elite> {
+        self.cells
+            .values()
+            .max_by(|a, b| a.fitness.total_cmp(&b.fitness))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use being_core_mutation::{apply, MutationKind};
@@ -85,6 +161,23 @@ mod tests {
         assert_eq!(child.lineage.generation, 1);
         assert_eq!(child.lineage.parents, vec![1]);
         assert_eq!(child.genome, pg); // inherited verbatim
+    }
+
+    #[test]
+    fn archive_keeps_best_per_cell_and_reports_global_best() {
+        let mut a = Archive::new();
+        let g = Genome::default;
+        // empty cell → inserted
+        assert!(a.consider(vec![0], Lineage::founder(1), g(), 0.5));
+        // same cell, worse → rejected; better → replaces
+        assert!(!a.consider(vec![0], Lineage::founder(2), g(), 0.4));
+        assert!(a.consider(vec![0], Lineage::founder(3), g(), 0.9));
+        assert_eq!(a.elite(&[0]).unwrap().fitness, 0.9);
+        // a different cell coexists (diversity preserved)
+        assert!(a.consider(vec![1], Lineage::founder(4), g(), 0.6));
+        assert_eq!(a.len(), 2);
+        // global best across cells
+        assert_eq!(a.best().unwrap().fitness, 0.9);
     }
 
     #[test]
