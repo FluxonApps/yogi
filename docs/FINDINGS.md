@@ -457,3 +457,24 @@ pre-flagged as likely-underpowered at feasible scale. The harness (`EVOLVE_DRIFT
 This does not weaken the M6 result: the live illumination evidence already stands on its own —
 recombination assembling the all-3-skills solver (1.0), reproduced across seeds, cold-founder failure
 confirming genuine transfer. The drift gate is the formal *cherry on top*; the cake is baked.
+
+## 2026-06-21 — live M3 gap detection works: the gap IS the reasoning task
+
+Ran `distill` (qwen3:8b twice — no-think student vs thinking teacher) on the frozen suite:
+
+```
+student (/no_think) pass-rate = 0.90   teacher (thinking) pass-rate = 1.00
+gap (teacher-success ∩ student-weak) = 1 task:  [anagram] "Rearrange the letters of 'silent' …" (→ listen)
+```
+
+`being_distill::gap_set` correctly isolated, on the live model, the one task the weak student drops but
+the teacher solves — the **anagram**, which genuinely needs a scratchpad. Three things at once:
+1. **Gap detection is real end-to-end** — the M3 target set is computed live, not hypothesised.
+2. **Empirical re-confirmation of "never /no_think a reasoning task"** — the gap is exactly the
+   reasoning task; no-think drops it, thinking gets it.
+3. **Explains the frozen-suite M6 collapse** — the illumination founder scored 0.90 precisely because it
+   consistently failed this single hard task; that's why prompt-style variants couldn't spread.
+
+The M3 flywheel now has its live target + the promotion gate (`PromotionGate`, both clauses). The only
+remaining piece is the heavy/foreground LoRA training to close the gap — which needs a student-size
+decision (16 GB budget).
