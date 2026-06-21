@@ -126,6 +126,40 @@ impl<S: Signer> MemoryJournal<S> {
     }
 }
 
+/// The journal interface the runtime depends on — so a `Being` can hold an in-memory [`MemoryJournal`]
+/// *or* a durable one behind the same seam (the plug-point for build-spec §5 persistence). `append`
+/// returns `io::Result` because a durable journal can fail to fsync (the in-memory one is always `Ok`);
+/// `verify_chain` re-checks the whole signed hash-chain.
+pub trait Journal {
+    fn append(&mut self, kind: &str, payload: Vec<u8>) -> std::io::Result<Seq>;
+    fn verify_chain(&self) -> bool;
+    fn head(&self) -> (Seq, Hash);
+    fn len(&self) -> usize;
+    fn is_empty(&self) -> bool;
+    fn did(&self) -> &Did;
+}
+
+impl<S: Signer> Journal for MemoryJournal<S> {
+    fn append(&mut self, kind: &str, payload: Vec<u8>) -> std::io::Result<Seq> {
+        Ok(MemoryJournal::append(self, kind, payload)) // in-memory append never fails
+    }
+    fn verify_chain(&self) -> bool {
+        MemoryJournal::verify_chain(self)
+    }
+    fn head(&self) -> (Seq, Hash) {
+        MemoryJournal::head(self)
+    }
+    fn len(&self) -> usize {
+        MemoryJournal::len(self)
+    }
+    fn is_empty(&self) -> bool {
+        MemoryJournal::is_empty(self)
+    }
+    fn did(&self) -> &Did {
+        MemoryJournal::did(self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

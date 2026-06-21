@@ -86,6 +86,29 @@ impl<S: Signer> DurableJournal<S> {
     }
 }
 
+/// `DurableJournal` plugs into the runtime's [`being_core_journal::Journal`] seam, so a `Being` can be
+/// constructed durable behind the same interface as the in-memory one (the §5 persistence plug-point).
+impl<S: Signer> being_core_journal::Journal for DurableJournal<S> {
+    fn append(&mut self, kind: &str, payload: Vec<u8>) -> io::Result<Seq> {
+        DurableJournal::append(self, kind, payload)
+    }
+    fn verify_chain(&self) -> bool {
+        DurableJournal::verify_chain(self)
+    }
+    fn head(&self) -> (Seq, Hash) {
+        DurableJournal::head(self)
+    }
+    fn len(&self) -> usize {
+        DurableJournal::len(self)
+    }
+    fn is_empty(&self) -> bool {
+        DurableJournal::is_empty(self)
+    }
+    fn did(&self) -> &Did {
+        DurableJournal::did(self)
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Durable dedup ledger: the M1 at-most-once egress guard made restart-survivable.
 // ---------------------------------------------------------------------------------------------
