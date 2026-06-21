@@ -6,6 +6,7 @@ members = [
     "crates/being-core-id",
     "crates/being-core-journal",
     "crates/being-core-memory",
+    "crates/being-runtime",
 ]
 
 [workspace.package]
