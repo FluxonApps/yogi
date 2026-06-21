@@ -85,6 +85,15 @@ impl DurableLog {
     /// Append one record and **fsync** it to disk before returning — so once `append` returns, the
     /// record survives a crash. Frame: `len ++ checksum ++ bytes`.
     pub fn append(&mut self, record: &[u8]) -> io::Result<()> {
+        // The frame length is a u32; refuse a record that wouldn't fit rather than silently truncating
+        // the length (which would corrupt the log on replay). Records are tiny in practice (ids, small
+        // payloads) — this is a defensive guard against a future caller, not an expected path.
+        if record.len() > u32::MAX as usize {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "record exceeds u32::MAX bytes; cannot frame durably",
+            ));
+        }
         let mut framed = Vec::with_capacity(record.len() + 8);
         framed.extend_from_slice(&(record.len() as u32).to_le_bytes());
         framed.extend_from_slice(&checksum(record).to_le_bytes());
