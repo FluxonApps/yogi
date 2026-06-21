@@ -112,6 +112,9 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
   the genome verbatim; variation only via the closed surface). **No fitness, no reproduction
   scheduler, no death** — heredity mechanics only. The crash-recoverable signed-snapshot fork saga +
   selection remain OFF behind the entry gate.
+- [x] `being-lineage` MAP-Elites substrate (gated) — best-per-cell `Archive`, `BehaviorDescriptor`
+  (deterministic behavior→`Cell` binning — the diversity-niche map), and QD-score/mean-fitness
+  observability. Storage + queries + reporting only; **no selection/reproduction/death**.
 - **Entry gate:** the compounding bench shows accumulation **AND** the anti-theater gate fires.
 - **Acceptance (when entered):** a fork is a signed, crash-recoverable distributed snapshot; the
   post-exhaustion fitness-variance gate distinguishes signal from a neutral-drift control at stated
