@@ -804,3 +804,13 @@ counterpart to the static RiskPolicyCommitter ceiling. v0 ceiling integration is
 lane_count=1); the substance is the trust model itself. Other spec-named absences are packaging
 (being-bin CLI), foreground tooling (being-distill-train = the MLX script), or covered. 21 crates,
 206 tests, green.
+
+## 2026-06-22 — being-bin: the yogi CLI (last spec-named crate, deployable entrypoint)
+
+Built the final spec-named crate (being-bin, build-spec §2). `yogi status` prints an instant model-free
+capability summary; `yogi run [turns]` drives a durable + capability-sandboxed being on the local qwen3
+proposer for a few turns (foreground). Pure-std arg parsing, no new deps. The project now has a proper
+entrypoint instead of scattered per-bin invocations. With being-core-policy (the §3.9 trust model) this
+completes the spec's named crate set; the remaining spec-named absences are foreground tooling
+(being-distill-train = scripts/distill_lora.sh), generation-state loading (covered by lineage/persist),
+or deployment. 22 crates, 206 tests, green.
