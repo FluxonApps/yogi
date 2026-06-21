@@ -50,3 +50,5 @@ being-core-mutation = { path = "../being-core-mutation" }
 being-loop = { path = "../being-loop" }
 # The MAP-Elites engine + drift gate input. Used by the `evolve` bin and the m6_acceptance test.
 being-lineage = { path = "../being-lineage" }
+# Ed25519 signer for the Colony's signed fork ledger (evolve bin).
+being-core-id = { path = "../being-core-id" }

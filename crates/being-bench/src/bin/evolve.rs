@@ -10,10 +10,11 @@
 
 use being_bench::{default_frozen_suite, neutral_drift_gate, score_response};
 use being_core_economy::Account;
+use being_core_id::Ed25519Signer;
 use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{
-    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, IlluminationConfig, Retention,
-    Rng, Variator,
+    illuminate, Archive, BehaviorDescriptor, Colony, Evaluation, Evaluator, IlluminationConfig,
+    Retention, Rng, Variator,
 };
 use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::{Being, EchoExecutor, PassThroughCommitter};
@@ -88,18 +89,16 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
 
-    let mut archive = Archive::new();
+    // Run inside a Colony: every fork is colony-signed into the ledger and the full genealogy recorded.
     let cfg = IlluminationConfig::new(iterations, 42).with_recombination(recomb);
-    let stats = illuminate(
-        &mut archive,
-        &descriptor,
+    let mut colony = Colony::new(descriptor.clone(), Ed25519Signer::from_seed([42; 32]), 1);
+    let stats = colony.run(
         Genome::default(),
-        1,
         &mut BenchEvaluator,
         &mut PromptVariator,
         &cfg,
-        None,
     );
+    let archive = &colony.archive;
 
     println!(
         "\nillumination: {} evaluations, {} archive improvements, {} recombinations, {} niches filled",
@@ -112,7 +111,14 @@ fn main() {
         "QD-score={:.3}  mean-fitness={:.3}  coverage={:.1}%",
         archive.qd_score(),
         archive.mean_fitness().unwrap_or(0.0),
-        descriptor.coverage(&archive).unwrap_or(0.0) * 100.0
+        descriptor.coverage(archive).unwrap_or(0.0) * 100.0
+    );
+    println!(
+        "signed fork ledger: {} committed forks · genealogy {} lineages (depth {}) · colony {}",
+        colony.ledger.len(),
+        colony.phylogeny.len(),
+        colony.phylogeny.max_generation(),
+        colony.did().0
     );
     println!("\nelites per verbosity niche (len-band -> fitness, gen, prompt):");
     for e in archive.elites() {
