@@ -553,6 +553,24 @@ mod tests {
     }
 
     #[test]
+    fn pure_effect_at_dispatched_always_redispatches() {
+        // The Dispatched row is the only "unknown", resolved by the ledger — but ONLY for dedup'd
+        // classes. A pure effect is exempt: even with its key already in the ledger, a pure step found
+        // at Dispatched must re-dispatch (re-execution is safe), never SkipEmitThenAttest.
+        let key = IdemKey::new(h(2), 1);
+        let mut dedup = DedupLedger::new();
+        dedup.mark(&key); // ledger has the key...
+        for ec in [EffectClass::Query, EffectClass::Infer] {
+            assert!(ec.is_pure());
+            assert_eq!(
+                resume_action(StepState::Dispatched, ec, &dedup, &key),
+                ResumeAction::ReDispatch,
+                "{ec:?} is pure → must re-dispatch regardless of the ledger"
+            );
+        }
+    }
+
+    #[test]
     fn happy_path_runs_one_reserve_and_settles_every_step() {
         let mut m = StepMachine::new(caps());
         let reserves = Cell::new(0);
