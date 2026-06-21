@@ -1,0 +1,56 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo *)",
+      "Bash(rustup *)",
+      "Bash(git *)",
+      "Bash(ollama *)",
+      "Bash(.claude/scripts/verify.sh)",
+      "Bash(.claude/scripts/check.sh)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/scripts/check.sh\"",
+            "timeout": 180,
+            "statusMessage": "cargo check…"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/scripts/verify.sh\"",
+            "timeout": 600,
+            "statusMessage": "verifying: cargo test + clippy…"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/scripts/verify.sh\"",
+            "timeout": 600,
+            "statusMessage": "verifying: cargo test + clippy…"
+          }
+        ]
+      }
+    ]
+  }
+}

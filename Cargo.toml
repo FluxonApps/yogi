@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/being-core-types",
+    "crates/being-core-mutation",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.0.0"
+license = "UNLICENSED"
+
+# Microdollar accounting is i64 and must never silently wrap (build-spec §4).
+[profile.release]
+overflow-checks = true

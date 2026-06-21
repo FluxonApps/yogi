@@ -59,9 +59,10 @@ until the bench shows compounding. That ordering is the whole point.
 ## Stack
 
 Rust workspace (type-level closure of the mutation surface; Wasmtime sandbox; Ed25519 + hash-chain
-signing; SQLite journal/memory). Local model via candle/llama.cpp; cloud via OpenAI-compatible HTTP.
-See build spec §0 for the committed decisions (all revisable; each points to an architecture §15
-trade).
+signing; SQLite journal/memory). **Built and run entirely locally — no CI, no cloud, no API keys:**
+the runtime's local proposer + shared embedding are served by **Ollama** (`qwen3:8b`,
+`nomic-embed-text`), and the frontier/teacher tier is the **Claude Code agent**. See `CLAUDE.md` for
+the local build harness and build spec §0 for the committed decisions (all revisable).
 
 ## License
 
