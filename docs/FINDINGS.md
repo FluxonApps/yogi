@@ -155,3 +155,25 @@ backend is back. Model runs are paused until `ollama serve` is confirmed healthy
 returned `model said: hi` and the single-skill e2e **re-certified at 1.000** (CI=[1,1]). The
 skill-index refactor is sound — the 0.000 streak was entirely the dead backend, as diagnosed. The
 real multi-skill cert now runs on a healthy backend.
+
+## 2026-06-21 — multi-skill result (GENUINE, healthy backend) — supersedes the retracted run
+
+A thinking-mode being learns 3 rules (⊕,⊗,⊙) and is tested per-op and on the compositional split:
+
+```
+single-op transfer:  cold 0.000 -> skilled 1.000  CI=[1,1]  compounds=TRUE   CERTIFIED
+compositional split: cold 0.000 -> skilled 0.000  compounds=false            (top-1 limit)
+LiMem (single):      0.000  -> pure rule-application, not memorization
+```
+
+- **Multi-skill single-op transfer is CERTIFIED.** The being holds three learned rules and, via
+  top-1 precise retrieval, applies the *right* one to new operands. The earlier "skill interference"
+  was the dead-backend artifact (retracted); on a healthy backend multi-skill transfer holds.
+- **LiMem = 0.000** — re-scoring with perturbed operands stays correct, so this is genuine rule
+  *application*, not answer memorization. The transfer claim is clean.
+- **Compositional `(a⊕b)⊗c` fails (0.000), as expected:** top-1 injects only ONE skill, but composition
+  needs BOTH ⊕ and ⊗ in context. Not a backend issue (single-op = 1.000 same run).
+- **Note on top-1:** the "precise top-1" choice was over-motivated by the retracted dead-backend
+  interference finding. Top-1 demonstrably suffices for single-op; whether injecting more skills hurts
+  is now an *open, testable* question. **Next: inject top-2 skills** so multi-symbol tasks get both
+  rules, and re-cert — checking single-op stays 1.000 while compositional rises.
