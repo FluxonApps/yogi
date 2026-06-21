@@ -8,12 +8,12 @@
 //! illuminates a *diversity* of working styles, not one hill-climb. The acceptance machinery is pure
 //! and tested; only the [`Evaluator`] here loads the model, foreground (CLAUDE.md HARD RULE).
 
-use being_bench::{default_frozen_suite, score_response};
+use being_bench::{default_frozen_suite, neutral_drift_gate, score_response};
 use being_core_economy::Account;
 use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{
-    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, IlluminationConfig, Rng,
-    Variator,
+    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, IlluminationConfig, Retention,
+    Rng, Variator,
 };
 use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::{Being, EchoExecutor, PassThroughCommitter};
@@ -129,8 +129,62 @@ fn main() {
             best.fitness, best.lineage.generation, best.genome.prompt
         );
     }
+    // EVOLVE_DRIFT=1 runs the real M6 acceptance: replicate elitist (selection) vs neutral-drift
+    // arms, model-scored, judged by neutral_drift_gate. Expensive (many model calls) — opt-in.
+    if std::env::var("EVOLVE_DRIFT").as_deref() == Ok("1") {
+        run_drift_acceptance(&descriptor, iterations);
+    } else {
+        println!(
+            "\n(Set EVOLVE_DRIFT=1 for the replicate selection-vs-neutral-drift gate — the \
+             build-spec §6 acceptance on real model scores. The gate already fires on synthetic data.)"
+        );
+    }
+}
+
+/// The M6 acceptance on real model scores: a few replicates of elitist selection vs the matched
+/// neutral-drift control, each measured by archive mean-fitness, judged by the real drift gate.
+fn run_drift_acceptance(descriptor: &BehaviorDescriptor, iterations: usize) {
+    let replicates = std::env::var("EVOLVE_REPLICATES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(5);
+    eprintln!("M6 drift acceptance: {replicates} replicates × 2 arms (model-scored) ...");
+
+    let mut selection = Vec::new();
+    let mut drift = Vec::new();
+    for i in 0..replicates {
+        let seed = 100 + i as u64 * 17;
+        for (arm, out) in [
+            (Retention::Elitist, &mut selection),
+            (Retention::NeutralDrift, &mut drift),
+        ] {
+            let mut archive = Archive::new();
+            let cfg = IlluminationConfig::new(iterations, seed).with_retention(arm);
+            illuminate(
+                &mut archive,
+                descriptor,
+                Genome::default(),
+                1,
+                &mut BenchEvaluator,
+                &mut PromptVariator,
+                &cfg,
+                None,
+            );
+            out.push(archive.mean_fitness().unwrap_or(0.0));
+        }
+    }
+
+    let report = neutral_drift_gate(&drift, &selection, 0.0, 2000, 7, 0.05);
     println!(
-        "\n(Illustrative; a publishable M6 result needs replicate runs + the neutral_drift_gate over \
-         QD-scores — build-spec §6 acceptance. The gate already fires on synthetic data.)"
+        "\nM6 ACCEPTANCE: selection mean={:.3} vs drift mean={:.3}  advantage CI=[{:.3},{:.3}]  fires={}",
+        report.selection_mean, report.drift_mean, report.ci.lower, report.ci.upper, report.fires
+    );
+    println!(
+        "{}",
+        if report.fires {
+            "→ selection beats neutral drift at power: real open-ended signal."
+        } else {
+            "→ no significant edge over drift: the honest breeding-program-not-evolution null."
+        }
     );
 }
