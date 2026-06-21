@@ -208,6 +208,76 @@ mod tests {
     }
 
     #[test]
+    fn investment_to_exactly_the_reserve_floor_is_allowed() {
+        // Boundary: leaving balance == reserve_floor is "at", not "below", the floor → allowed.
+        // (Guards the `< reserve_floor` comparison against an off-by-one to `<=`.)
+        let mut a = Account::new(500_000, 200_000, 500_000);
+        assert_eq!(
+            a.charge(SpendCategory::Exploration, 300_000),
+            BudgetVerdict::WithinBudget
+        );
+        assert_eq!(a.balance(), 200_000); // exactly the floor
+                                          // one microdollar more would dip below the floor → refused
+        assert_eq!(
+            a.charge(SpendCategory::Exploration, 1),
+            BudgetVerdict::Refused
+        );
+        assert_eq!(a.balance(), 200_000);
+    }
+
+    #[test]
+    fn investment_at_exactly_the_per_charge_cap_is_allowed() {
+        // Boundary: amount == cap is allowed; amount == cap+1 is refused.
+        let mut a = Account::new(1_000_000, 0, 300_000);
+        assert_eq!(
+            a.charge(SpendCategory::Reproduction, 300_000),
+            BudgetVerdict::WithinBudget
+        );
+        assert_eq!(a.balance(), 700_000);
+        assert_eq!(
+            a.charge(SpendCategory::Reproduction, 300_001),
+            BudgetVerdict::Refused
+        );
+        assert_eq!(a.balance(), 700_000);
+    }
+
+    #[test]
+    fn insolvent_account_refuses_investment_but_still_services_operating() {
+        // Maintenance-first holds even past zero: operating always debits; investment is refused once
+        // the balance can't stay at/above the floor.
+        let mut a = Account::new(100_000, 0, 1_000_000);
+        assert_eq!(
+            a.charge(SpendCategory::Operating, 150_000),
+            BudgetVerdict::Exceeded
+        );
+        assert!(a.is_insolvent());
+        // investment from an insolvent balance can't satisfy the floor → refused, balance untouched
+        assert_eq!(
+            a.charge(SpendCategory::Distillation, 10_000),
+            BudgetVerdict::Refused
+        );
+        assert_eq!(a.balance(), -50_000);
+        // operating still goes through (drives further negative, stays Exceeded)
+        assert_eq!(
+            a.charge(SpendCategory::Operating, 10_000),
+            BudgetVerdict::Exceeded
+        );
+        assert_eq!(a.balance(), -60_000);
+    }
+
+    #[test]
+    fn credit_ignores_non_positive_amounts() {
+        let mut a = account();
+        a.credit(0);
+        a.credit(-100);
+        assert_eq!(a.balance(), 1_000_000);
+        assert_eq!(a.credited(), 0);
+        a.credit(50_000);
+        assert_eq!(a.balance(), 1_050_000);
+        assert_eq!(a.credited(), 50_000);
+    }
+
+    #[test]
     fn zero_or_negative_charge_is_a_noop() {
         let mut a = account();
         assert_eq!(
