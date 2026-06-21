@@ -287,3 +287,26 @@ survive the matched control at honest power. The committed test asserts only the
 (determinism, both arms progress); the comparative claim lives here, not as a cherry-picked green assert.
 The descriptor-diversity dependence is the real, reusable insight (and a caution for the eventual
 model-scored run: choose the behavior axis to preserve the diversity you want selection to exploit).
+
+## 2026-06-21 — M6 open-ended-search arm COMPLETE (loop-safe); next step is foreground/design
+
+The full M6 research arm is built, green (138 tests), and cohesive:
+
+`Colony` → `illuminate` (asexual `fork` + sexual `fork2`/`recombine`, `IlluminationConfig`) →
+`BehaviorDescriptor` (bounded/unbounded, coverage) + `Archive` (QD-score, mean-fitness) →
+`ForkObserver` → signed `ForkSnapshot`/`ForkLedger` (N-parent, content-addressed, idempotent) +
+`Phylogeny` (full genealogy) → `neutral_drift_gate` (the honesty gate). Foreground `evolve` bin runs
+the whole thing model-scored, with `EVOLVE_DRIFT=1` producing the §6 acceptance verdict.
+
+**Safety invariant intact, gate or no gate:** every child — mutated, recombined, or signed — varies
+only through the closed `MutationKind` surface, and `Genome` has no capability/trust/kernel fields, so
+no forbidden power is representable in any lineage. Recorded experiment: recombination helps only when
+the behavior space preserves building-block diversity (otherwise it's eval overhead).
+
+**What remains is genuinely NOT loop-safe** (so it cannot be built in the automated, no-inference loop):
+1. **Foreground:** run the real model-scored acceptance — `EVOLVE_DRIFT=1 cargo run -p being-bench
+   --bin evolve --release` (loads qwen3:8b). Only a human can launch inference.
+2. **Design + safety:** wire `Colony` into `being-runtime` as a live model-backed population with real
+   beings and death/reaper — the most safety-sensitive step, deferred deliberately.
+The pure substrate has been taken as far as it productively goes; further in-loop additions would be
+speculative (no landscape to validate them). Awaiting a foreground run or a new direction.
