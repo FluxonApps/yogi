@@ -417,6 +417,29 @@ mod tests {
     }
 
     #[test]
+    fn only_the_matching_skill_is_injected_no_interference() {
+        // With several learned skills, retrieval must inject ONLY the matching one (top-1) — the fix
+        // for multi-skill interference (FINDINGS). Here "cat" embeds [1,0], everything else [0,1].
+        let sup = Supervisor::new(Account::new(10_000_000, 0, 1_000_000), i64::MAX, 0);
+        let mut b = Being::from_seed(
+            [9u8; 32],
+            Supervisor::as_port(&sup),
+            CtxEchoProposer,
+            PassThroughCommitter,
+            EchoExecutor,
+        )
+        .with_embedder(std::sync::Arc::new(KeywordEmbedder));
+        b.learn_skill("cat rule: cats purr", true, 1); // embeds [1,0]
+        b.learn_skill("dog rule: dogs bark", true, 2); // embeds [0,1]
+        let resp = b.turn("a cat question", 3).observations.join(" ");
+        assert!(resp.contains("cats purr"), "matching skill missing: {resp}");
+        assert!(
+            !resp.contains("dogs bark"),
+            "interfering skill injected: {resp}"
+        );
+    }
+
+    #[test]
     fn learned_skill_is_retrieved_on_future_turns() {
         let sup = Supervisor::new(Account::new(10_000_000, 0, 1_000_000), i64::MAX, 0);
         let mut b = Being::from_seed(
