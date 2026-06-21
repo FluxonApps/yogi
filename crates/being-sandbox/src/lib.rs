@@ -110,14 +110,21 @@ impl Broker {
                 }
             }
             EffectRequest::Payment { microdollars } => {
+                // A payment must be non-negative AND within the granted cap. Without the `>= 0` guard a
+                // negative charge (a refund/credit — the opposite of a bounded spend) would pass the
+                // `<= cap` check unconditionally; the being must not self-authorize that.
                 let ok = caps.caps.iter().any(|c| match c {
-                    Capability::Payment { max_microdollars } => *microdollars <= *max_microdollars,
+                    Capability::Payment { max_microdollars } => {
+                        *microdollars >= 0 && *microdollars <= *max_microdollars
+                    }
                     _ => false,
                 });
                 if ok {
                     Authorization::Granted
                 } else {
-                    Authorization::Denied("payment exceeds the granted cap (or none granted)")
+                    Authorization::Denied(
+                        "payment negative or exceeds the granted cap (or none granted)",
+                    )
                 }
             }
             EffectRequest::MemoryWrite => auth_if(
@@ -207,6 +214,17 @@ mod tests {
         assert!(
             !Broker::authorize(&EffectRequest::Payment { microdollars: 1001 }, &caps).is_granted()
         );
+        // a NEGATIVE payment (a refund/credit, not a bounded spend) is denied even though -1 <= cap.
+        assert!(
+            !Broker::authorize(&EffectRequest::Payment { microdollars: -1 }, &caps).is_granted()
+        );
+        assert!(!Broker::authorize(
+            &EffectRequest::Payment {
+                microdollars: i64::MIN
+            },
+            &caps
+        )
+        .is_granted());
     }
 
     #[test]
