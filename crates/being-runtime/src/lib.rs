@@ -1,17 +1,21 @@
-//! The runtime seam + control loop (build-spec §3.4, §3.5; architecture §4).
+//! The runtime seam + control loop, now metabolic (build-spec §3.4/§3.5; architecture §4; D-M1-*).
 //!
-//! The **proposer** (an LLM in the full build) generates; the **committer** is a separate,
-//! mostly-deterministic gate that decides what runs; the **executor** acts. The seam is
-//! propose → commit → attest, and every commitment and attestation is appended to the signed,
-//! hash-chained journal, so the committed tail of a turn is replayable and attributable.
+//! The **proposer** generates; the **committer** is a separate gate; the **executor** acts; and the
+//! **supervisor** (held only as an `Arc<dyn SupervisorPort>`) owns the budget + reaper. The seam is
+//! propose → reserve → commit → attest, every commitment/attestation is appended to the signed
+//! hash-chained journal, and a turn whose operating cost bankrupts the being trips the reaper
+//! mid-operation (D-M1-1): it does not act, and every later turn is refused.
 //!
-//! M0 wires this end-to-end with an echo proposer (no model) and a pass-through committer (no
-//! budget/trust gate — those arrive at M1 with the Account and the reaper). The seam *shape* and
-//! the journaling/determinism guarantees are the deliverable.
+//! M0 wired this with an echo proposer + pass-through committer; M1 adds the live Account/reaper via
+//! the supervisor. The committer still owns policy; budget authority is the supervisor's.
 
+use std::sync::Arc;
+
+use being_core_economy::{BudgetVerdict, SpendCategory};
 use being_core_id::Ed25519Signer;
 use being_core_journal::{MemoryJournal, Seq};
 use being_core_memory::{EpisodicStore, Ms};
+use being_supervisor::SupervisorPort;
 
 // --- Seam types ------------------------------------------------------------------------------
 
@@ -37,14 +41,7 @@ pub struct Proposal {
     pub est_cost: i64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BudgetVerdict {
-    WithinBudget,
-    Exceeded,
-    Refused,
-}
-
-/// Committer output: the decisive cut — what actually runs this turn.
+/// Committer output: the decisive cut. `budget_verdict` is filled by the supervisor's reservation.
 #[derive(Clone, Debug)]
 pub struct Commitment {
     pub committed_steps: Vec<PlanStep>,
@@ -58,7 +55,8 @@ pub trait Proposer {
     fn propose(&mut self, ctx: &ContextPack) -> Proposal;
 }
 
-/// The commitment layer. Deterministic gate; decides what runs and whether to loop.
+/// The commitment layer. Deterministic policy gate; decides what runs and whether to loop. (Budget
+/// authority is the supervisor's, not the committer's.)
 pub trait Committer {
     fn commit(&mut self, proposal: &Proposal, ctx: &ContextPack) -> Commitment;
 }
@@ -68,7 +66,7 @@ pub trait Executor {
     fn execute(&mut self, step: &PlanStep) -> String;
 }
 
-// --- M0 implementations ----------------------------------------------------------------------
+// --- M0/M1 implementations -------------------------------------------------------------------
 
 /// Deterministic echo proposer (stands in for the LLM until the Ollama proposer at M2).
 pub struct EchoProposer;
@@ -86,8 +84,8 @@ impl Proposer for EchoProposer {
     }
 }
 
-/// Pass-through committer: commits the proposed steps unchanged. The real gate (policy + trust +
-/// budget reservation) lands at M1; the seam is already separate so that gate drops in here.
+/// Pass-through policy committer. The real policy gate (trust + risk) lands later; budget is the
+/// supervisor's job and is filled into `budget_verdict` by the turn.
 pub struct PassThroughCommitter;
 impl Committer for PassThroughCommitter {
     fn commit(&mut self, proposal: &Proposal, _ctx: &ContextPack) -> Commitment {
@@ -109,7 +107,6 @@ impl Executor for EchoExecutor {
 }
 
 // --- Deterministic journal payload encoding --------------------------------------------------
-// Manual, stable byte encoding (no serde) so committed-tail replay is byte-identical.
 
 fn encode_commitment(c: &Commitment) -> Vec<u8> {
     let verdict = match c.budget_verdict {
@@ -134,26 +131,39 @@ fn encode_observations(obs: &[String]) -> Vec<u8> {
 /// The result of one control-loop iteration.
 #[derive(Clone, Debug)]
 pub struct Turn {
-    pub commitment_seq: Seq,
-    pub attestation_seq: Seq,
+    /// Did the committed steps execute? False if the being was dead or the turn was not affordable.
+    pub acted: bool,
     pub observations: Vec<String>,
+    /// Is the being still alive after this turn? False once the reaper has fired.
+    pub alive_after: bool,
+    pub commitment_seq: Option<Seq>,
+    pub attestation_seq: Option<Seq>,
+    pub budget_verdict: BudgetVerdict,
 }
 
-/// A minimal being: identity-bound journal + episodic memory + the seam components. This is the
-/// M0 skeleton; the Account/reaper (M1), real proposer (M2), and the rest layer onto it.
+/// A metabolic being: identity-bound journal + episodic memory + the seam + an operator-owned
+/// supervisor (held only as the narrow `SupervisorPort`).
 pub struct Being<P: Proposer, C: Committer, E: Executor> {
     journal: MemoryJournal<Ed25519Signer>,
     episodic: EpisodicStore,
+    supervisor: Arc<dyn SupervisorPort>,
     proposer: P,
     committer: C,
     executor: E,
 }
 
 impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
-    pub fn from_seed(seed: [u8; 32], proposer: P, committer: C, executor: E) -> Self {
+    pub fn from_seed(
+        seed: [u8; 32],
+        supervisor: Arc<dyn SupervisorPort>,
+        proposer: P,
+        committer: C,
+        executor: E,
+    ) -> Self {
         Self {
             journal: MemoryJournal::new(Ed25519Signer::from_seed(seed)),
             episodic: EpisodicStore::new(),
+            supervisor,
             proposer,
             committer,
             executor,
@@ -168,13 +178,28 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
         &self.episodic
     }
 
-    /// One control-loop iteration: perceive → retrieve → propose → commit → journal → execute →
-    /// attest → journal → remember. The commitment and attestation are signed journal entries, so
-    /// the committed tail is replayable and tamper-evident.
+    pub fn is_alive(&self) -> bool {
+        self.supervisor.is_alive()
+    }
+
+    /// One control-loop iteration. A dead being refuses immediately. Otherwise: heartbeat →
+    /// perceive → retrieve → propose → **reserve operating cost** → commit → journal → (if
+    /// affordable) execute → attest → journal → remember. Spending past the balance trips the
+    /// reaper mid-turn; the decision is still journaled, but no steps run.
     pub fn turn(&mut self, input: &str, now_ms: Ms) -> Turn {
-        // perceive
+        if !self.supervisor.is_alive() {
+            return Turn {
+                acted: false,
+                observations: Vec::new(),
+                alive_after: false,
+                commitment_seq: None,
+                attestation_seq: None,
+                budget_verdict: BudgetVerdict::Refused,
+            };
+        }
+
+        self.supervisor.heartbeat(now_ms);
         self.episodic.record_user_turn(input, now_ms, now_ms);
-        // retrieve
         let retrieved: Vec<String> = self
             .episodic
             .retrieve(input, 4)
@@ -185,77 +210,112 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
             input: input.to_string(),
             retrieved,
         };
-        // propose (model) → commit (deterministic gate)
+
         let proposal = self.proposer.propose(&ctx);
-        let commitment = self.committer.commit(&proposal, &ctx);
+        // Reserve the turn's operating cost through the supervisor (maintenance spend). Charging
+        // past the balance returns Exceeded and reaps the being (D-M1-1).
+        let cost = proposal.est_cost.max(1);
+        let verdict = self
+            .supervisor
+            .reserve(SpendCategory::Operating, cost, now_ms);
+
+        let mut commitment = self.committer.commit(&proposal, &ctx);
+        commitment.budget_verdict = verdict;
         let commitment_seq = self
             .journal
             .append("commitment", encode_commitment(&commitment));
-        // execute committed steps
-        let observations: Vec<String> = commitment
-            .committed_steps
-            .iter()
-            .map(|step| self.executor.execute(step))
-            .collect();
-        // attest the observations to the journal
-        let attestation_seq = self
-            .journal
-            .append("attestation", encode_observations(&observations));
-        // remember the model-derived result (ModelInference provenance — cannot escalate trust)
-        self.episodic
-            .record_model_inference(observations.join("; "), now_ms, now_ms);
-        Turn {
-            commitment_seq,
-            attestation_seq,
-            observations,
+
+        if verdict == BudgetVerdict::WithinBudget {
+            let observations: Vec<String> = commitment
+                .committed_steps
+                .iter()
+                .map(|step| self.executor.execute(step))
+                .collect();
+            let attestation_seq = self
+                .journal
+                .append("attestation", encode_observations(&observations));
+            self.episodic
+                .record_model_inference(observations.join("; "), now_ms, now_ms);
+            Turn {
+                acted: true,
+                observations,
+                alive_after: self.supervisor.is_alive(),
+                commitment_seq: Some(commitment_seq),
+                attestation_seq: Some(attestation_seq),
+                budget_verdict: verdict,
+            }
+        } else {
+            // Not affordable (Exceeded ⇒ reaped, or Refused). The decision is journaled; no steps run.
+            Turn {
+                acted: false,
+                observations: Vec::new(),
+                alive_after: self.supervisor.is_alive(),
+                commitment_seq: Some(commitment_seq),
+                attestation_seq: None,
+                budget_verdict: verdict,
+            }
         }
     }
 }
 
-/// The default M0 being: echo proposer + pass-through committer + echo executor.
+/// The default M1 being: echo proposer + pass-through committer + echo executor.
 pub type EchoBeing = Being<EchoProposer, PassThroughCommitter, EchoExecutor>;
 
-/// Construct the default M0 being from a seed.
-pub fn echo_being(seed: [u8; 32]) -> EchoBeing {
-    Being::from_seed(seed, EchoProposer, PassThroughCommitter, EchoExecutor)
+/// Construct the default echo being from a seed and a supervisor port.
+pub fn echo_being(seed: [u8; 32], supervisor: Arc<dyn SupervisorPort>) -> EchoBeing {
+    Being::from_seed(
+        seed,
+        supervisor,
+        EchoProposer,
+        PassThroughCommitter,
+        EchoExecutor,
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use being_core_economy::Account;
     use being_core_types::ProvenanceClass;
+    use being_supervisor::{DeathCause, Supervisor};
+
+    /// A well-funded being whose turns always act (huge balance, effectively no watchdog timeout).
+    fn solvent_being(seed: [u8; 32]) -> (EchoBeing, Arc<Supervisor>) {
+        let sup = Supervisor::new(Account::new(10_000_000, 0, 1_000_000), i64::MAX, 0);
+        let being = echo_being(seed, Supervisor::as_port(&sup));
+        (being, sup)
+    }
 
     #[test]
-    fn turn_runs_end_to_end_and_journals_commitment_and_attestation() {
-        let mut b = echo_being([1u8; 32]);
+    fn turn_acts_and_journals_commitment_and_attestation() {
+        let (mut b, _sup) = solvent_being([1u8; 32]);
         let t = b.turn("hello yogi", 1_000);
-        assert_eq!(t.commitment_seq, 1);
-        assert_eq!(t.attestation_seq, 2);
+        assert!(t.acted);
+        assert!(t.alive_after);
+        assert_eq!(t.commitment_seq, Some(1));
+        assert_eq!(t.attestation_seq, Some(2));
         assert_eq!(t.observations, vec!["echo:hello yogi".to_string()]);
-        // both steps landed in the signed journal
-        assert_eq!(b.journal().len(), 2);
         assert_eq!(b.journal().get(1).unwrap().kind, "commitment");
         assert_eq!(b.journal().get(2).unwrap().kind, "attestation");
     }
 
     #[test]
-    fn committed_tail_verifies() {
-        let mut b = echo_being([2u8; 32]);
+    fn committed_tail_verifies_over_multiple_turns() {
+        let (mut b, _sup) = solvent_being([2u8; 32]);
         b.turn("a", 1);
         b.turn("b", 2);
         assert!(b.journal().verify_chain());
-        assert_eq!(b.journal().len(), 4); // 2 turns × (commitment + attestation)
+        assert_eq!(b.journal().len(), 4);
     }
 
     #[test]
     fn committed_tail_is_deterministic_across_identical_beings() {
-        let mut a = echo_being([7u8; 32]);
-        let mut b = echo_being([7u8; 32]);
+        let (mut a, _sa) = solvent_being([7u8; 32]);
+        let (mut b, _sb) = solvent_being([7u8; 32]);
         for input in ["one", "two", "three"] {
             a.turn(input, 42);
             b.turn(input, 42);
         }
-        // same seed + same inputs + same clock ⇒ byte-identical signed chains
         assert_eq!(a.journal().head(), b.journal().head());
         let ha: Vec<_> = a.journal().replay().map(|e| e.entry_hash.clone()).collect();
         let hb: Vec<_> = b.journal().replay().map(|e| e.entry_hash.clone()).collect();
@@ -264,8 +324,8 @@ mod tests {
 
     #[test]
     fn different_identity_yields_different_chain() {
-        let mut a = echo_being([1u8; 32]);
-        let mut b = echo_being([2u8; 32]);
+        let (mut a, _sa) = solvent_being([1u8; 32]);
+        let (mut b, _sb) = solvent_being([2u8; 32]);
         a.turn("x", 1);
         b.turn("x", 1);
         assert_ne!(a.journal().head().1, b.journal().head().1);
@@ -273,7 +333,7 @@ mod tests {
 
     #[test]
     fn turn_records_exactly_one_trust_escalating_memory() {
-        let mut b = echo_being([3u8; 32]);
+        let (mut b, _sup) = solvent_being([3u8; 32]);
         b.turn("remember this", 1);
         let escalating = b
             .episodic()
@@ -281,10 +341,43 @@ mod tests {
             .iter()
             .filter(|e| e.provenance.can_escalate_trust())
             .count();
-        assert_eq!(escalating, 1); // only the user turn; the model result is ModelInference
+        assert_eq!(escalating, 1);
         assert_eq!(
             b.episodic().all()[1].provenance,
             ProvenanceClass::ModelInference
         );
+    }
+
+    #[test]
+    fn a_turn_that_bankrupts_the_being_kills_it_mid_operation() {
+        // Tiny balance: the operating cost of a normal turn exceeds it.
+        let sup = Supervisor::new(Account::new(5, 0, 1_000_000), i64::MAX, 0);
+        let mut b = echo_being([9u8; 32], Supervisor::as_port(&sup));
+        let t = b.turn("a prompt longer than five bytes", 100);
+        assert!(!t.acted, "a dying turn must not execute steps");
+        assert!(!t.alive_after);
+        assert_eq!(t.budget_verdict, BudgetVerdict::Exceeded);
+        assert_eq!(t.commitment_seq, Some(1)); // the decision is still journaled
+        assert_eq!(t.attestation_seq, None); // nothing executed → nothing attested
+        assert_eq!(sup.death().unwrap().cause, DeathCause::Insolvency);
+
+        // every subsequent turn is refused, with no new journal entries
+        let t2 = b.turn("anything", 101);
+        assert!(!t2.acted);
+        assert!(!t2.alive_after);
+        assert_eq!(t2.commitment_seq, None);
+        assert_eq!(b.journal().len(), 1);
+        assert!(b.journal().verify_chain());
+    }
+
+    #[test]
+    fn operator_kill_refuses_all_further_turns() {
+        let (mut b, sup) = solvent_being([4u8; 32]);
+        assert!(b.turn("first", 1).acted);
+        sup.operator_kill(2);
+        let t = b.turn("second", 3);
+        assert!(!t.acted);
+        assert!(!t.alive_after);
+        assert!(!b.is_alive());
     }
 }

@@ -66,10 +66,12 @@ version = "0.0.0"
 name = "being-runtime"
 version = "0.0.0"
 dependencies = [
+ "being-core-economy",
  "being-core-id",
  "being-core-journal",
  "being-core-memory",
  "being-core-types",
+ "being-supervisor",
 ]
 
 [[package]]
