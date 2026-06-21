@@ -14,6 +14,7 @@
 
 use std::time::Duration;
 
+use being_router::{ReasoningMode, Router};
 use being_runtime::{ContextPack, PlanStep, Proposal, Proposer};
 use serde_json::{json, Value};
 
@@ -162,6 +163,40 @@ impl Proposer for OpenAiChatProposer {
     }
 }
 
+/// A `Proposer` that routes each turn to a **thinking** or a **fast** backend by the navigator's
+/// decision ([`being_router`]) — reasoning tasks get thinking, trivial recall stays fast (FINDINGS
+/// 2026-06-21). Composes two configs + a [`Router`]; the routing decision is pure (testable without
+/// the model), only the chosen `propose` reaches the backend.
+pub struct RoutedProposer<R: Router> {
+    thinking: OpenAiChatProposer,
+    fast: OpenAiChatProposer,
+    router: R,
+}
+
+impl<R: Router> RoutedProposer<R> {
+    pub fn new(thinking: OpenAiChatConfig, fast: OpenAiChatConfig, router: R) -> Self {
+        Self {
+            thinking: OpenAiChatProposer::new(thinking),
+            fast: OpenAiChatProposer::new(fast),
+            router,
+        }
+    }
+
+    /// The reasoning mode the navigator picks for `input` — pure, testable without the model.
+    pub fn mode_for(&self, input: &str) -> ReasoningMode {
+        self.router.route(input)
+    }
+}
+
+impl<R: Router> Proposer for RoutedProposer<R> {
+    fn propose(&mut self, ctx: &ContextPack) -> Proposal {
+        match self.router.route(&ctx.input) {
+            ReasoningMode::Think => self.thinking.propose(ctx),
+            ReasoningMode::NoThink => self.fast.propose(ctx),
+        }
+    }
+}
+
 /// Extract `choices[0].message.content` from an OpenAI-compatible response, stripping a
 /// `<think>…</think>` reasoning block if present. Pure; unit-tested.
 pub fn parse_chat_response(body: &str) -> Result<String, String> {
@@ -228,6 +263,21 @@ mod tests {
         let user = v["messages"][1]["content"].as_str().unwrap();
         assert!(!user.contains("/no_think")); // generic backend: no qwen3 quirk
         assert!(user.contains("hello"));
+    }
+
+    #[test]
+    fn routed_proposer_picks_mode_by_task() {
+        use being_router::HeuristicRouter;
+        let p = RoutedProposer::new(
+            OpenAiChatConfig::ollama_qwen3_thinking(),
+            OpenAiChatConfig::ollama_qwen3(),
+            HeuristicRouter,
+        );
+        assert_eq!(p.mode_for("Compute 5 ⊕ 6"), ReasoningMode::Think);
+        assert_eq!(
+            p.mode_for("What is the capital of France?"),
+            ReasoningMode::NoThink
+        );
     }
 
     #[test]

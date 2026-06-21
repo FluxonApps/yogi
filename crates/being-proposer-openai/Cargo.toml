@@ -11,5 +11,6 @@ live-model = []
 
 [dependencies]
 being-runtime = { path = "../being-runtime" }
+being-router = { path = "../being-router" }
 serde_json = "1"
 ureq = "2"

@@ -114,6 +114,7 @@ dependencies = [
 name = "being-proposer-openai"
 version = "0.0.0"
 dependencies = [
+ "being-router",
  "being-runtime",
  "serde_json",
  "ureq",
