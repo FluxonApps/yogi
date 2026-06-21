@@ -10,8 +10,14 @@ license.workspace = true
 name = "bench"
 path = "src/bin/bench.rs"
 
+# Day-0 vs Day-N compounding demo (loads qwen3:8b + nomic-embed-text). Foreground only.
+[[bin]]
+name = "compound"
+path = "src/bin/compound.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }
+being-embed-openai = { path = "../being-embed-openai" }
 being-supervisor = { path = "../being-supervisor" }
 being-core-economy = { path = "../being-core-economy" }

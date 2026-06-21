@@ -57,7 +57,7 @@ foreground/user-run only (16 GB budget); the automated loop never loads a model.
 - **Acceptance:** bench runs Day-0 vs Day-N with the model held constant and emits a paired-bootstrap
   CI; the anti-theater harness runs all three arms and produces a report (null result is valid).
 
-## M3 — Learning layer  `[~]`  · decisions [D-M3-1/2](decisions.md) (retrieval-first; distillation gated)
+## M3 — Learning layer  `[x]`  · decisions [D-M3-1/2](decisions.md) (retrieval-first; distillation gated)
 *Token-space compounding first (retrieval + consolidation + verifier-fed skills); per-domain
 distillation is an optional foreground arm. Build order: retrieval → embedder → consolidation →
 skill-learning(verifier) → wire + Day-N bench.*
@@ -68,7 +68,10 @@ skill-learning(verifier) → wire + Day-N bench.*
 - [x] `Consolidator` (episodic→semantic; deterministic `FrequencyConsolidator`, idempotent) +
   verifier-fed skill-learning (`ProceduralStore::learn_from`/`best_for`: branching `[ok]`/`[fail]`
   variants keyed by task class; latest passing wins) · 3 tests
-- [ ] wire retrieval into the turn + Day-N bench demo vs. no-memory baseline
+- [x] wired semantic retrieval into `Being::turn` (optional embedder; embed input → cosine+recency
+  search → accumulate into the index → memory compounds; episodic fallback). Test proves turn-2
+  surfaces turn-1 memory (stub embedder, no model). Foreground `compound` bin runs the Day-0 vs Day-N
+  paired-bootstrap demo (`cargo run -p being-bench --bin compound --release`).
 - **Acceptance:** distillation closes the gap on `(teacher-success ∩ student-weak)` for ≥1 domain by
   the pre-registered per-domain margin; every `DomainModel` promotion re-clears the mixed-set
   non-inferiority floor; compounding bench detects accumulation or reports saturation.

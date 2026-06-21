@@ -14,7 +14,7 @@ use std::sync::Arc;
 use being_core_economy::{BudgetVerdict, SpendCategory};
 use being_core_id::Ed25519Signer;
 use being_core_journal::{MemoryJournal, Seq};
-use being_core_memory::{EpisodicStore, Ms};
+use being_core_memory::{Embedder, EpisodicStore, Ms, SemanticIndex};
 use being_supervisor::SupervisorPort;
 
 // --- Seam types ------------------------------------------------------------------------------
@@ -141,11 +141,17 @@ pub struct Turn {
     pub budget_verdict: BudgetVerdict,
 }
 
-/// A metabolic being: identity-bound journal + episodic memory + the seam + an operator-owned
-/// supervisor (held only as the narrow `SupervisorPort`).
+/// Retrieval blend (D-M3-1): cosine weight and a ~14-day recency half-life.
+const RETRIEVAL_ALPHA: f32 = 0.7;
+const RETRIEVAL_HALF_LIFE_MS: i64 = 14 * 24 * 60 * 60 * 1000;
+
+/// A metabolic being: identity-bound journal + episodic & semantic memory + the seam + an
+/// operator-owned supervisor (held only as the narrow `SupervisorPort`).
 pub struct Being<P: Proposer, C: Committer, E: Executor> {
     journal: MemoryJournal<Ed25519Signer>,
     episodic: EpisodicStore,
+    index: SemanticIndex,
+    embedder: Option<Arc<dyn Embedder>>,
     supervisor: Arc<dyn SupervisorPort>,
     proposer: P,
     committer: C,
@@ -163,6 +169,8 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
         Self {
             journal: MemoryJournal::new(Ed25519Signer::from_seed(seed)),
             episodic: EpisodicStore::new(),
+            index: SemanticIndex::new(),
+            embedder: None,
             supervisor,
             proposer,
             committer,
@@ -176,6 +184,40 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
 
     pub fn episodic(&self) -> &EpisodicStore {
         &self.episodic
+    }
+
+    /// Attach a semantic embedder. With one, `turn` retrieves prior memory by embedding the input
+    /// (cosine + recency) and accumulates each input into the index, so memory compounds across
+    /// turns; without one, retrieval falls back to episodic substring. The embed call is foreground.
+    pub fn with_embedder(mut self, embedder: Arc<dyn Embedder>) -> Self {
+        self.embedder = Some(embedder);
+        self
+    }
+
+    pub fn semantic_len(&self) -> usize {
+        self.index.len()
+    }
+
+    /// Retrieve prior memory for `input`. With an embedder: embed, semantic-search the index, then
+    /// add the input to the index (memory accumulates). Otherwise / on embed error: episodic
+    /// substring fallback.
+    fn retrieve_context(&mut self, input: &str, now_ms: Ms) -> Vec<String> {
+        if let Some(embedder) = self.embedder.clone() {
+            if let Ok(qv) = embedder.embed(input) {
+                let hits =
+                    self.index
+                        .search(&qv, now_ms, 4, RETRIEVAL_ALPHA, RETRIEVAL_HALF_LIFE_MS);
+                let texts: Vec<String> = hits.into_iter().map(|h| h.text).collect();
+                let id = self.index.len() as u64 + 1;
+                self.index.add(id, qv, input, now_ms);
+                return texts;
+            }
+        }
+        self.episodic
+            .retrieve(input, 4)
+            .into_iter()
+            .map(|e| e.text.clone())
+            .collect()
     }
 
     pub fn is_alive(&self) -> bool {
@@ -200,12 +242,7 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
 
         self.supervisor.heartbeat(now_ms);
         self.episodic.record_user_turn(input, now_ms, now_ms);
-        let retrieved: Vec<String> = self
-            .episodic
-            .retrieve(input, 4)
-            .into_iter()
-            .map(|e| e.text.clone())
-            .collect();
+        let retrieved = self.retrieve_context(input, now_ms);
         let ctx = ContextPack {
             input: input.to_string(),
             retrieved,
@@ -278,6 +315,54 @@ mod tests {
     use being_core_economy::Account;
     use being_core_types::ProvenanceClass;
     use being_supervisor::{DeathCause, Supervisor};
+
+    struct KeywordEmbedder;
+    impl being_core_memory::Embedder for KeywordEmbedder {
+        fn embed(&self, text: &str) -> Result<Vec<f32>, String> {
+            Ok(if text.contains("cat") {
+                vec![1.0, 0.0]
+            } else {
+                vec![0.0, 1.0]
+            })
+        }
+    }
+
+    /// Proposer that echoes the retrieved context, so tests can observe what memory surfaced.
+    struct CtxEchoProposer;
+    impl Proposer for CtxEchoProposer {
+        fn propose(&mut self, ctx: &ContextPack) -> Proposal {
+            Proposal {
+                intent: "ctx".to_string(),
+                candidate_steps: vec![PlanStep {
+                    action: "ctx".to_string(),
+                    arg: ctx.retrieved.join("|"),
+                }],
+                preferred: 0,
+                est_cost: 1,
+            }
+        }
+    }
+
+    #[test]
+    fn memory_compounds_across_turns_via_semantic_retrieval() {
+        let sup = Supervisor::new(Account::new(10_000_000, 0, 1_000_000), i64::MAX, 0);
+        let mut b = Being::from_seed(
+            [5u8; 32],
+            Supervisor::as_port(&sup),
+            CtxEchoProposer,
+            PassThroughCommitter,
+            EchoExecutor,
+        )
+        .with_embedder(std::sync::Arc::new(KeywordEmbedder));
+        b.turn("cats purr when content", 1); // indexed; no prior memory to retrieve
+        let t2 = b.turn("what about cats", 2); // semantic retrieval surfaces turn 1
+        let resp = t2.observations.join(" ");
+        assert!(
+            resp.contains("cats purr when content"),
+            "expected prior cat memory surfaced, got: {resp}"
+        );
+        assert_eq!(b.semantic_len(), 2); // both inputs accumulated
+    }
 
     /// A well-funded being whose turns always act (huge balance, effectively no watchdog timeout).
     fn solvent_being(seed: [u8; 32]) -> (EchoBeing, Arc<Supervisor>) {

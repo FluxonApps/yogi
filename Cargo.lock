@@ -37,6 +37,7 @@ name = "being-bench"
 version = "0.0.0"
 dependencies = [
  "being-core-economy",
+ "being-embed-openai",
  "being-proposer-openai",
  "being-runtime",
  "being-supervisor",
