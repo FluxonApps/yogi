@@ -126,7 +126,12 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 - [x] **Signed, crash-recoverable fork snapshot** (`being-lineage::ForkSnapshot`/`ForkLedger` +
   `Genome::canon_bytes`): the parent signs the child's inherited state (lineage edge + canonical
   genome); content-addressed `snapshot_id` gives at-most-once idempotent commit across replay/crash.
-  Tampered genome/edge/DID all fail verification. (Real model-scored run = remaining foreground step.)
+  Tampered genome/edge/DID all fail verification.
+- [x] Foreground `evolve` bin (`cargo run -p being-bench --bin evolve --release`) — real model-scored
+  MAP-Elites: benches each genome on the frozen suite (fitness = pass-rate, behavior = mean response
+  length → verbosity niches), illuminates the archive, reports QD-score + per-niche elites. Compiles
+  in the loop; loads qwen3:8b only when run. (Replicate runs + drift gate over QD-scores = the
+  publishable result; gate already fires on synthetic data.)
 - **Entry gate:** the compounding bench shows accumulation **AND** the anti-theater gate fires. The
   gate *machinery* now exists and fires correctly on synthetic data; wiring reproduction/death to a
   live population stays a deliberate, reviewable boundary.

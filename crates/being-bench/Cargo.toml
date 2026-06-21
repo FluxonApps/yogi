@@ -35,6 +35,11 @@ path = "src/bin/transfer_e2e.rs"
 name = "multi_skill"
 path = "src/bin/multi_skill.rs"
 
+# M6 MAP-Elites illumination over genomes, scored by the real bench + model. Foreground only.
+[[bin]]
+name = "evolve"
+path = "src/bin/evolve.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }
@@ -43,7 +48,5 @@ being-supervisor = { path = "../being-supervisor" }
 being-core-economy = { path = "../being-core-economy" }
 being-core-mutation = { path = "../being-core-mutation" }
 being-loop = { path = "../being-loop" }
-
-[dev-dependencies]
-# M6 acceptance integration test: drive the real MAP-Elites engine through the real drift gate.
+# The MAP-Elites engine + drift gate input. Used by the `evolve` bin and the m6_acceptance test.
 being-lineage = { path = "../being-lineage" }
