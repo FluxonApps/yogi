@@ -34,6 +34,10 @@ Show the actual test/clippy output as evidence; do not assert success.
 3. `cargo clippy --all-targets -- -D warnings` — zero warnings.
 4. `cargo fmt --all` — formatted.
 5. Commit only when 1–4 pass. End commit messages with the session trailer.
+   - Run git from the repo root — **never** `cd … && git …` (it trips the "cd before git can run
+     untrusted hooks" prompt; the session cwd is already the repo root).
+   - Use **plain `git commit`** — never `-c user.email/-c user.name` overrides; the ambient gitconfig
+     identity (`Ganesh Gunasegaran <me@itsgg.com>`) is correct.
 
 ## Continue / what's next
 - **Milestone state is tracked in `docs/MILESTONES.md`** (the durable source of truth). To "continue",
