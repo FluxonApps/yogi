@@ -133,6 +133,27 @@ mod tests {
     // CLOSURE GUARANTEE (the load-bearing safety invariant):
     // `apply` matches `MutationKind` exhaustively with no `_` arm, so the forbidden mutations
     // (capability grant, trust-policy edit, signature-boundary change, kernel, budget rules,
-    // reaper) cannot be added without a compile error. A `trybuild` compile-fail test will pin
-    // this mechanically once dev-deps are introduced (build-spec §8).
+    // reaper) cannot be added without a compile error.
+    #[test]
+    fn mutation_surface_is_closed_compile_guard() {
+        // A SECOND exhaustive match with NO wildcard arm — a deliberate, dependency-free mechanical
+        // pin (no brittle `trybuild` .stderr). Adding any `MutationKind` variant fails to compile
+        // here as well as in `apply`. And whatever the new variant is, it CANNOT be a forbidden power
+        // (capability/trust/signature/kernel/budget/reaper) — those are absent BY TYPE, not by this
+        // check. If this stops compiling, do not add a `_ =>` arm; reconsider the variant.
+        fn assert_closed(k: &MutationKind) {
+            match k {
+                MutationKind::Prompt(_) => {}
+                MutationKind::ToolPolicy(_) => {}
+                MutationKind::RetrievalPolicy(_) => {}
+                MutationKind::DecompositionPolicy(_) => {}
+                MutationKind::RoutingPolicy(_) => {}
+                MutationKind::ReasoningNavigator(_) => {}
+                MutationKind::DomainModel(_, _) => {}
+                MutationKind::SkillInstall(_) => {}
+                MutationKind::SkillRevoke(_) => {}
+            }
+        }
+        assert_closed(&MutationKind::Prompt("x".into()));
+    }
 }
