@@ -7,16 +7,16 @@
 /// the survival ledger can never silently wrap (build-spec §4).
 pub type Microdollars = i64;
 
-/// Decentralized identifier root. Placeholder string form; real `did:key` resolution lands in
+/// Decentralized identifier. A real W3C `did:key` (Ed25519: `did:key:z6Mk…`), encoded/decoded in
 /// `being-core-id`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Did(pub String);
 
-/// Opaque content hash (placeholder for blake3).
+/// A 32-byte content hash (blake3 digest; the hash-chain in `being-core-journal` produces these).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Hash(pub [u8; 32]);
 
-/// Opaque signature (placeholder for ed25519).
+/// An Ed25519 signature (bytes produced/verified by `being-core-id`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sig(pub Vec<u8>);
 
