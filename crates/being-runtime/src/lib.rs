@@ -256,7 +256,20 @@ fn encode_commitment(c: &Commitment) -> Vec<u8> {
         .iter()
         .map(|s| format!("{}\u{1f}{}", s.action, s.arg))
         .collect();
-    format!("{verdict}|{}|{}", c.continue_loop, steps.join("\u{1e}")).into_bytes()
+    // Policy-gate refusals are part of the audit trail: record WHAT was rejected and WHY in the signed
+    // hash-chain, not just what was committed (so a RiskPolicyCommitter's decisions are tamper-evident).
+    let rejected: Vec<String> = c
+        .rejected
+        .iter()
+        .map(|(s, why)| format!("{}\u{1f}{}\u{1f}{}", s.action, s.arg, why))
+        .collect();
+    format!(
+        "{verdict}|{}|{}|{}",
+        c.continue_loop,
+        steps.join("\u{1e}"),
+        rejected.join("\u{1e}")
+    )
+    .into_bytes()
 }
 
 fn encode_observations(obs: &[String]) -> Vec<u8> {
