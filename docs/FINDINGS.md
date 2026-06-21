@@ -550,3 +550,17 @@ clause alone (gap_closure 0.67 ✓, mixed_delta −0.6 ✗). The blocker is now 
 forgetting, whose standard fix is **replay** — mixing general examples into the training set. Testing
 that next: if replay preserves the general set while keeping ⊕ generalization, the gate should finally
 PROMOTE a weight-distilled student.
+
+## 2026-06-21 — weight-distill tradeoff: replay fixes forgetting but costs generalization
+
+```
+1.5B student      held-out ⊕     general
+no replay         8/12 ✓         1/5  ✗   → reject (forgetting)
++ replay (44⊕/11) 4/12 ✗         5/5  ✓   → reject (gap closure)
+```
+
+Replay (mixing general examples into training) **completely fixed forgetting** (1/5 → 5/5, now
+non-inferior) but **halved ⊕ generalization** (8 → 4/12). The replay's basic-arithmetic items compete
+with ⊕ for the LoRA adapter's limited capacity. Neither extreme clears both PromotionGate clauses —
+a genuine capability-vs-retention tradeoff. The lever: lighter, less-interfering replay (facts-weighted)
++ stronger ⊕ signal, to land both above threshold. Tuning next.
