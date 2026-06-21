@@ -11,3 +11,5 @@ being-core-journal = { path = "../being-core-journal" }
 being-core-memory = { path = "../being-core-memory" }
 being-core-economy = { path = "../being-core-economy" }
 being-supervisor = { path = "../being-supervisor" }
+# M4 isolation policy core (light, no wasmtime) — the SandboxedExecutor gates effects through the broker.
+being-sandbox = { path = "../being-sandbox" }

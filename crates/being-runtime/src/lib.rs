@@ -108,6 +108,75 @@ impl Executor for EchoExecutor {
     }
 }
 
+// --- M4 isolation: capability-gated executor -------------------------------------------------
+
+/// Map a committed [`PlanStep`] to the [`EffectRequest`] it would perform. The M1 runtime emits only
+/// pure response steps; effectful actions are classified explicitly here and **anything unrecognized
+/// is treated as effectful and denied** (fail-closed) rather than slipping through as pure.
+pub fn classify_effect(step: &PlanStep) -> being_sandbox::EffectRequest {
+    use being_sandbox::EffectRequest;
+    match step.action.as_str() {
+        "respond" | "error" | "" => EffectRequest::Query,
+        "egress" | "http" | "fetch" => EffectRequest::Egress {
+            host: step.arg.clone(),
+        },
+        "pay" | "payment" => EffectRequest::Payment {
+            microdollars: step.arg.parse().unwrap_or(i64::MAX),
+        },
+        "memory_write" | "remember" => EffectRequest::MemoryWrite,
+        "sign" => EffectRequest::Sign,
+        // Fail-closed: an unrecognized action is treated as egress to an unknown host, so it is denied
+        // unless the operator explicitly granted it (never silently allowed as "pure").
+        _ => EffectRequest::Egress {
+            host: format!("unclassified:{}", step.action),
+        },
+    }
+}
+
+/// Wraps any [`Executor`] so every step is authorized by the capability [`being_sandbox::Broker`]
+/// **before** it runs (M4 isolation policy, in-process). A denied step never reaches the inner
+/// executor — it yields a `[denied:<reason>]` observation instead. Compose this around the real
+/// executor to enforce deny-by-default capabilities on the live turn; the wasmtime backend
+/// (`being-sandbox-wasm`) is the out-of-process hardening of the same policy.
+pub struct SandboxedExecutor<E: Executor> {
+    inner: E,
+    caps: being_sandbox::CapabilitySet,
+    classify: fn(&PlanStep) -> being_sandbox::EffectRequest,
+}
+
+impl<E: Executor> SandboxedExecutor<E> {
+    /// Gate `inner` with the operator-granted `caps`, using [`classify_effect`].
+    pub fn new(inner: E, caps: being_sandbox::CapabilitySet) -> Self {
+        Self {
+            inner,
+            caps,
+            classify: classify_effect,
+        }
+    }
+
+    /// As [`SandboxedExecutor::new`] but with a custom step→effect classifier.
+    pub fn with_classifier(
+        inner: E,
+        caps: being_sandbox::CapabilitySet,
+        classify: fn(&PlanStep) -> being_sandbox::EffectRequest,
+    ) -> Self {
+        Self {
+            inner,
+            caps,
+            classify,
+        }
+    }
+}
+
+impl<E: Executor> Executor for SandboxedExecutor<E> {
+    fn execute(&mut self, step: &PlanStep) -> String {
+        match being_sandbox::Broker::authorize(&(self.classify)(step), &self.caps) {
+            being_sandbox::Authorization::Granted => self.inner.execute(step),
+            being_sandbox::Authorization::Denied(reason) => format!("[denied:{reason}]"),
+        }
+    }
+}
+
 // --- Deterministic journal payload encoding --------------------------------------------------
 
 fn encode_commitment(c: &Commitment) -> Vec<u8> {
@@ -373,6 +442,38 @@ mod tests {
     use being_core_economy::Account;
     use being_core_types::ProvenanceClass;
     use being_supervisor::{DeathCause, Supervisor};
+
+    #[test]
+    fn sandboxed_executor_gates_effects_by_capability() {
+        use being_sandbox::{Capability, CapabilitySet};
+        use std::collections::BTreeSet;
+        let step = |a: &str, arg: &str| PlanStep {
+            action: a.into(),
+            arg: arg.into(),
+        };
+
+        // No capabilities: pure responses run; egress is denied (never reaches the inner executor).
+        let mut sx = SandboxedExecutor::new(EchoExecutor, CapabilitySet::none());
+        assert_eq!(sx.execute(&step("respond", "hi")), "respond:hi");
+        assert!(sx
+            .execute(&step("egress", "evil.test"))
+            .starts_with("[denied:"));
+        // Fail-closed: an unrecognized action is denied, not silently run as pure.
+        assert!(sx.execute(&step("exfiltrate", "x")).starts_with("[denied:"));
+
+        // Granting egress to a specific host lets exactly that host through.
+        let caps = CapabilitySet::granted([Capability::Egress {
+            hosts: BTreeSet::from(["api.ok.test".to_string()]),
+        }]);
+        let mut sx = SandboxedExecutor::new(EchoExecutor, caps);
+        assert_eq!(
+            sx.execute(&step("egress", "api.ok.test")),
+            "egress:api.ok.test"
+        );
+        assert!(sx
+            .execute(&step("egress", "other.test"))
+            .starts_with("[denied:"));
+    }
 
     struct KeywordEmbedder;
     impl being_core_memory::Embedder for KeywordEmbedder {

@@ -181,6 +181,7 @@ dependencies = [
  "being-core-journal",
  "being-core-memory",
  "being-core-types",
+ "being-sandbox",
  "being-supervisor",
 ]
 
