@@ -242,3 +242,24 @@ built (loop-safe, no model):
 and can only vary through the closed `MutationKind` surface — so no signed snapshot can ever carry a
 forbidden mutation, regardless of selection being on. The remaining foreground step is a real
 model-scored illumination run (the gate already fires on synthetic data).
+
+## 2026-06-21 — M6 open-ended-search arm built out (loop-safe, gates lifted)
+
+Operator lifted the milestone gates ("nothing is gated, don't stop"), so the M6 research arm was
+built end-to-end as pure, loop-safe machinery (no model in the automated loop; the foreground `evolve`
+bin loads qwen3:8b only when run):
+
+- **Engine:** `illuminate` (MAP-Elites) with `IlluminationConfig` — elitist vs neutral-drift retention,
+  asexual `fork` and sexual `fork2`/`recombine` (uniform crossover, `recombination_rate`), optional
+  `Phylogeny` genealogy recording. Deterministic xorshift RNG → replayable.
+- **Diversity map:** `BehaviorDescriptor` (unbounded `new` + finite `bounded`), `Archive` best-per-cell,
+  QD-score / mean-fitness / coverage.
+- **Honesty gate:** `neutral_drift_gate` (paired bootstrap) — fires only when selection beats a matched
+  drift control by a margin; `m6_acceptance.rs` shows it firing on a synthetic landscape (12 replicates).
+- **Durable fork:** signed, content-addressed, crash-recoverable `ForkSnapshot`/`ForkLedger` +
+  `Genome::canon_bytes`; tamper/forge/impostor all rejected; replay is idempotent.
+
+**Safety invariant held throughout, gate or no gate:** every child — mutated or recombined, signed or
+not — varies only through the closed `MutationKind` surface, and `Genome` has no capability/trust/kernel
+fields, so no forbidden power is representable in any lineage. The remaining step is genuinely
+foreground: a real model-scored illumination run + replicate drift-gate over QD-scores.

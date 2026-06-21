@@ -106,18 +106,22 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
   **efficiency-only** until a genuinely exogenous payer is committed (the step-0 that makes the
   anti-theater/economic gate *fire* on real foreground runs).
 
-## M6 — Research arm (population + selection)  `[ ] 🔒`
-*Fork saga + lineage built as substrate; **selection stays OFF** until the entry gate holds.*
+## M6 — Research arm (population + selection)  `[~] in progress`
+*Open-ended-search arm built loop-safe (gates lifted by operator). Wiring reproduction/death to a
+live population remains a deliberate, reviewable boundary — noted in diffs, not blocked.*
 - [x] `being-lineage` — `Lineage` (id/parents/generation) + `fork` (asexual; child inherits the
   genome verbatim) + `fork2`/`recombine` (sexual uniform-crossover; child records both parents).
   Variation only via the closed surface; recombination only copies existing parent values, so no
   forbidden power can appear that neither parent had — safety invariant survives sexual reproduction.
-- [x] `being-lineage` MAP-Elites substrate — best-per-cell `Archive`, `BehaviorDescriptor`
-  (deterministic behavior→`Cell` binning — the diversity-niche map), and QD-score/mean-fitness
-  observability.
-- [x] `being-lineage::illuminate` — the MAP-Elites illumination **engine**: sample-parent → fork →
-  vary (closed surface) → evaluate (injected `Evaluator`, loop never infers) → place in cell.
-  `Retention::{Elitist,NeutralDrift}` selects real selection vs the matched control.
+- [x] `being-lineage` MAP-Elites substrate — best-per-cell `Archive`; `BehaviorDescriptor`
+  (deterministic behavior→`Cell` binning; `bounded()` gives a finite cell space); QD-score,
+  mean-fitness, and `coverage()` (filled/total) observability.
+- [x] `Phylogeny` — full-ancestry recorder (every produced lineage, `max_generation`,
+  `is_well_formed`); the genealogy the drift/fitness-variance analysis needs.
+- [x] `being-lineage::illuminate` — the MAP-Elites illumination **engine** (`IlluminationConfig`):
+  sample-parent(s) → fork/recombine → vary (closed surface) → evaluate (injected `Evaluator`, loop
+  never infers) → place in cell. `Retention::{Elitist,NeutralDrift}` selects real selection vs the
+  matched control; `recombination_rate` enables sexual reproduction; optional `Phylogeny` recorder.
 - [x] `being-bench::neutral_drift_gate` — the M6 **entry-gate machinery**: paired-bootstrap selection
   vs neutral-drift control; fires only when selection beats drift by a margin.
 - [x] M6 acceptance **methodology proven loop-safe** (`being-bench/tests/m6_acceptance.rs`): on a
