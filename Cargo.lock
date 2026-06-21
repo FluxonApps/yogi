@@ -86,6 +86,7 @@ dependencies = [
  "being-runtime",
  "being-sandbox",
  "being-supervisor",
+ "being-value",
 ]
 
 [[package]]

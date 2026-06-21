@@ -67,6 +67,13 @@ being-distill = { path = "../being-distill" }
 # Full-integration capstone (full_being bin): durable journal + capability sandbox composed on a being.
 being-colony = { path = "../being-colony" }
 being-sandbox = { path = "../being-sandbox" }
+# Live population demo (population_live bin): exogenous payer drives economic selection.
+being-value = { path = "../being-value" }
+
+# Live M6 population: real-model economic selection (thinking vs /no_think competence). Foreground.
+[[bin]]
+name = "population_live"
+path = "src/bin/population_live.rs"
 
 # M3 distillation flywheel end-to-end on the transfer corpus (cold vs distilled). Foreground.
 [[bin]]
