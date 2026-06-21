@@ -13,6 +13,7 @@ being-persist = { path = "../being-persist" }
 being-core-types = { path = "../being-core-types" }
 being-core-journal = { path = "../being-core-journal" }
 being-core-id = { path = "../being-core-id" }
+being-runtime = { path = "../being-runtime" }
 
 [dev-dependencies]
 being-core-mutation = { path = "../being-core-mutation" }

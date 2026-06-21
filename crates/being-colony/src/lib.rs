@@ -86,6 +86,56 @@ impl<S: Signer> DurableJournal<S> {
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Durable dedup ledger: the M1 at-most-once egress guard made restart-survivable.
+// ---------------------------------------------------------------------------------------------
+
+/// A durable version of the M1 `DedupLedger` (build-spec §5): it persists each side-effecting step's
+/// 36-byte [`IdemKey`](being_runtime::step_machine::IdemKey) canon, so **at-most-once** for egress /
+/// payment / memory-write / sign holds across a crash/restart — after a restart the executor will not
+/// re-emit an effect that was already emitted before the crash. Reopen replays the durable log.
+pub struct DurableDedupLedger {
+    log: DurableLog,
+    seen: std::collections::BTreeSet<[u8; 36]>,
+}
+
+impl DurableDedupLedger {
+    pub fn open(path: impl AsRef<Path>) -> io::Result<Self> {
+        let log = DurableLog::open(path)?;
+        let mut seen = std::collections::BTreeSet::new();
+        for rec in log.replay()? {
+            if let Ok(k) = <[u8; 36]>::try_from(rec.as_slice()) {
+                seen.insert(k);
+            }
+        }
+        Ok(Self { log, seen })
+    }
+
+    /// Mark an effect's `IdemKey` as emitted, durably. Returns `true` if newly marked, `false` if it
+    /// was already present (the effect already happened — do NOT re-emit). Idempotent + crash-safe.
+    pub fn mark(&mut self, key: &being_runtime::step_machine::IdemKey) -> io::Result<bool> {
+        let k = key.canon();
+        if self.seen.contains(&k) {
+            return Ok(false);
+        }
+        self.log.append(&k)?;
+        self.seen.insert(k);
+        Ok(true)
+    }
+
+    pub fn contains(&self, key: &being_runtime::step_machine::IdemKey) -> bool {
+        self.seen.contains(&key.canon())
+    }
+
+    pub fn len(&self) -> usize {
+        self.seen.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.seen.is_empty()
+    }
+}
+
 /// A [`being_lineage::ForkLedger`] whose committed set is **durable**: each accepted fork's
 /// content-addressed `snapshot_id` is persisted via a [`DurableIdSet`], so at-most-once fork commit
 /// holds across a process restart (not only as idempotent replay within one run). Reopening replays
@@ -200,6 +250,25 @@ mod tests {
         assert_eq!(j.len(), 2);
         assert!(j.verify_chain());
         assert_eq!(j.head(), head_before);
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn durable_dedup_survives_restart() {
+        use being_core_types::Hash;
+        use being_runtime::step_machine::IdemKey;
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        let key = IdemKey::new(Hash([3u8; 32]), 1);
+        {
+            let mut d = DurableDedupLedger::open(&path).unwrap();
+            assert!(d.mark(&key).unwrap()); // newly emitted
+            assert!(!d.mark(&key).unwrap()); // already emitted → don't re-emit
+        }
+        // "Restart": the at-most-once guard remembers the effect already happened.
+        let d = DurableDedupLedger::open(&path).unwrap();
+        assert!(d.contains(&key));
+        assert_eq!(d.len(), 1);
         std::fs::remove_file(&path).ok();
     }
 }

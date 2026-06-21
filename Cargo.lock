@@ -96,6 +96,7 @@ dependencies = [
  "being-core-types",
  "being-lineage",
  "being-persist",
+ "being-runtime",
 ]
 
 [[package]]
