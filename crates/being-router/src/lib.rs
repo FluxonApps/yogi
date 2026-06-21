@@ -107,6 +107,32 @@ impl OutcomeLearnedRouter {
         }
     }
 
+    /// Classes that have graduated from cold-start (both modes sampled) and the mode now chosen for
+    /// each — observability for the learned policy. Pure.
+    pub fn learned_decisions(&self) -> BTreeMap<&'static str, ReasoningMode> {
+        let classes: std::collections::BTreeSet<&'static str> =
+            self.stats.keys().map(|(c, _)| *c).collect();
+        classes
+            .into_iter()
+            .filter_map(|c| {
+                match (
+                    self.value(c, ReasoningMode::Think),
+                    self.value(c, ReasoningMode::NoThink),
+                ) {
+                    (Some(vt), Some(vn)) => Some((
+                        c,
+                        if vn >= vt {
+                            ReasoningMode::NoThink
+                        } else {
+                            ReasoningMode::Think
+                        },
+                    )),
+                    _ => None,
+                }
+            })
+            .collect()
+    }
+
     /// Estimated value of a mode for a class, or `None` until it has `min_samples` outcomes.
     fn value(&self, class: &'static str, mode: ReasoningMode) -> Option<f64> {
         let (n, passes) = self.stats.get(&(class, mode)).copied().unwrap_or((0, 0));
@@ -184,6 +210,19 @@ mod tests {
             r.record(task, ReasoningMode::Think, true); // Think keeps passing
         }
         assert_eq!(r.route(task), ReasoningMode::Think); // learned to override the heuristic
+    }
+
+    #[test]
+    fn outcome_router_reports_learned_decisions() {
+        let mut r = OutcomeLearnedRouter::new(3, 0.05);
+        let task = "describe the vibe"; // class "plain"
+        for _ in 0..3 {
+            r.record(task, ReasoningMode::NoThink, false);
+            r.record(task, ReasoningMode::Think, true);
+        }
+        let d = r.learned_decisions();
+        assert_eq!(d.get("plain"), Some(&ReasoningMode::Think));
+        assert!(!d.contains_key("math")); // never sampled → not graduated
     }
 
     #[test]
