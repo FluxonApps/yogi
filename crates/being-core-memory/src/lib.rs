@@ -581,6 +581,26 @@ mod vector_tests {
         assert!(cosine_similarity(&[1.0, 0.0], &[0.0, 1.0]).abs() < EPS); // orthogonal
         assert!(cosine_similarity(&[1.0], &[1.0, 2.0]).abs() < EPS); // length mismatch → 0
         assert!(cosine_similarity(&[0.0, 0.0], &[1.0, 1.0]).abs() < EPS); // zero vector → 0
+                                                                          // It is true (signed) cosine, not clamped: anti-parallel vectors give -1.
+        assert!((cosine_similarity(&[1.0, 0.0], &[-1.0, 0.0]) + 1.0).abs() < EPS);
+    }
+
+    #[test]
+    fn search_handles_empty_index_and_zero_k() {
+        let mut idx = SemanticIndex::new();
+        assert!(idx.search(&[1.0, 0.0], 0, 5, 1.0, 1000).is_empty()); // nothing indexed
+        idx.add(1, vec![1.0, 0.0], "a", 0);
+        assert!(idx.search(&[1.0, 0.0], 0, 0, 1.0, 1000).is_empty()); // k = 0 → no hits
+    }
+
+    #[test]
+    fn hybrid_with_no_lexical_match_falls_back_to_semantic_order() {
+        let mut idx = SemanticIndex::new();
+        idx.add(1, vec![1.0, 0.0], "alpha note", 0);
+        idx.add(2, vec![0.0, 1.0], "beta note", 0);
+        // Query text matches no indexed token → lexical channel is silent → cosine decides.
+        let hyb = idx.search_hybrid(&[1.0, 0.0], "zzz", 0, 2, 1.0, 1000, 0.5);
+        assert_eq!(hyb[0].id, 1);
     }
 
     #[test]
@@ -655,6 +675,20 @@ mod learning_tests {
     }
 
     #[test]
+    fn best_for_is_none_without_a_passing_skill() {
+        let mut p = ProceduralStore::new();
+        assert!(p.best_for("sql").is_none()); // no skills at all
+        p.learn_from(&Trajectory {
+            task_class: "sql",
+            passed: false,
+            lesson: "this failed",
+        });
+        // A class with only a [fail] variant surfaces NO best — a cautionary lesson is never injected
+        // as the skill to apply.
+        assert!(p.best_for("sql").is_none());
+    }
+
+    #[test]
     fn failing_trajectory_does_not_become_best() {
         let mut p = ProceduralStore::new();
         p.learn_from(&Trajectory {
@@ -714,6 +748,18 @@ mod tests {
         assert_eq!(hits[0].text, "the cat ran"); // most recent first
         assert_eq!(hits[0].valid_at_ms, 20);
         assert_eq!(hits[0].txn_at_ms, 200);
+    }
+
+    #[test]
+    fn retrieve_honors_limit_and_returns_empty_on_no_match() {
+        let mut ep = EpisodicStore::new();
+        ep.record_user_turn("the cat sat", 1, 1);
+        ep.record_user_turn("the cat ran", 2, 2);
+        ep.record_user_turn("the cat jumped", 3, 3);
+        let limited = ep.retrieve("cat", 2);
+        assert_eq!(limited.len(), 2); // limit honored
+        assert_eq!(limited[0].text, "the cat jumped"); // most-recent-first within the limit
+        assert!(ep.retrieve("dog", 10).is_empty()); // no substring match
     }
 
     #[test]
