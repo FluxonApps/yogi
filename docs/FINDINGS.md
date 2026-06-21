@@ -263,3 +263,27 @@ bin loads qwen3:8b only when run):
 not — varies only through the closed `MutationKind` surface, and `Genome` has no capability/trust/kernel
 fields, so no forbidden power is representable in any lineage. The remaining step is genuinely
 foreground: a real model-scored illumination run + replicate drift-gate over QD-scores.
+
+## 2026-06-21 — recombination helps ONLY when the behavior space preserves building-block diversity
+
+Experiment (`being-bench/tests/m6_recombination.rs`, pure/loop-safe): a 4-gene building-block landscape
+(each gene in its own genome field; gene correct iff first byte = `a`; mutation flips one random gene),
+asexual vs sexual `illuminate` at a 30-eval budget × 16 paired replicates, judged by `neutral_drift_gate`.
+
+| niching (behavior axis) | asexual best | sexual best | gate |
+|---|---|---|---|
+| **correct-count** (quantity) | 0.563 | 0.516 | not fired (sexual slightly *worse*) |
+| **which-genes-solved** (identity) | 0.672 | 0.688 | not fired (sexual slightly better, n.s.) |
+
+**The lesson:** MAP-Elites recombination only pays off when the **behavior descriptor preserves the
+diversity crossover needs**. Niching by *correct-count* collapses all "k-correct" genomes into one cell,
+so the archive forgets *which* blocks a lineage solved — crossover then has nothing complementary to
+combine and merely pays evaluation overhead (it does slightly worse). Niching by *which* genes are
+solved keeps specialists for different blocks, and crossover edges ahead — but only marginally at this
+tiny budget, so the gate correctly reports **no significant effect**.
+
+This is the anti-theater discipline working: a plausible "sexual reproduction is better" story does NOT
+survive the matched control at honest power. The committed test asserts only the robust facts
+(determinism, both arms progress); the comparative claim lives here, not as a cherry-picked green assert.
+The descriptor-diversity dependence is the real, reusable insight (and a caution for the eventual
+model-scored run: choose the behavior axis to preserve the diversity you want selection to exploit).
