@@ -144,6 +144,9 @@ pub struct Turn {
 /// Retrieval blend (D-M3-1): cosine weight and a ~14-day recency half-life.
 const RETRIEVAL_ALPHA: f32 = 0.7;
 const RETRIEVAL_HALF_LIFE_MS: i64 = 14 * 24 * 60 * 60 * 1000;
+/// Lexical weight in the hybrid blend (D-M3-3): moderate, so rare/exact tokens (symbols, IDs) surface
+/// reliably without overriding semantic similarity.
+const RETRIEVAL_LEX_WEIGHT: f32 = 0.3;
 
 /// A metabolic being: identity-bound journal + episodic & semantic memory + the seam + an
 /// operator-owned supervisor (held only as the narrow `SupervisorPort`).
@@ -220,9 +223,15 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
     fn retrieve_context(&mut self, input: &str, now_ms: Ms) -> Vec<String> {
         if let Some(embedder) = self.embedder.clone() {
             if let Ok(qv) = embedder.embed(input) {
-                let hits =
-                    self.index
-                        .search(&qv, now_ms, 4, RETRIEVAL_ALPHA, RETRIEVAL_HALF_LIFE_MS);
+                let hits = self.index.search_hybrid(
+                    &qv,
+                    input,
+                    now_ms,
+                    4,
+                    RETRIEVAL_ALPHA,
+                    RETRIEVAL_HALF_LIFE_MS,
+                    RETRIEVAL_LEX_WEIGHT,
+                );
                 let texts: Vec<String> = hits.into_iter().map(|h| h.text).collect();
                 let id = self.index.len() as u64 + 1;
                 self.index.add(id, qv, input, now_ms);
