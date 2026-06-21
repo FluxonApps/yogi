@@ -206,18 +206,48 @@ pub struct BehaviorDescriptor {
     origin: Vec<f64>,
     /// Bin width for each dimension (must be > 0).
     width: Vec<f64>,
+    /// Optional bin count per dimension. `Some(n)` bounds that axis to bins `0..n` (values clamp in),
+    /// making the cell space finite so coverage can be a fraction; `None` leaves the axis open.
+    caps: Vec<Option<i64>>,
 }
 
 impl BehaviorDescriptor {
-    /// Build a descriptor from per-dimension `(origin, width)` pairs. `width` must be strictly
-    /// positive on every axis (a zero/negative bin is meaningless); returns `None` otherwise.
+    /// Build an *unbounded* descriptor from per-dimension `(origin, width)` pairs. `width` must be
+    /// strictly positive on every axis (a zero/negative bin is meaningless); returns `None` otherwise.
     pub fn new(bins: impl IntoIterator<Item = (f64, f64)>) -> Option<Self> {
         let (origin, width): (Vec<f64>, Vec<f64>) = bins.into_iter().unzip();
         // Reject zero, negative, and NaN widths (a non-positive bin is meaningless).
         if width.iter().any(|w| *w <= 0.0 || w.is_nan()) {
             return None;
         }
-        Some(Self { origin, width })
+        let caps = vec![None; width.len()];
+        Some(Self {
+            origin,
+            width,
+            caps,
+        })
+    }
+
+    /// Build a *bounded* descriptor from per-dimension `(origin, width, bins)` triples. Each axis is
+    /// clamped to bins `0..bins`, so the total cell space is finite ([`cell_count`](Self::cell_count)
+    /// is `Some`) and [`coverage`](Self::coverage) is a fraction. `width > 0` and `bins ≥ 1` required.
+    pub fn bounded(bins: impl IntoIterator<Item = (f64, f64, i64)>) -> Option<Self> {
+        let mut origin = Vec::new();
+        let mut width = Vec::new();
+        let mut caps = Vec::new();
+        for (o, w, n) in bins {
+            if w <= 0.0 || w.is_nan() || n < 1 {
+                return None;
+            }
+            origin.push(o);
+            width.push(w);
+            caps.push(Some(n));
+        }
+        Some(Self {
+            origin,
+            width,
+            caps,
+        })
     }
 
     /// Number of characterized behavior dimensions.
@@ -225,14 +255,33 @@ impl BehaviorDescriptor {
         self.width.len()
     }
 
-    /// Discretize a behavior vector into its cell. Each axis `i` bins to `floor((x_i − origin_i)/width_i)`.
-    /// A missing coordinate (shorter `behavior`) falls into bin 0's axis (treated as `origin_i`), so the
-    /// result is always `dims()` long and never panics — deterministic regardless of input length.
+    /// Total number of reachable cells — the product of per-axis bin counts — or `None` if any axis
+    /// is unbounded. The denominator for [`coverage`](Self::coverage).
+    pub fn cell_count(&self) -> Option<usize> {
+        self.caps
+            .iter()
+            .try_fold(1usize, |acc, c| c.map(|n| acc.saturating_mul(n as usize)))
+    }
+
+    /// Fraction of the reachable cell space an archive has filled (`filled / cell_count`), or `None`
+    /// for an unbounded descriptor. The canonical QD companion to [`Archive::qd_score`].
+    pub fn coverage(&self, archive: &Archive) -> Option<f64> {
+        self.cell_count()
+            .map(|total| archive.len() as f64 / total as f64)
+    }
+
+    /// Discretize a behavior vector into its cell. Each axis `i` bins to `floor((x_i − origin_i)/width_i)`,
+    /// clamped to `0..bins_i` on bounded axes. A missing coordinate (shorter `behavior`) falls into bin 0
+    /// (treated as `origin_i`), so the result is always `dims()` long and never panics.
     pub fn cell(&self, behavior: &[f64]) -> Cell {
         (0..self.dims())
             .map(|i| {
                 let x = behavior.get(i).copied().unwrap_or(self.origin[i]);
-                ((x - self.origin[i]) / self.width[i]).floor() as i64
+                let bin = ((x - self.origin[i]) / self.width[i]).floor() as i64;
+                match self.caps[i] {
+                    Some(n) => bin.clamp(0, n - 1),
+                    None => bin,
+                }
             })
             .collect()
     }
@@ -316,6 +365,31 @@ mod tests {
         assert_eq!(bd.cell(&[3.0]), vec![3, 0]);
         // a zero/negative width is rejected
         assert!(BehaviorDescriptor::new([(0.0, 0.0)]).is_none());
+    }
+
+    #[test]
+    fn bounded_descriptor_clamps_and_reports_coverage() {
+        // 2 axes × 3 bins = 9 reachable cells.
+        let bd = BehaviorDescriptor::bounded([(0.0, 1.0, 3), (0.0, 1.0, 3)]).unwrap();
+        assert_eq!(bd.cell_count(), Some(9));
+        // Out-of-range values clamp into the valid bin range (never escape the bounded space).
+        assert_eq!(bd.cell(&[-5.0, 99.0]), vec![0, 2]);
+        assert_eq!(bd.cell(&[1.5, 2.5]), vec![1, 2]);
+
+        let mut a = Archive::new();
+        let g = Genome::default;
+        a.consider(bd.cell(&[0.0, 0.0]), Lineage::founder(1), g(), 0.5);
+        a.consider(bd.cell(&[2.0, 2.0]), Lineage::founder(2), g(), 0.5);
+        a.consider(bd.cell(&[1.0, 1.0]), Lineage::founder(3), g(), 0.5);
+        // 3 of 9 cells filled → coverage 1/3.
+        assert!((bd.coverage(&a).unwrap() - 3.0 / 9.0).abs() < 1e-9);
+
+        // Unbounded descriptors have no finite denominator → no coverage fraction.
+        let open = BehaviorDescriptor::new([(0.0, 1.0)]).unwrap();
+        assert_eq!(open.cell_count(), None);
+        assert_eq!(open.coverage(&a), None);
+        // bins < 1 is rejected.
+        assert!(BehaviorDescriptor::bounded([(0.0, 1.0, 0)]).is_none());
     }
 
     #[test]

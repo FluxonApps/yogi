@@ -76,8 +76,8 @@ impl Variator for PromptVariator {
 
 fn main() {
     eprintln!("M6 illumination (foreground — loads qwen3:8b repeatedly) ...");
-    // Verbosity niches: each 20-char band of mean response length is its own cell.
-    let descriptor = BehaviorDescriptor::new([(0.0, 20.0)]).unwrap();
+    // Verbosity niches: 30 bands of 20 chars (0..600), bounded so coverage is a fraction.
+    let descriptor = BehaviorDescriptor::bounded([(0.0, 20.0, 30)]).unwrap();
     let iterations = std::env::var("EVOLVE_ITERS")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -108,9 +108,10 @@ fn main() {
         archive.len()
     );
     println!(
-        "QD-score={:.3}  mean-fitness={:.3}",
+        "QD-score={:.3}  mean-fitness={:.3}  coverage={:.1}%",
         archive.qd_score(),
-        archive.mean_fitness().unwrap_or(0.0)
+        archive.mean_fitness().unwrap_or(0.0),
+        descriptor.coverage(&archive).unwrap_or(0.0) * 100.0
     );
     println!("\nelites per verbosity niche (len-band -> fitness, gen, prompt):");
     for e in archive.elites() {
