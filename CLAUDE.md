@@ -24,6 +24,11 @@ Show the actual test/clippy output as evidence; do not assert success.
 4. `cargo fmt --all` — formatted.
 5. Commit only when 1–4 pass. End commit messages with the session trailer.
 
+## Continue / what's next
+- **Milestone state is tracked in `docs/MILESTONES.md`** (the durable source of truth). To "continue",
+  implement the **first unchecked item** there, keep the build green, then tick it and commit.
+- Drive one milestone per `/goal`; review the diff at `⚠` safety-critical and `🔒` gated milestones.
+
 ## Milestone discipline (build-spec §6)
 - Build milestone-by-milestone (M0 → M6); each ends in a runnable artifact + a passing acceptance test.
 - **Selection (M6) stays OFF** until the bench shows compounding AND the anti-theater gate fires.
