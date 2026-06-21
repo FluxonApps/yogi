@@ -90,6 +90,7 @@ dependencies = [
 name = "being-colony"
 version = "0.0.0"
 dependencies = [
+ "being-core-economy",
  "being-core-id",
  "being-core-journal",
  "being-core-mutation",
@@ -97,6 +98,7 @@ dependencies = [
  "being-lineage",
  "being-persist",
  "being-runtime",
+ "being-supervisor",
 ]
 
 [[package]]

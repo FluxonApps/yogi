@@ -225,8 +225,8 @@ const SKILL_RETRIEVAL_K: usize = 2;
 
 /// A metabolic being: identity-bound journal + episodic & semantic memory + the seam + an
 /// operator-owned supervisor (held only as the narrow `SupervisorPort`).
-pub struct Being<P: Proposer, C: Committer, E: Executor> {
-    journal: MemoryJournal<Ed25519Signer>,
+pub struct Being<P: Proposer, C: Committer, E: Executor, J = MemoryJournal<Ed25519Signer>> {
+    journal: J,
     episodic: EpisodicStore,
     index: SemanticIndex,
     /// Skills live in their OWN index, retrieved at high precision (top-`SKILL_RETRIEVAL_K`), separate
@@ -241,6 +241,8 @@ pub struct Being<P: Proposer, C: Committer, E: Executor> {
 }
 
 impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
+    /// The default in-memory being. (`journal()` below is concrete here so existing callers keep the
+    /// `MemoryJournal`-specific methods like `replay`/`get`.)
     pub fn from_seed(
         seed: [u8; 32],
         supervisor: Arc<dyn SupervisorPort>,
@@ -248,8 +250,32 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
         committer: C,
         executor: E,
     ) -> Self {
+        Self::from_parts(
+            MemoryJournal::new(Ed25519Signer::from_seed(seed)),
+            supervisor,
+            proposer,
+            committer,
+            executor,
+        )
+    }
+
+    pub fn journal(&self) -> &MemoryJournal<Ed25519Signer> {
+        &self.journal
+    }
+}
+
+impl<P: Proposer, C: Committer, E: Executor, J: being_core_journal::Journal> Being<P, C, E, J> {
+    /// Construct from a prebuilt journal — the seam for a **durable** being (the caller supplies the
+    /// `J`, e.g. `being-colony`'s `DurableJournal`). `from_seed` is the in-memory default.
+    pub fn from_parts(
+        journal: J,
+        supervisor: Arc<dyn SupervisorPort>,
+        proposer: P,
+        committer: C,
+        executor: E,
+    ) -> Self {
         Self {
-            journal: MemoryJournal::new(Ed25519Signer::from_seed(seed)),
+            journal,
             episodic: EpisodicStore::new(),
             index: SemanticIndex::new(),
             skill_index: SemanticIndex::new(),
@@ -261,12 +287,18 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
         }
     }
 
-    pub fn journal(&self) -> &MemoryJournal<Ed25519Signer> {
-        &self.journal
-    }
-
     pub fn episodic(&self) -> &EpisodicStore {
         &self.episodic
+    }
+
+    /// Journal length / chain-validity via the `Journal` seam — works for any journal (in-memory or
+    /// durable), unlike the concrete `journal()` accessor which exposes `MemoryJournal`-only methods.
+    pub fn journal_len(&self) -> usize {
+        self.journal.len()
+    }
+
+    pub fn journal_verifies(&self) -> bool {
+        self.journal.verify_chain()
     }
 
     /// Attach a semantic embedder. With one, `turn` retrieves prior memory by embedding the input
@@ -385,9 +417,24 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
 
         let mut commitment = self.committer.commit(&proposal, &ctx);
         commitment.budget_verdict = verdict;
-        let commitment_seq = self
+        let commitment_seq = match self
             .journal
-            .append("commitment", encode_commitment(&commitment));
+            .append("commitment", encode_commitment(&commitment))
+        {
+            Ok(seq) => seq,
+            // A durable journal that can't fsync the commitment must NOT let the turn act (fail-safe);
+            // the in-memory journal never reaches this branch.
+            Err(_) => {
+                return Turn {
+                    acted: false,
+                    observations: Vec::new(),
+                    alive_after: self.supervisor.is_alive(),
+                    commitment_seq: None,
+                    attestation_seq: None,
+                    budget_verdict: verdict,
+                }
+            }
+        };
 
         if verdict == BudgetVerdict::WithinBudget {
             let observations: Vec<String> = commitment
@@ -395,9 +442,12 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
                 .iter()
                 .map(|step| self.executor.execute(step))
                 .collect();
+            // Attestation persisted after the effects; if a durable write fails here the effects still
+            // happened, so the turn is still acted (attestation_seq just absent).
             let attestation_seq = self
                 .journal
-                .append("attestation", encode_observations(&observations));
+                .append("attestation", encode_observations(&observations))
+                .ok();
             self.episodic
                 .record_model_inference(observations.join("; "), now_ms, now_ms);
             Turn {
@@ -405,7 +455,7 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
                 observations,
                 alive_after: self.supervisor.is_alive(),
                 commitment_seq: Some(commitment_seq),
-                attestation_seq: Some(attestation_seq),
+                attestation_seq,
                 budget_verdict: verdict,
             }
         } else {

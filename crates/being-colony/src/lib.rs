@@ -86,6 +86,31 @@ impl<S: Signer> DurableJournal<S> {
     }
 }
 
+/// Construct a **durable being**: a [`being_runtime::Being`] whose signed journal is a [`DurableJournal`]
+/// at `path`, so its commitment/attestation chain survives a process restart (§5). Reopening the same
+/// path + signer rebuilds the being's journal from disk. This is the live-being capstone of the
+/// persistence work — the runtime's `Being` plugged onto durable storage via the `Journal` seam.
+#[allow(clippy::type_complexity)]
+pub fn durable_being<P, C, E, S>(
+    path: impl AsRef<Path>,
+    signer: S,
+    supervisor: std::sync::Arc<dyn being_supervisor::SupervisorPort>,
+    proposer: P,
+    committer: C,
+    executor: E,
+) -> io::Result<being_runtime::Being<P, C, E, DurableJournal<S>>>
+where
+    P: being_runtime::Proposer,
+    C: being_runtime::Committer,
+    E: being_runtime::Executor,
+    S: Signer,
+{
+    let journal = DurableJournal::open(path, signer)?;
+    Ok(being_runtime::Being::from_parts(
+        journal, supervisor, proposer, committer, executor,
+    ))
+}
+
 /// `DurableJournal` plugs into the runtime's [`being_core_journal::Journal`] seam, so a `Being` can be
 /// constructed durable behind the same interface as the in-memory one (the §5 persistence plug-point).
 impl<S: Signer> being_core_journal::Journal for DurableJournal<S> {
@@ -273,6 +298,48 @@ mod tests {
         assert_eq!(j.len(), 2);
         assert!(j.verify_chain());
         assert_eq!(j.head(), head_before);
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn durable_being_journal_survives_restart() {
+        use being_core_economy::Account;
+        use being_runtime::{EchoExecutor, EchoProposer, PassThroughCommitter};
+        use being_supervisor::Supervisor;
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+
+        // A live durable being takes a couple of turns; each commitment+attestation is fsynced.
+        {
+            let sup = Supervisor::new(Account::new(1_000_000_000, 0, 1_000_000_000), i64::MAX, 0);
+            let mut being = durable_being(
+                &path,
+                Ed25519Signer::from_seed([8; 32]),
+                Supervisor::as_port(&sup),
+                EchoProposer,
+                PassThroughCommitter,
+                EchoExecutor,
+            )
+            .unwrap();
+            being.turn("hello", 1);
+            being.turn("again", 2);
+            assert!(being.journal_len() >= 2); // commitments (+ attestations) persisted
+            assert!(being.journal_verifies());
+        }
+        // "Restart": a fresh durable being on the same path + signer rebuilds the journal from disk —
+        // the being's signed history survived the process restart and still verifies.
+        let sup = Supervisor::new(Account::new(1_000_000_000, 0, 1_000_000_000), i64::MAX, 0);
+        let recovered = durable_being(
+            &path,
+            Ed25519Signer::from_seed([8; 32]),
+            Supervisor::as_port(&sup),
+            EchoProposer,
+            PassThroughCommitter,
+            EchoExecutor,
+        )
+        .unwrap();
+        assert!(recovered.journal_len() >= 2);
+        assert!(recovered.journal_verifies());
         std::fs::remove_file(&path).ok();
     }
 
