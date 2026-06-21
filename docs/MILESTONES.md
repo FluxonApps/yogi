@@ -76,6 +76,11 @@ skill-learning(verifier) → wire + Day-N bench.*
   search → accumulate into the index → memory compounds; episodic fallback). Test proves turn-2
   surfaces turn-1 memory (stub embedder, no model). Foreground `compound` bin runs the Day-0 vs Day-N
   paired-bootstrap demo (`cargo run -p being-bench --bin compound --release`).
+- [x] `being-distill` (D-M3-4) — the distillation **decision machinery**: `gap_set`
+  (teacher-success ∩ student-weak) + `PromotionGate` (both acceptance clauses: gap-closure margin AND
+  mixed-set non-inferiority/anti-forgetting). Pure/loop-safe · 6 tests. Foreground `distill` bin
+  computes the live gap (qwen3 thinking teacher vs no-think student). **LoRA training itself is the
+  remaining foreground/heavy step** (needs a student-size decision).
 - **Acceptance:** distillation closes the gap on `(teacher-success ∩ student-weak)` for ≥1 domain by
   the pre-registered per-domain margin; every `DomainModel` promotion re-clears the mixed-set
   non-inferiority floor; compounding bench detects accumulation or reports saturation.
@@ -140,9 +145,15 @@ live population remains a deliberate, reviewable boundary — noted in diffs, no
   length → verbosity niches), illuminates the archive, reports QD-score + per-niche elites. Compiles
   in the loop; loads qwen3:8b only when run. (Replicate runs + drift gate over QD-scores = the
   publishable result; gate already fires on synthetic data.)
+- [x] **LIVE demonstration** (`evolve_transfer` bin, FINDINGS 2026-06-21): on the transfer corpus
+  (rule-carrying genomes) the arm does real work on `qwen3:8b` — cold founder fails all ops (genuine
+  transfer), niches spread (88% coverage, reproduced across seeds), and **recombination assembled a
+  2-parent gen-3 child solving all three operations (fitness 1.0)**. The saturated frozen suite was
+  the wrong substrate (collapsed to 1 niche); the transfer corpus is the right one. Live drift
+  acceptance (`EVOLVE_DRIFT`) harness ready; a powered run is multi-hour on this 16 GB/8B box.
 - **Entry gate:** the compounding bench shows accumulation **AND** the anti-theater gate fires. The
-  gate *machinery* now exists and fires correctly on synthetic data; wiring reproduction/death to a
-  live population stays a deliberate, reviewable boundary.
+  gate *machinery* now exists and fires on synthetic data; the live illumination demonstrates the
+  thesis. Wiring reproduction/death to a live population stays a deliberate, reviewable boundary.
 - **Acceptance (when entered):** a fork is a signed, crash-recoverable distributed snapshot; the
   post-exhaustion fitness-variance gate distinguishes signal from a neutral-drift control at stated
   power, or the "breeding-program-not-evolution" result is reported.
