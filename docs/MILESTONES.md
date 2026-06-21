@@ -35,9 +35,13 @@ committed tail is deterministic.* — **met** (26 tests, clippy clean; commits c
 
 - [x] `being-core-economy` — single-ledger Account: maintenance-first, `reserve_floor` + per-bet cap, category telemetry, credit-only inflow (D-M1-2) · 6 tests
 - [x] `being-supervisor` — `SupervisorPort` façade, private authority, out-of-band watchdog thread, irreversible `Death`/reaper (insolvency · timeout · operator kill), first-cause-wins (D-M1-1, D-M1-3) · 6 tests
-- [ ] per-step state machine + crash recovery
+- [x] `being-runtime::step_machine` — the per-step state machine + crash recovery (`Reserved →
+  Dispatched → Attested → Settled`): `EffectClass` (egress/payment · `MemoryWrite`/`Sign` ·
+  pure `Query`/`Infer`), `IdemKey` (`canon(commitment_hash ++ step_index)`) + `DedupLedger`
+  (at-most-once for every side-effecting class), the §5 `resume_action` truth table, batch-reserve
+  ownership (ONE reserve / turn → per-step `run_step`), survivor-drop on `Exceeded` by descending
+  `step_index`, and the **two distinct named bounds** (`B_INFLIGHT` cross-turn ∧ per-turn cap) · 11 tests
 - [x] wire into `being-runtime` turn — heartbeat → reserve operating cost → commit → (if affordable) execute → attest; insolvency mid-turn trips the reaper (Death journaled), dead/killed beings refuse all turns · 7 tests
-- [ ] per-step state machine + crash recovery (reserve→dispatch→attest→settle; build-spec §5/App. A) — refinement
 
 - **Acceptance:** `reserve` rejects over-cap (budget binds); reaper fires on sustained insolvency and
   journals a Death event; out-of-band kill meets a measured latency bound; in-flight egress ≤

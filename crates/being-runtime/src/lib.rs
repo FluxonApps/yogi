@@ -11,6 +11,8 @@
 
 use std::sync::Arc;
 
+pub mod step_machine;
+
 use being_core_economy::{BudgetVerdict, SpendCategory};
 use being_core_id::Ed25519Signer;
 use being_core_journal::{MemoryJournal, Seq};
