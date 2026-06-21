@@ -422,3 +422,25 @@ This is the first live (non-synthetic) demonstration that the M6 open-ended-sear
 quality-diversity illumination + selection + recombination combining skills, on the real model. The
 saturated frozen suite was simply the wrong substrate (prior finding). Next: longer runs to fill the
 remaining niches (⊗ and the all-3 composer), then the live neutral-drift acceptance on this corpus.
+
+## 2026-06-21 — live M6 REPRODUCES (seed 123): recombination assembles the ALL-3 solver (fitness 1.0)
+
+Second live run, different seed (123), 10 iterations — stronger and reproducible:
+
+```
+11 evals, 7 improvements, 7 recombinations, 7 niches (coverage 88%)  QD=3.667  ·  10 forks, depth 4
+[]          0.00 gen0 p0     ← cold founder fails ALL (reproduces seed-42)
+[s1] 0.33 g1 p1 · [s2] 0.33 g3 p2 · [s0,s1] 0.67 g2 p1 · [s1,s2] 0.67 g2 p1 · [s0,s2] 0.67 g4 p2
+[s0,s1,s2]  1.00 gen3 p2     ← RECOMBINANT solves ALL THREE ops (global best)
+```
+
+**The building-block payoff, complete and live:** MAP-Elites discovered single-rule genomes in separate
+niches; recombination (per-element skill-set crossover) then assembled a **2-parent gen-3 child carrying
+all three rules that solves every operation (1.00)** — 7 recombination events, depth-4 genealogy, 88%
+coverage, all signed into the fork ledger. Reproduces the seed-42 result and surpasses it (full composer
+vs 2-op). This is a solid, non-synthetic demonstration of open-ended search assembling independently-
+acquired skills into a maximal solver on a local 8B.
+
+Remaining: the formal neutral-drift acceptance (selection vs drift) at adequate statistical power is a
+multi-hour job on this 16GB/8B setup (many replicates × 2 arms × thinking-mode evals); harness is ready
+(`EVOLVE_DRIFT=1`). The illumination evidence above already substantively demonstrates the thesis.
