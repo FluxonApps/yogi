@@ -22,6 +22,9 @@ pub use evolve::{illuminate, Evaluation, Evaluator, IlluminationStats, Retention
 mod fork_saga;
 pub use fork_saga::{fork_signed, CommitOutcome, ForkLedger, ForkSnapshot};
 
+mod recombine;
+pub use recombine::{fork2, recombine};
+
 /// Identifies a being within a lineage (the operator/registry assigns ids; this crate only records).
 pub type BeingId = u64;
 

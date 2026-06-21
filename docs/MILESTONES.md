@@ -108,10 +108,10 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 
 ## M6 — Research arm (population + selection)  `[ ] 🔒`
 *Fork saga + lineage built as substrate; **selection stays OFF** until the entry gate holds.*
-- [x] `being-lineage` (gated substrate) — `Lineage` (id/parents/generation) + `fork` (child inherits
-  the genome verbatim; variation only via the closed surface). **No fitness, no reproduction
-  scheduler, no death** — heredity mechanics only. The crash-recoverable signed-snapshot fork saga +
-  selection remain OFF behind the entry gate.
+- [x] `being-lineage` — `Lineage` (id/parents/generation) + `fork` (asexual; child inherits the
+  genome verbatim) + `fork2`/`recombine` (sexual uniform-crossover; child records both parents).
+  Variation only via the closed surface; recombination only copies existing parent values, so no
+  forbidden power can appear that neither parent had — safety invariant survives sexual reproduction.
 - [x] `being-lineage` MAP-Elites substrate — best-per-cell `Archive`, `BehaviorDescriptor`
   (deterministic behavior→`Cell` binning — the diversity-niche map), and QD-score/mean-fitness
   observability.
