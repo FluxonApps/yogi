@@ -790,3 +790,17 @@ surfaced genuine spec-deferred items (not demos, not deployment):
 Remaining markers are genuinely non-code (OS-keystore key storage = deployment) or already covered
 (embedding retrieval exists in SemanticIndex; EchoProposer/Ollama proposer both present). 20 crates,
 200 tests, green.
+
+## 2026-06-22 — workspace-vs-spec scan: §3.9 trust model was an entire missing crate (now built)
+
+Fresh angle: diffed the build-spec's crate names against crates/. Most absences were naming/layout
+(being-memory=being-core-memory, being-proposer-echo=EchoProposer, being-asserted is a phrase not a
+crate) — but §3.9's policy/trust model (being-core-policy) genuinely had NO crate. Built it:
+TrustLedger = one Beta(alpha,beta) per EffectClass; TrustLevel = 2.5th-percentile lower bound via
+statrs (spec-mandated for bit-stable replay); attested-accepted raises trust, damage/rejection lowers
+it harder (W_DOWN>W_UP — slow to earn, quick to lose); high-stakes classes (Payment/Sign/Http) start
+pessimistic; geometric decay clamps to the prior floor. This is the DYNAMIC earned-trust model — the
+counterpart to the static RiskPolicyCommitter ceiling. v0 ceiling integration is minimal (spec
+lane_count=1); the substance is the trust model itself. Other spec-named absences are packaging
+(being-bin CLI), foreground tooling (being-distill-train = the MLX script), or covered. 21 crates,
+206 tests, green.
