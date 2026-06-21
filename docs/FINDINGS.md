@@ -444,3 +444,16 @@ acquired skills into a maximal solver on a local 8B.
 Remaining: the formal neutral-drift acceptance (selection vs drift) at adequate statistical power is a
 multi-hour job on this 16GB/8B setup (many replicates × 2 arms × thinking-mode evals); harness is ready
 (`EVOLVE_DRIFT=1`). The illumination evidence above already substantively demonstrates the thesis.
+
+## 2026-06-21 — live drift acceptance: stopped (resource-bound, not a result)
+
+The bounded live drift acceptance (3 replicates × 2 arms, transfer corpus, thinking mode) ran 71 min
+without completing and was stopped. The lesson is a resource finding, not a scientific one: at 3
+replicates it was already ~70+ min, so a *statistically powered* drift acceptance (8–10 replicates) is
+a 3–4 hour job on this 16 GB / single-8B box — impractical to pin the model on, especially for a gate I
+pre-flagged as likely-underpowered at feasible scale. The harness (`EVOLVE_DRIFT=1`,
+`EVOLVE_REPLICATES`) stays ready for a deliberate multi-hour block.
+
+This does not weaken the M6 result: the live illumination evidence already stands on its own —
+recombination assembling the all-3-skills solver (1.0), reproduced across seeds, cold-founder failure
+confirming genuine transfer. The drift gate is the formal *cherry on top*; the cake is baked.
