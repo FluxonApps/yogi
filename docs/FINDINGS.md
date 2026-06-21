@@ -108,3 +108,26 @@ together make the retrieve→apply loop work without help.**
 note. The remaining frontier: (1) a less-synthetic, multi-skill corpus; (2) certify with the skill
 *learned from verifier feedback* (the Letta loop) rather than authored; (3) measure LiMem under
 perturbation to confirm it's not memorization. The mechanism is proven; the corpus is the next work.
+
+## 2026-06-21 — multi-skill transfer FAILS (skill interference) — informative negative
+
+Multi-skill cert: a thinking-mode being learns 3 made-up rules (⊕,⊗,⊙), then is tested per-op and on
+the compositional `(a⊕b)⊗c` split.
+
+```
+single-op transfer:  cold 0.000 -> skilled 0.000  compounds=false
+compositional split: cold 0.000 -> skilled 0.000  compounds=false
+LiMem: 0.000 (uninformative — nothing was correct to be consistent about)
+```
+
+**Adding 3 similar rules COLLAPSES the transfer that scored 1.000 with a single skill.** Diagnosis
+(pure test added, no model): the hybrid index **correctly ranks the matching-symbol rule first**, so
+this is **not** a retrieval-ranking bug — it's **skill interference**: the being injects the top-4
+retrieved, so all 3 novel symbol-rules reach the model, and qwen3:8b **conflates** them. Single-skill
+worked precisely because only one rule was present. This is the retrieval-*precision* caveat from the
+D-M3-3 research, made concrete.
+
+**Next (fix → re-cert):** inject only the **top-1–2** most-relevant skills (the lexical channel
+already ranks the right rule first), separating high-precision *skill* retrieval from broader *memory*
+retrieval. Then re-run the multi-skill cert. The compositional split needs the right *two* rules and
+nothing else — precise injection is the prerequisite for composition.

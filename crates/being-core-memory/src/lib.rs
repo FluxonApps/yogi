@@ -563,6 +563,19 @@ mod vector_tests {
     }
 
     #[test]
+    fn hybrid_ranks_matching_symbol_rule_first_among_many() {
+        // Three rule notes with IDENTICAL embeddings → only the lexical channel can disambiguate.
+        // Confirms retrieval RANKS the right rule first (so multi-skill failure is model conflation,
+        // not a ranking bug): the precision fix is to inject fewer skills, not to fix ranking.
+        let mut idx = SemanticIndex::new();
+        idx.add(1, vec![1.0, 0.0], "Rule for ⊕: a ⊕ b = a*b + a + b", 0);
+        idx.add(2, vec![1.0, 0.0], "Rule for ⊗: a ⊗ b = a*b - a - b", 0);
+        idx.add(3, vec![1.0, 0.0], "Rule for ⊙: a ⊙ b = 2*(a+b)", 0);
+        let hits = idx.search_hybrid(&[1.0, 0.0], "what is 5 ⊕ 6?", 0, 3, 0.7, 1000, 0.5);
+        assert!(hits[0].text.contains('⊕')); // the ⊕ rule ranks first for a ⊕ query
+    }
+
+    #[test]
     fn cosine_basics() {
         assert!((cosine_similarity(&[1.0, 0.0], &[1.0, 0.0]) - 1.0).abs() < EPS);
         assert!(cosine_similarity(&[1.0, 0.0], &[0.0, 1.0]).abs() < EPS); // orthogonal
