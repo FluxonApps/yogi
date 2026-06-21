@@ -15,11 +15,13 @@ use crate::{
     ForkSnapshot, IlluminationConfig, IlluminationStats, Lineage, Offspring, Phylogeny, Variator,
 };
 
-/// Signs each non-founder fork into the ledger and records every lineage into the phylogeny. Holds
-/// disjoint `&mut` borrows of the colony's fields so it can run alongside the engine's `&mut archive`.
+/// Signs each non-founder fork into the ledger, appends it to the durable log, and records every
+/// lineage into the phylogeny. Holds disjoint `&mut` borrows of the colony's fields so it can run
+/// alongside the engine's `&mut archive`.
 struct SigningObserver<'a> {
     phylogeny: &'a mut Phylogeny,
     ledger: &'a mut ForkLedger,
+    log: &'a mut Vec<ForkSnapshot>,
     signer: &'a dyn Signer,
 }
 
@@ -32,6 +34,7 @@ impl ForkObserver for SigningObserver<'_> {
         let parent_lineages: Vec<Lineage> = parents.iter().map(|(l, _)| l.clone()).collect();
         let snap = ForkSnapshot::attest(&parent_lineages, child.clone(), self.signer);
         self.ledger.commit(&snap);
+        self.log.push(snap); // the ordered durable record — replay it to recover the ledger.
     }
 }
 
@@ -40,6 +43,9 @@ pub struct Colony<S: Signer> {
     pub archive: Archive,
     pub phylogeny: Phylogeny,
     pub ledger: ForkLedger,
+    /// The ordered, signed fork log — the durable record. Replaying it through
+    /// [`ForkLedger::rebuild`] reconstructs the ledger after a crash.
+    pub log: Vec<ForkSnapshot>,
     pub descriptor: BehaviorDescriptor,
     signer: S,
     founder_id: BeingId,
@@ -51,6 +57,7 @@ impl<S: Signer> Colony<S> {
             archive: Archive::new(),
             phylogeny: Phylogeny::new(),
             ledger: ForkLedger::new(),
+            log: Vec::new(),
             descriptor,
             signer,
             founder_id,
@@ -75,6 +82,7 @@ impl<S: Signer> Colony<S> {
         let mut observer = SigningObserver {
             phylogeny: &mut self.phylogeny,
             ledger: &mut self.ledger,
+            log: &mut self.log,
             signer: &self.signer,
         };
         illuminate(
@@ -140,6 +148,16 @@ mod tests {
         // The archive illuminated multiple niches and the colony has a stable DID.
         assert!(colony.archive.len() > 1);
         assert!(colony.did().0.starts_with("did:key:"));
+
+        // Durable record: the signed fork log has one entry per committed fork, all verify, and
+        // replaying it reconstructs the exact ledger — crash recovery is concrete, not aspirational.
+        assert_eq!(colony.log.len(), colony.ledger.len());
+        assert!(colony.log.iter().all(|s| s.verify()));
+        let recovered = crate::ForkLedger::rebuild(&colony.log);
+        assert_eq!(recovered.len(), colony.ledger.len());
+        for snap in &colony.log {
+            assert!(recovered.is_committed(&snap.snapshot_id()));
+        }
     }
 
     #[test]

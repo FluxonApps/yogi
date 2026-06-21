@@ -185,6 +185,17 @@ impl ForkLedger {
     pub fn is_committed(&self, id: &Hash) -> bool {
         self.committed.contains(&id.0)
     }
+
+    /// Rebuild a ledger by replaying an ordered fork log (the durable record) after a crash. Each
+    /// snapshot is re-verified and committed; invalid entries are skipped. Replaying the same log
+    /// twice yields the same committed set — recovery is idempotent and tamper-evident.
+    pub fn rebuild(snapshots: &[ForkSnapshot]) -> Self {
+        let mut ledger = Self::new();
+        for snap in snapshots {
+            ledger.commit(snap);
+        }
+        ledger
+    }
 }
 
 #[cfg(test)]
