@@ -302,6 +302,40 @@ mod tests {
     }
 
     #[test]
+    fn durable_journal_recovers_from_a_crash_mid_append() {
+        use std::io::Write;
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        {
+            let mut j = DurableJournal::open(&path, Ed25519Signer::from_seed([6; 32])).unwrap();
+            j.append("commitment", b"x".to_vec()).unwrap();
+            j.append("attestation", b"y".to_vec()).unwrap();
+        }
+        // Crash mid-append: a torn frame (length header claiming more bytes than follow) appended to
+        // the journal's underlying durable log.
+        {
+            let mut raw = std::fs::OpenOptions::new()
+                .append(true)
+                .open(&path)
+                .unwrap();
+            raw.write_all(&(500u32).to_le_bytes()).unwrap();
+            raw.write_all(&(0u32).to_le_bytes()).unwrap();
+            raw.write_all(b"partial").unwrap();
+            raw.sync_data().unwrap();
+        }
+        // Reopen: the signed chain recovers from the valid prefix, still verifies, and the torn entry
+        // is gone — and the being can keep journaling afterward (contiguous, verifiable).
+        let mut j = DurableJournal::open(&path, Ed25519Signer::from_seed([6; 32])).unwrap();
+        assert_eq!(j.len(), 2);
+        assert!(j.verify_chain());
+        j.append("commitment", b"z".to_vec()).unwrap();
+        let j2 = DurableJournal::open(&path, Ed25519Signer::from_seed([6; 32])).unwrap();
+        assert_eq!(j2.len(), 3);
+        assert!(j2.verify_chain());
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
     fn durable_being_journal_survives_restart() {
         use being_core_economy::Account;
         use being_runtime::{EchoExecutor, EchoProposer, PassThroughCommitter};
