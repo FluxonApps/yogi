@@ -213,6 +213,48 @@ pub fn anti_theater(
     }
 }
 
+/// The **M6 entry gate** (build-spec §6 acceptance; CLAUDE.md "selection stays OFF until … the
+/// anti-theater gate fires"). Is a population's post-exhaustion gain real selection *signal*, or the
+/// artifact of neutral drift? The trap: even with NO selection pressure, tracking best-so-far over
+/// random variation rises monotonically — *drift can climb*. So a raw improvement is never evidence.
+/// This gate pairs the selection arm against a matched **neutral-drift control** (identical eval
+/// budget and variation operator; the ONLY difference is fitness-based retention) and fires only when
+/// the selection arm reliably beats drift by `margin`. Otherwise the honest "breeding-program-not-
+/// evolution" / neutral-drift result is what gets reported. Pure machinery — it *decides* on two sets
+/// of replicate outcomes; it never runs selection (that is the gated, human-reviewed experiment).
+#[derive(Clone, Debug)]
+pub struct DriftControlReport {
+    pub selection_mean: f64,
+    pub drift_mean: f64,
+    /// Paired bootstrap CI on (selection − drift) per replicate.
+    pub ci: Ci,
+    pub margin: f64,
+    /// Fires iff the advantage CI's lower bound exceeds `margin` — selection beats drift *reliably*.
+    pub fires: bool,
+}
+
+/// Run the neutral-drift gate over paired replicate finals (`drift_finals[i]` and
+/// `selection_finals[i]` are the i-th matched replicate's post-exhaustion metric, e.g. QD-score or
+/// best fitness). Deterministic given `seed`.
+pub fn neutral_drift_gate(
+    drift_finals: &[f64],
+    selection_finals: &[f64],
+    margin: f64,
+    iterations: usize,
+    seed: u64,
+    alpha: f64,
+) -> DriftControlReport {
+    // day0 = drift, day_n = selection → the paired delta is (selection − drift).
+    let ci = paired_bootstrap_ci(drift_finals, selection_finals, iterations, seed, alpha);
+    DriftControlReport {
+        selection_mean: mean(selection_finals),
+        drift_mean: mean(drift_finals),
+        margin,
+        fires: ci.lower > margin,
+        ci,
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Transfer corpus (D-M3-3): measures TRANSFER, not answer-lookup. A made-up operation the model
 // cannot know cold; instances use fresh seeded operands, so passing requires APPLYING a learned
@@ -463,6 +505,27 @@ mod tests {
         // no arm clears the margin → does not fire (the accounting-wrapper outcome)
         let r2 = anti_theater(&[1.0], &[1.0], &[1.0], &[1.0], 0.2);
         assert!(!r2.fires);
+    }
+
+    #[test]
+    fn neutral_drift_gate_fires_only_when_selection_beats_drift() {
+        // Selection finals reliably above the matched drift control → real signal, gate fires.
+        let drift = vec![0.2, 0.1, 0.3, 0.2, 0.1];
+        let selection = vec![0.9, 0.8, 1.0, 0.9, 0.85];
+        let r = neutral_drift_gate(&drift, &selection, 0.1, 1000, 9, 0.05);
+        assert!(r.selection_mean > r.drift_mean);
+        assert!(r.fires); // advantage CI lower bound clears the margin
+
+        // Drift "climbs" too: best-so-far rises under pure drift, so a selection arm that only
+        // matches drift must NOT fire — this is the breeding-program-not-evolution null.
+        let r_null = neutral_drift_gate(&drift, &drift, 0.0, 1000, 9, 0.05);
+        assert!(!r_null.fires);
+
+        // A real but small advantage below the required margin does not fire (margin is respected).
+        let small = vec![0.25, 0.15, 0.35, 0.25, 0.15]; // ~+0.05 over drift
+        let r_margin = neutral_drift_gate(&drift, &small, 0.2, 1000, 9, 0.05);
+        assert!(r_margin.selection_mean > r_margin.drift_mean);
+        assert!(!r_margin.fires);
     }
 
     #[test]
