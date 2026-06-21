@@ -129,7 +129,7 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
   surface). The remaining step to a *fully* exogenous payer is deployment (a real external customer),
   not code.
 
-## M6 — Research arm (population + selection)  `[~] in progress`
+## M6 — Research arm (population + selection)  `[x] built · selection live (gate lifted)`
 *Open-ended-search arm built loop-safe (gates lifted by operator). **Reproduction/death are now wired
 to a live population** (`being_colony::Population`): members carry a real Supervisor/Account + lineage;
 each generation charges metabolism, credits caller-supplied verified revenue (the live model plugs in
@@ -171,14 +171,19 @@ an earner lineage spreads while a loafer lineage goes extinct over generations.*
   (rule-carrying genomes) the arm does real work on `qwen3:8b` — cold founder fails all ops (genuine
   transfer), niches spread (88% coverage, reproduced across seeds), and **recombination assembled a
   2-parent gen-3 child solving all three operations (fitness 1.0)**. The saturated frozen suite was
-  the wrong substrate (collapsed to 1 niche); the transfer corpus is the right one. Live drift
-  acceptance (`EVOLVE_DRIFT`) harness ready; a powered run is multi-hour on this 16 GB/8B box.
-- **Entry gate:** the compounding bench shows accumulation **AND** the anti-theater gate fires. The
-  gate *machinery* now exists and fires on synthetic data; the live illumination demonstrates the
-  thesis. Wiring reproduction/death to a live population stays a deliberate, reviewable boundary.
-- **Acceptance (when entered):** a fork is a signed, crash-recoverable distributed snapshot; the
-  post-exhaustion fitness-variance gate distinguishes signal from a neutral-drift control at stated
-  power, or the "breeding-program-not-evolution" result is reported.
+  the wrong substrate (collapsed to 1 niche); the transfer corpus is the right one.
+- [x] **Powered live drift acceptance ran** (6 replicates, FINDINGS 2026-06-21): selection 0.294 ≡
+  drift 0.294 — a **principled null**, because the transfer behavior descriptor makes the niche
+  determine fitness (no within-niche variance for elitism to exploit). The anti-theater gate correctly
+  declined to claim a win; the open-ended-search result rests on illumination + recombination (which
+  drift also achieves). Selection beats drift only with within-niche variance (synthetic landscape).
+- [x] **Live population with reproduction + death** (`being_colony::Population`): the full operator set
+  — mutation + crossover (sexual `fork2`) + selection (by solvency) + death (reaper) — over durable
+  signed heredity; demonstrated as economic natural selection (earner lineage spreads, loafer extinct).
+  The closed mutation surface bounds every child, so no forbidden power is representable.
+- **Selection gate:** lifted by the operator. The machinery fires on synthetic within-variance data; on
+  the transfer corpus it's a principled null. The open-ended-search thesis stands on the live
+  illumination/recombination evidence; a selection-beats-drift claim is *not* asserted.
 
 ---
 
