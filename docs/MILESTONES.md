@@ -122,7 +122,11 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
   vs neutral-drift control; fires only when selection beats drift by a margin.
 - [x] M6 acceptance **methodology proven loop-safe** (`being-bench/tests/m6_acceptance.rs`): on a
   synthetic noisy landscape, selection beats the drift control and the gate fires (12 paired
-  replicates). Real-being result + signed crash-recoverable fork snapshot = next foreground step.
+  replicates).
+- [x] **Signed, crash-recoverable fork snapshot** (`being-lineage::ForkSnapshot`/`ForkLedger` +
+  `Genome::canon_bytes`): the parent signs the child's inherited state (lineage edge + canonical
+  genome); content-addressed `snapshot_id` gives at-most-once idempotent commit across replay/crash.
+  Tampered genome/edge/DID all fail verification. (Real model-scored run = remaining foreground step.)
 - **Entry gate:** the compounding bench shows accumulation **AND** the anti-theater gate fires. The
   gate *machinery* now exists and fires correctly on synthetic data; wiring reproduction/death to a
   live population stays a deliberate, reviewable boundary.

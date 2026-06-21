@@ -220,3 +220,25 @@ fires only when selection actually does work. The real M6 result (signal vs drif
 landscape, fork as a signed crash-recoverable snapshot) is the next foreground step. The dangerous
 parts — reproduction/death wired to a live population — remain a deliberate, reviewable boundary even
 though the gate now demonstrably distinguishes signal from drift.
+
+## 2026-06-21 — signed, crash-recoverable fork snapshot (M6 acceptance piece)
+
+The operator lifted the M6 selection gate ("nothing is gated, don't stop"), so the fork saga is now
+built (loop-safe, no model):
+
+- **`Genome::canon_bytes`** (being-core-mutation) — canonical, length-prefixed, deterministic encoding
+  of the heritable unit. Ordered collections iterate canonically; the classic "ab|c" vs "a|bc"
+  ambiguity can't collide. This is what the parent actually signs.
+- **`being-lineage::ForkSnapshot`** — the parent (`Signer`) signs a blake3 digest over
+  `(parent_did, parent edge, child edge, genome.canon_bytes)`, domain-separated `yogi.fork.snapshot.v1`.
+  `verify()` checks BOTH the heredity invariants (child = parent.generation+1, sole parent recorded)
+  AND the Ed25519 signature. Tampered genome, forged lineage edge, or impostor DID each flip the digest
+  / fail the edge check → rejected.
+- **`ForkLedger`** — content-addressed `snapshot_id` (blake3) keys an at-most-once commit set:
+  first commit `Committed`, replay of the same snapshot `AlreadyCommitted` (idempotent crash recovery),
+  invalid snapshot `Rejected`. Same exactly-once-effective discipline as the M1 `DedupLedger`.
+
+**Safety invariant intact despite the lifted gate:** a signed child still inherits its genome verbatim
+and can only vary through the closed `MutationKind` surface — so no signed snapshot can ever carry a
+forbidden mutation, regardless of selection being on. The remaining foreground step is a real
+model-scored illumination run (the gate already fires on synthetic data).

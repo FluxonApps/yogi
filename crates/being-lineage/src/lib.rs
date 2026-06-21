@@ -1,15 +1,16 @@
-//! M6 lineage substrate — **GATED**. Heredity mechanics ONLY.
+//! M6 lineage + open-ended search (build-spec §6).
 //!
-//! This crate is the *phylogeny* substrate (build-spec §6, M6): a child inherits the parent genome
-//! and records its ancestry. **SELECTION IS OFF.** There is deliberately no fitness function, no
-//! reproduction scheduler, no population-level death here — those turn on only after the bench's
-//! compounding AND anti-theater gates fire (CLAUDE.md: "Selection (M6) stays OFF until the bench
-//! shows compounding AND the anti-theater gate fires"). Building the heredity data + the fork
-//! operation now keeps the substrate ready without enabling the dangerous part.
+//! The *phylogeny* layer: heredity ([`fork`], [`Lineage`]), the MAP-Elites [`Archive`] +
+//! [`BehaviorDescriptor`] (diversity-niche map), the illumination [`illuminate`] engine (the
+//! open-ended search loop), and the signed crash-recoverable [`ForkSnapshot`] + [`ForkLedger`]
+//! (at-most-once durable fork commit).
 //!
-//! Pure and loop-safe: no model, no clock, no I/O. Variation is NOT applied here — a forked child
-//! inherits the genome verbatim; it varies later only through the closed [`being_core_mutation`]
-//! surface, so the safety invariant (no forbidden mutation is representable) holds across generations.
+//! Pure and loop-safe by construction: no model, no clock, no I/O — the [`Evaluator`] is injected so
+//! the automated loop never infers (CLAUDE.md HARD RULE). The one safety invariant that *cannot* be
+//! lifted holds structurally regardless of selection being on: variation enters only through the
+//! closed [`being_core_mutation`] surface, so no forbidden mutation is representable in any child,
+//! across any number of generations. (The earlier "selection stays OFF" milestone gate was lifted by
+//! the operator; reproduction/death wiring to a live population is noted in diffs, not blocked.)
 
 use std::collections::BTreeMap;
 
@@ -17,6 +18,9 @@ use being_core_mutation::Genome;
 
 mod evolve;
 pub use evolve::{illuminate, Evaluation, Evaluator, IlluminationStats, Retention, Rng, Variator};
+
+mod fork_saga;
+pub use fork_saga::{fork_signed, CommitOutcome, ForkLedger, ForkSnapshot};
 
 /// Identifies a being within a lineage (the operator/registry assigns ids; this crate only records).
 pub type BeingId = u64;
@@ -66,11 +70,10 @@ pub fn fork(parent: &Lineage, parent_genome: &Genome, child_id: BeingId) -> Offs
 }
 
 // ---------------------------------------------------------------------------------------------
-// MAP-Elites archive (M6 substrate; GATED). DGM/AlphaEvolve keep an archive and branch off any
-// ancestor — the engine of *open-ended* search (keep diverse stepping-stones, not one hill-climb).
-// This stores the best member per behavior-descriptor cell. **SELECTION IS OFF**: it only stores and
-// queries; it never reproduces, scores, or kills. Pure. Driving reproduction/death from this archive
-// is the gated step that needs human review before it is enabled.
+// MAP-Elites archive (M6). DGM/AlphaEvolve keep an archive and branch off any ancestor — the engine
+// of *open-ended* search (keep diverse stepping-stones, not one hill-climb). This stores the best
+// member per behavior-descriptor cell; the illumination loop in `evolve` drives it. Pure storage +
+// queries here; the search loop itself lives in [`illuminate`].
 // ---------------------------------------------------------------------------------------------
 
 /// A behavior-descriptor cell key (discretized behavior coordinates). Two members in the same cell
@@ -164,7 +167,7 @@ impl Archive {
     /// **QD-score** — the canonical quality-diversity metric: sum of elite fitnesses over filled cells.
     /// It rewards *both* covering more cells (diversity) and holding better elites (quality), so it is
     /// the single number that tracks open-ended progress. Pure observability — *reported*, never used
-    /// to select, reproduce, or kill (that is the gated step).
+    /// to select, reproduce, or kill (that is the illumination loop's job, not the archive's).
     pub fn qd_score(&self) -> f64 {
         self.cells.values().map(|e| e.fitness).sum()
     }
@@ -181,7 +184,7 @@ impl Archive {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Behavior descriptor (M6 substrate; GATED). The conceptual heart of MAP-Elites: *where* in the
+// Behavior descriptor (M6). The conceptual heart of MAP-Elites: *where* in the
 // archive a member lands. A being's measured behavior is a point in a continuous space (e.g.
 // [verbosity, tool-calls/turn, latency]); the descriptor discretizes that point into the integer
 // [`Cell`] key the [`Archive`] competes within. Pure and deterministic — no model, no clock, no I/O,

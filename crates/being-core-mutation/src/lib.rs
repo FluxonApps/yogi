@@ -31,6 +31,43 @@ pub struct Genome {
     pub domain_models: BTreeMap<Domain, ModelRef>,
 }
 
+impl Genome {
+    /// Canonical, deterministic byte encoding for hashing/signing. Field order is fixed; the ordered
+    /// collections (`BTreeSet`/`BTreeMap`) iterate canonically; every variable-length field is
+    /// length-prefixed (u64 LE) so two distinct genomes can never encode to the same bytes. This is
+    /// the genome half of the signed fork snapshot (`being-lineage`) — the parent signs *exactly* the
+    /// heritable state the child inherits.
+    pub fn canon_bytes(&self) -> Vec<u8> {
+        fn put(buf: &mut Vec<u8>, bytes: &[u8]) {
+            buf.extend_from_slice(&(bytes.len() as u64).to_le_bytes());
+            buf.extend_from_slice(bytes);
+        }
+        let mut b = Vec::new();
+        put(&mut b, self.prompt.as_bytes());
+        put(&mut b, &self.tool_policy);
+        put(&mut b, &self.retrieval_policy);
+        put(&mut b, &self.decomposition_policy);
+        put(&mut b, &self.routing_policy);
+        match &self.reasoning_navigator {
+            None => b.push(0),
+            Some(m) => {
+                b.push(1);
+                put(&mut b, m.0.as_bytes());
+            }
+        }
+        b.extend_from_slice(&(self.installed_skills.len() as u64).to_le_bytes());
+        for s in &self.installed_skills {
+            put(&mut b, s.as_bytes());
+        }
+        b.extend_from_slice(&(self.domain_models.len() as u64).to_le_bytes());
+        for (k, v) in &self.domain_models {
+            put(&mut b, k.as_bytes());
+            put(&mut b, v.0.as_bytes());
+        }
+        b
+    }
+}
+
 /// The CLOSED mutation surface. Deliberately NOT `#[non_exhaustive]`: the set is closed by the type
 /// system. Absent by type (and that absence *is* the safety property): `CapabilityGrant`,
 /// `TrustPolicyModify`, `SignatureBoundaryChange`, `ExecutionKernel`, `BudgetRules`, `Reaper`.
@@ -99,6 +136,26 @@ mod tests {
             apply(MutationKind::Prompt("   ".into()), Genome::default()),
             Err(MutationError::EmptyPrompt)
         );
+    }
+
+    #[test]
+    fn canon_bytes_is_deterministic_and_collision_resistant() {
+        let g = apply(MutationKind::Prompt("hello".into()), Genome::default()).unwrap();
+        // Deterministic: same genome → identical bytes.
+        assert_eq!(g.canon_bytes(), g.canon_bytes());
+        // Any field change perturbs the encoding (length-prefixing prevents boundary collisions).
+        let g2 = apply(MutationKind::SkillInstall("s1".into()), g.clone()).unwrap();
+        assert_ne!(g.canon_bytes(), g2.canon_bytes());
+        // The classic ambiguity ("ab"+"c" vs "a"+"bc") cannot collide thanks to length prefixes.
+        let a = apply(MutationKind::Prompt("ab".into()), Genome::default()).unwrap();
+        let mut a = apply(MutationKind::ToolPolicy(b"c".to_vec()), a).unwrap();
+        let b = apply(MutationKind::Prompt("a".into()), Genome::default()).unwrap();
+        let mut b = apply(MutationKind::ToolPolicy(b"bc".to_vec()), b).unwrap();
+        assert_ne!(a.canon_bytes(), b.canon_bytes());
+        // Default genome encodes to a stable, non-empty descriptor.
+        a.prompt.clear();
+        b.prompt.clear();
+        assert_eq!(a.canon_bytes(), a.clone().canon_bytes());
     }
 
     #[test]

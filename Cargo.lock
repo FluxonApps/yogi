@@ -101,7 +101,10 @@ dependencies = [
 name = "being-lineage"
 version = "0.0.0"
 dependencies = [
+ "being-core-id",
  "being-core-mutation",
+ "being-core-types",
+ "blake3",
 ]
 
 [[package]]
