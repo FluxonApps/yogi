@@ -21,6 +21,7 @@ members = [
     "crates/being-sandbox-wasm",
     "crates/being-persist",
     "crates/being-colony",
+    "crates/being-core-policy",
 ]
 
 [workspace.package]

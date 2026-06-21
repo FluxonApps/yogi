@@ -1,0 +1,9 @@
+[package]
+name = "being-core-policy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# §3.9 policy/trust model: a Beta(alpha,beta)-per-EffectClass trust ledger. Pure, loop-safe, no model.
+[dependencies]
+statrs = "0.17"
