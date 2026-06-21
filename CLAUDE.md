@@ -12,6 +12,17 @@ Yogi is built **entirely locally**. No CI, no cloud services, no API keys.
 This **supersedes the spec's cloud assumptions for the local build** (architecture/build-spec D2/D5):
 local proposer = Ollama; frontier/teacher = Claude Code; no OpenAI-compatible cloud endpoint.
 
+## Hardware & inference budget (M5 MacBook Pro · 16 GB unified memory)
+- **One model at a time.** `qwen3:8b` ≈ 5–6 GB resident when loaded; never run two large models
+  concurrently. `nomic-embed-text` ≈ 0.3 GB.
+- **HARD RULE — no model inference in the automated loop.** `cargo test --all`, `cargo clippy`, and
+  the `Stop`/`PostToolUse` hooks MUST NEVER call Ollama. Live model calls are **foreground and
+  user-initiated only** (e.g. `cargo test -p being-proposer-ollama --features live-ollama`, or a
+  `cargo run` demo). Default `cargo test --all` excludes the `live-ollama` feature, so the loop never
+  loads the model.
+- **Never launch inference (or any heavy job) in the background.**
+- Distillation (M3) must pick a student small enough to train within this budget — decide at M3.
+
 ## Golden rule
 **Never claim a task or milestone "done" while the build is red.** The `Stop` hook runs
 `cargo test --all` + `cargo clippy --all-targets -- -D warnings` and blocks completion on failure.

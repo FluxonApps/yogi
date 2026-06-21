@@ -9,6 +9,7 @@ members = [
     "crates/being-runtime",
     "crates/being-core-economy",
     "crates/being-supervisor",
+    "crates/being-proposer-openai",
 ]
 
 [workspace.package]

@@ -1,0 +1,15 @@
+[package]
+name = "being-proposer-openai"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+# Off by default: the live test reaches a real backend and loads the model. Run manually, foreground:
+#   cargo test -p being-proposer-openai --features live-model
+live-model = []
+
+[dependencies]
+being-runtime = { path = "../being-runtime" }
+serde_json = "1"
+ureq = "2"
