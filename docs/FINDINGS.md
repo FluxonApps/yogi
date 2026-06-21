@@ -177,3 +177,20 @@ LiMem (single):      0.000  -> pure rule-application, not memorization
   interference finding. Top-1 demonstrably suffices for single-op; whether injecting more skills hurts
   is now an *open, testable* question. **Next: inject top-2 skills** so multi-symbol tasks get both
   rules, and re-cert — checking single-op stays 1.000 while compositional rises.
+
+## 2026-06-21 — top-2 skill injection: COMPOSITION CERTIFIED (both hold)
+
+With `SKILL_RETRIEVAL_K=2` (inject the top-2 ranked skills), re-ran the multi-skill cert:
+
+```
+single-op transfer:    cold 0.000 -> skilled 1.000  CI[1,1]  CERTIFIED  (held — top-2 didn't hurt)
+compositional (a⊕b)⊗c: cold 0.000 -> skilled 1.000  CI[1,1]  CERTIFIED  (rose from 0.000!)
+LiMem (single):        0.000  -> pure rule-application
+```
+
+**The being composes two independently-learned skills.** Once both rules are in context (top-2, ranked
+by the lexical channel), it chains them — `(a⊕b)⊗c` solved on fresh operands. And single-op did **not**
+degrade, so top-2 is a strict win over top-1: it adds composition at no cost to single-symbol transfer.
+This is **L0/L1 self-improvement composing into genuinely new behavior** without any code-writing — the
+primitives+skills thesis (D-RSI-1) demonstrated: memory + verifier-fed skills + precise-but-plural
+retrieval = transfer *and* composition, certified, on a local 8B. `SKILL_RETRIEVAL_K=2` kept.
