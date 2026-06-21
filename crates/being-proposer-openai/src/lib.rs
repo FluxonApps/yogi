@@ -24,6 +24,9 @@ pub struct OpenAiChatConfig {
     pub model: String,
     pub system_prompt: String,
     pub max_tokens: u32,
+    /// Sampling temperature. 0.0 = greedy/deterministic — the default, so the falsification bench
+    /// measures capability rather than sampling noise.
+    pub temperature: f32,
     /// Optional prefix prepended to the user message (e.g. qwen3's `"/no_think\n"`). Empty = none.
     pub user_prefix: String,
 }
@@ -37,6 +40,7 @@ impl OpenAiChatConfig {
             system_prompt: "You are Yogi, a concise, helpful assistant. Answer directly."
                 .to_string(),
             max_tokens: 256,
+            temperature: 0.0,
             user_prefix: "/no_think\n".to_string(),
         }
     }
@@ -83,6 +87,7 @@ impl OpenAiChatProposer {
             "model": self.config.model,
             "stream": false,
             "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
             "messages": [
                 {"role": "system", "content": self.config.system_prompt},
                 {"role": "user", "content": user},
@@ -188,6 +193,7 @@ mod tests {
             model: "some-other-model".into(),
             system_prompt: "sys".into(),
             max_tokens: 64,
+            temperature: 0.0,
             user_prefix: String::new(),
         };
         let p = OpenAiChatProposer::new(cfg);

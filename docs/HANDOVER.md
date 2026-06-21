@@ -26,6 +26,12 @@ until the bench's anti-theater gate fires (see Gates).
 | **M5** value source `⚠` | `being-value` | operator-as-customer payer: tariff + held-out grader + inflow-bounded treasury + `ExternalPayer` hook |
 | **M6** population/selection | — | **GATED — not built.** See Gates. |
 
+**Live-verified** (`docs/FINDINGS.md`, 2026-06-21): the full M0–M5 stack runs on `qwen3:8b`
+foreground; the being **compounds directionally** (Day-0 0.900 → Day-N 1.000 via memory) on a
+deterministic bench, and the gate is correctly conservative (`compounds=false` at N=10 — won't
+over-claim). Self-mod refuses noise (rollback). Next: a larger calibrated corpus to actually fire the
+gate.
+
 ## How to continue autonomously (the loop)
 
 1. **`docs/MILESTONES.md` is the source of truth.** To continue: implement the **first unchecked

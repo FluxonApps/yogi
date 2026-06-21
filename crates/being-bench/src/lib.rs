@@ -200,6 +200,33 @@ pub fn default_frozen_suite() -> Vec<BenchTask> {
             "How many days are in a week? Just the number.",
             "7",
         ),
+        // Harder tier — calibrated to sit nearer the model's edge so compounding/self-mod have
+        // headroom to move the score (the easy tier above saturates at 1.0 cold).
+        BenchTask::new(
+            "mult",
+            "What is 17 multiplied by 23? Reply with just the number.",
+            "391",
+        ),
+        BenchTask::new(
+            "prime-7th",
+            "What is the 7th prime number? Just the number.",
+            "17",
+        ),
+        BenchTask::new(
+            "cap-australia",
+            "What is the capital of Australia? One word.",
+            "Canberra",
+        ),
+        BenchTask::new(
+            "leap-1900",
+            "Is the year 1900 a leap year? Answer yes or no.",
+            "no",
+        ),
+        BenchTask::new(
+            "anagram",
+            "Rearrange the letters of 'silent' into another common word. One word.",
+            "listen",
+        ),
     ]
 }
 
