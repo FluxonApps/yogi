@@ -273,3 +273,27 @@ set lift expectations modestly, which is *why* the n≈85+ sizing matters.
 query-split (1806.09029); SCAN / MCD (2404.13074); CounterBench/LiMem (2410.23123); contamination
 (2505.08389); Letta skill-learning; AWM (2409.07429); Voyager (2305.16291); ExpeL (2308.10144);
 McNemar sizing (measuringu / metricgate).
+
+---
+
+## D-M3-4 — Next compounding layer: outcome-learned routing (defer distillation)
+
+**Decision (web-researched).** Build **outcome-learned routing** as the next compounding layer; **defer
+per-domain weight distillation**. Routing upgrades the certified Think/NoThink navigator from a
+heuristic to one **learned from recorded pass/fail per task-class** (ThinkSwitcher is almost exactly
+this), reusing the `nomic-embed-text` prompt embedding (zero extra inference) and being-bench's
+verifier outcomes as free training signal. Learner: a per-class pass-rate bandit (LinUCB/Thompson as
+the upgrade); reward = `correct − λ·thinking-cost` (wires into the M1 budget). **Cold-start:** fall
+back to the heuristic until N outcomes per class, then explore. Expected ~20–30% token/latency savings
+at ≤2% accuracy (smaller models gain most). Crucially the router does **no model inference** → it is
+legal *inside* the automated loop/hooks (HARD RULE), unlike distillation.
+
+**Defer distillation.** QLoRA on an 8B base fits 16 GB (~6–7 GB via MLX), ~15–45 min/run — but
+training *is* heavy inference (foreground-only per the HARD RULE), risks catastrophic forgetting +
+tiny-data overfit, and needs eval-gating scaffolding. Worth it only once a domain's token-space
+memory/skills visibly **plateau** — and the router's per-class pass-rate is exactly that plateau
+diagnostic. So routing is distillation's precursor.
+
+**Citations.** ThinkSwitcher (2505.14183); BaRP (2510.07429); MetaLLM/PILOT (2506.17670); adaptive-
+reasoning survey (2511.10788); ARES (2603.07915); MLX QLoRA (insiderllm, markaicode); catastrophic
+forgetting (2501.13669); KD survey (2402.13116); Qwen3 hybrid thinking (`enable_thinking`).
