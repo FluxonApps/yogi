@@ -101,6 +101,7 @@ dependencies = [
  "being-persist",
  "being-runtime",
  "being-supervisor",
+ "being-value",
 ]
 
 [[package]]

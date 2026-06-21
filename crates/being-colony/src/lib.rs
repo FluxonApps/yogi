@@ -395,4 +395,56 @@ mod tests {
         assert_eq!(d.len(), 1);
         std::fs::remove_file(&path).ok();
     }
+
+    #[test]
+    fn economic_natural_selection_earner_survives_and_reproduces_loafer_is_reaped() {
+        use being_core_economy::{Account, SpendCategory};
+        use being_core_id::Ed25519Signer;
+        use being_core_mutation::{apply, Genome, MutationKind};
+        use being_lineage::{fork_signed, Lineage};
+        use being_supervisor::{Supervisor, SupervisorPort};
+        use being_value::{ExternalPayer, OperatorPayer, SubstringGrader, Tariff, Treasury};
+
+        // A being-exogenous payer: pays 100 per verified-correct answer from a bounded treasury.
+        let mut payer =
+            OperatorPayer::new(Tariff::new(100), SubstringGrader, Treasury::new(10_000));
+        // Two beings, same small budget; each turn costs 50 operating (metabolism).
+        let earner = Supervisor::new(Account::new(100, 0, 1_000_000), i64::MAX, 0);
+        let loafer = Supervisor::new(Account::new(100, 0, 1_000_000), i64::MAX, 0);
+
+        for t in 0..4 {
+            earner.reserve(SpendCategory::Operating, 50, t);
+            loafer.reserve(SpendCategory::Operating, 50, t);
+            // Operator-side settlement of each being's output (the being can't credit itself — credit
+            // is not on SupervisorPort). The earner answers correctly (+100); the loafer does not (+0).
+            earner.credit(payer.settle("q", "the capital is paris", "paris"));
+            loafer.credit(payer.settle("q", "i don't know", "paris"));
+            earner.tick(t);
+            loafer.tick(t);
+        }
+        // Selection by solvency: earning > metabolism keeps the earner alive; the loafer starves.
+        assert!(
+            earner.death().is_none(),
+            "earner funded its metabolism from verified success and survived"
+        );
+        assert!(
+            loafer.death().is_some(),
+            "loafer earned nothing and was reaped for insolvency"
+        );
+
+        // The survivor reproduces: a signed fork committed to the durable ledger. The dead one does not.
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        let signer = Ed25519Signer::from_seed([12; 32]);
+        let parent = Lineage::founder(1);
+        let child = apply(
+            MutationKind::Prompt("earner-lineage".into()),
+            Genome::default(),
+        )
+        .unwrap();
+        let mut ledger = DurableForkLedger::open(&path).unwrap();
+        let snap = fork_signed(&parent, &child, 2, &signer);
+        assert_eq!(ledger.commit(&snap).unwrap(), CommitOutcome::Committed);
+        std::fs::remove_file(&path).ok();
+    }
 }

@@ -19,3 +19,4 @@ being-supervisor = { path = "../being-supervisor" }
 [dev-dependencies]
 being-core-mutation = { path = "../being-core-mutation" }
 being-core-economy = { path = "../being-core-economy" }
+being-value = { path = "../being-value" }
