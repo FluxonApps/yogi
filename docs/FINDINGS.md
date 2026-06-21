@@ -338,3 +338,34 @@ watchdog `>`, insolvent-at-construction), value (inflow conservation, clamps, ze
 retrieve limits, signed cosine, hybrid no-match), runtime (pure-effect Dispatched crash-recovery row).
 Workspace: 160 tests, clippy clean. The major arcs (M6 open-ended search; safety-critical + load-bearing
 coverage) are done; remaining genuine in-loop work is a small refactor/doc-accuracy tail.
+
+## 2026-06-21 — FIRST LIVE M6 run (qwen3:8b) — stack works; verbosity descriptor collapses
+
+Ran the real model-scored M6 illumination (`EVOLVE_ITERS=4 EVOLVE_RECOMB=0.4 evolve`, backend verified
+healthy first — `qwen3:8b` returned "ok"). This is the first M6 evidence on the live model; all prior
+M6 results were synthetic.
+
+```
+illumination: 5 evaluations, 1 improvement, 0 recombinations, 1 niche filled
+QD-score=0.900  mean-fitness=0.900  coverage=3.3%
+signed fork ledger: 4 committed forks · genealogy 5 lineages (depth 1) · colony did:key:hex:197f6b23…
+```
+
+**Works:** the whole stack runs against the real model — real frozen-suite scores (the default empty-
+prompt being scores 0.90 = ~6.3/7), the Colony signs every fork into the ledger (4 committed,
+content-addressed), genealogy recorded, colony DID stable. The crash-recoverable signed saga is real,
+not just synthetic.
+
+**Real finding (a live confirmation of the synthetic one):** the verbosity behavior descriptor (mean
+response length, 20-char bands) **collapses to ONE niche** on this suite. The frozen tasks demand
+terse answers ("reply with just the number"), so every genome — whatever its prompt style — produces
+responses in the same length band. One niche ⇒ never two elites ⇒ 0 recombinations ⇒ MAP-Elites
+degenerates to single-cell hill-climbing (and the founder's 0.90 already owns the cell). Coverage 3.3%
+(1/30 cells) is the tell.
+
+**Implication / next experiment:** open-ended search needs a behavior axis that actually varies across
+the population on the task distribution at hand. A length axis is wrong for a short-answer suite. The
+honest options: (a) a behavior descriptor decorrelated from fitness that genuinely spreads (e.g. which
+*subset* of tasks a genome passes), and/or (b) a task distribution with real behavioral variety. Until
+the descriptor spreads, the drift-acceptance gate would compare two ~0.90 single-cell arms and
+correctly NOT fire — so fixing the descriptor is the prerequisite for a meaningful live M6 acceptance.
