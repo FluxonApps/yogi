@@ -162,4 +162,35 @@ mod tests {
         assert_eq!(p.settle("q", "paris again", "Paris"), 500); // accepted but inflow-bounded
         assert_eq!(p.treasury.paid(), 1500);
     }
+
+    #[test]
+    fn treasury_clamps_negative_inflow_and_negative_draws() {
+        // Negative committed inflow is treated as zero (no payout possible).
+        let mut empty = Treasury::new(-100);
+        assert_eq!(empty.remaining(), 0);
+        assert_eq!(empty.draw(-50), 0);
+        assert_eq!(empty.draw(10), 0);
+        // A negative draw on a funded treasury is a no-op (never refunds/inflates the budget).
+        let mut funded = Treasury::new(1000);
+        assert_eq!(funded.draw(-50), 0);
+        assert_eq!(funded.remaining(), 1000);
+        assert_eq!(funded.paid(), 0);
+    }
+
+    #[test]
+    fn zero_priced_accepted_work_pays_nothing() {
+        // Acceptance alone never moves money — the tariff does. A 0-priced class pays 0 even when graded.
+        let mut p = OperatorPayer::new(Tariff::new(0), SubstringGrader, Treasury::new(1000));
+        assert_eq!(p.settle("q", "contains paris", "paris"), 0);
+        assert_eq!(p.treasury.remaining(), 1000); // untouched
+        assert_eq!(p.treasury.paid(), 0);
+    }
+
+    #[test]
+    fn accepted_work_pays_zero_once_inflow_is_exhausted() {
+        let mut p = OperatorPayer::new(Tariff::new(1000), SubstringGrader, Treasury::new(1000));
+        assert_eq!(p.settle("q", "paris", "paris"), 1000); // exhausts inflow
+        assert_eq!(p.settle("q", "paris", "paris"), 0); // accepted, but nothing left to pay
+        assert_eq!(p.treasury.paid(), 1000); // conserved: never pays beyond committed inflow
+    }
 }
