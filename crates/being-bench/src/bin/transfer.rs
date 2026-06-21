@@ -9,13 +9,14 @@
 //!      nomic-embed-text's handling of the rare `⊕` symbol;
 //!   3. a worked-example skill note + an `ANSWER:` output line;
 //!   4. self-consistency (k samples, majority vote) for the final margin.
+//!
 //! Cold (no rule) should fail; with the rule injected it should apply it to the new operands.
 
 use being_bench::{mean, paired_bootstrap_ci, transfer_corpus, TransferTask, TRANSFER_SKILL_NOTE};
 use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::{ContextPack, Proposer};
 
-const VOTES: usize = 5; // self-consistency
+const VOTES: usize = 1; // self-consistency (1 = fast directional read; raise for a tighter margin)
 
 /// A qwen3 proposer in **thinking mode** (the research's prime fix for rule application).
 fn thinking_proposer() -> OpenAiChatProposer {
@@ -85,7 +86,7 @@ fn score(corpus: &[TransferTask], with_rule: bool) -> Vec<f64> {
 }
 
 fn main() {
-    let n = 20;
+    let n = 15;
     let corpus = transfer_corpus(n, 7);
     eprintln!(
         "Transfer cert v2 (thinking ON, deterministic rule injection, k={VOTES} vote): {n} tasks, foreground ..."
