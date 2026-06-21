@@ -7,6 +7,7 @@ members = [
     "crates/being-core-journal",
     "crates/being-core-memory",
     "crates/being-runtime",
+    "crates/being-core-economy",
 ]
 
 [workspace.package]

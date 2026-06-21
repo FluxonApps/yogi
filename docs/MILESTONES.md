@@ -30,8 +30,14 @@ committed tail is deterministic.* — **met** (26 tests, clippy clean; commits c
 - **Acceptance:** turn completes; all steps signed+journaled; committed-tail replay deterministic;
   property tests — 7th `MutationKind` variant won't compile, no-launder holds, single-head-per-DID.
 
-## M1 — Metabolism plumbing  `[ ] ⚠`
+## M1 — Metabolism plumbing  `[~] ⚠`  · decisions [D-M1-1/2/3](decisions.md)
 *Account + supervisor `reserve`/`settle` + the per-step state machine + the **reaper**.*
+
+- [x] `being-core-economy` — single-ledger Account: maintenance-first, `reserve_floor` + per-bet cap, category telemetry, credit-only inflow (D-M1-2) · 6 tests
+- [ ] `being-supervisor` — `SupervisorPort` façade, private authority, out-of-band watchdog kill, irreversible `Death`/reaper (D-M1-1, D-M1-3)
+- [ ] per-step state machine + crash recovery
+- [ ] wire into `being-runtime` turn (committer reserves; turn debits; insolvency → reaper)
+
 - **Acceptance:** `reserve` rejects over-cap (budget binds); reaper fires on sustained insolvency and
   journals a Death event; out-of-band kill meets a measured latency bound; in-flight egress ≤
   `min(B_inflight, per-turn effect-count cap)` under stale-replica fuzzing.
