@@ -5,8 +5,86 @@
 use std::io;
 use std::path::Path;
 
+use being_core_id::Signer;
+use being_core_journal::{MemoryJournal, Seq};
+use being_core_types::{Did, Hash};
 use being_lineage::{CommitOutcome, ForkSnapshot};
-use being_persist::DurableIdSet;
+use being_persist::{DurableIdSet, DurableLog};
+
+// ---------------------------------------------------------------------------------------------
+// Durable signed journal: the in-memory hash-chained journal made restart-survivable.
+// ---------------------------------------------------------------------------------------------
+
+/// A signed, hash-chained journal whose entries are **durable** (build-spec §5). It persists each
+/// appended `(kind, payload)` to a [`DurableLog`] and, on [`open`](DurableJournal::open), rebuilds the
+/// full chain by replaying those records through a fresh [`MemoryJournal`]. Because Ed25519 signing and
+/// blake3 hashing are deterministic, the replayed chain is **byte-identical** (same seqs, prev-hashes,
+/// entry-hashes, signatures) — so a restart recovers a journal that still passes `verify_chain`.
+pub struct DurableJournal<S: Signer> {
+    journal: MemoryJournal<S>,
+    log: DurableLog,
+}
+
+fn encode_kv(kind: &str, payload: &[u8]) -> Vec<u8> {
+    let mut b = Vec::with_capacity(4 + kind.len() + payload.len());
+    b.extend_from_slice(&(kind.len() as u32).to_le_bytes());
+    b.extend_from_slice(kind.as_bytes());
+    b.extend_from_slice(payload);
+    b
+}
+
+fn decode_kv(rec: &[u8]) -> Option<(String, Vec<u8>)> {
+    if rec.len() < 4 {
+        return None;
+    }
+    let klen = u32::from_le_bytes(rec[0..4].try_into().ok()?) as usize;
+    let kind = String::from_utf8(rec.get(4..4 + klen)?.to_vec()).ok()?;
+    let payload = rec.get(4 + klen..)?.to_vec();
+    Some((kind, payload))
+}
+
+impl<S: Signer> DurableJournal<S> {
+    /// Open (creating if absent) a durable journal at `path` for `signer`, rebuilding the chain from
+    /// the durable log. The signer must be the same identity that wrote the log (else the rebuilt
+    /// signatures won't match the original — caught by `verify_chain`).
+    pub fn open(path: impl AsRef<Path>, signer: S) -> io::Result<Self> {
+        let log = DurableLog::open(path)?;
+        let mut journal = MemoryJournal::new(signer);
+        for rec in log.replay()? {
+            if let Some((kind, payload)) = decode_kv(&rec) {
+                journal.append(&kind, payload);
+            }
+        }
+        Ok(Self { journal, log })
+    }
+
+    /// Append a signed entry, **durably** (fsynced to the log) before it joins the in-memory chain, so
+    /// it survives a crash. Returns the new sequence number.
+    pub fn append(&mut self, kind: &str, payload: Vec<u8>) -> io::Result<Seq> {
+        self.log.append(&encode_kv(kind, &payload))?; // durability point first
+        Ok(self.journal.append(kind, payload))
+    }
+
+    pub fn verify_chain(&self) -> bool {
+        self.journal.verify_chain()
+    }
+
+    pub fn head(&self) -> (Seq, Hash) {
+        self.journal.head()
+    }
+
+    pub fn len(&self) -> usize {
+        self.journal.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.journal.is_empty()
+    }
+
+    pub fn did(&self) -> &Did {
+        self.journal.did()
+    }
+}
 
 /// A [`being_lineage::ForkLedger`] whose committed set is **durable**: each accepted fork's
 /// content-addressed `snapshot_id` is persisted via a [`DurableIdSet`], so at-most-once fork commit
@@ -100,6 +178,28 @@ mod tests {
         .unwrap();
         assert_eq!(ledger.commit(&bad).unwrap(), CommitOutcome::Rejected);
 
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn durable_journal_survives_restart_with_identical_chain() {
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        let head_before;
+        {
+            let mut j = DurableJournal::open(&path, Ed25519Signer::from_seed([5; 32])).unwrap();
+            j.append("commitment", b"a".to_vec()).unwrap();
+            j.append("attestation", b"b".to_vec()).unwrap();
+            assert!(j.verify_chain());
+            assert_eq!(j.len(), 2);
+            head_before = j.head();
+        }
+        // "Restart" with the SAME signer: the chain is rebuilt from the durable log and is
+        // byte-identical (deterministic Ed25519 + blake3) — same head, still verifies.
+        let j = DurableJournal::open(&path, Ed25519Signer::from_seed([5; 32])).unwrap();
+        assert_eq!(j.len(), 2);
+        assert!(j.verify_chain());
+        assert_eq!(j.head(), head_before);
         std::fs::remove_file(&path).ok();
     }
 }

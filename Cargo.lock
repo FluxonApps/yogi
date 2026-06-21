@@ -91,6 +91,7 @@ name = "being-colony"
 version = "0.0.0"
 dependencies = [
  "being-core-id",
+ "being-core-journal",
  "being-core-mutation",
  "being-core-types",
  "being-lineage",
