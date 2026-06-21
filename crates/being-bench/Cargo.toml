@@ -64,3 +64,8 @@ being-lineage = { path = "../being-lineage" }
 being-core-id = { path = "../being-core-id" }
 # M3 gap detection / promotion gate (distill bin).
 being-distill = { path = "../being-distill" }
+
+# M3 distillation flywheel end-to-end on the transfer corpus (cold vs distilled). Foreground.
+[[bin]]
+name = "distill_close"
+path = "src/bin/distill_close.rs"
