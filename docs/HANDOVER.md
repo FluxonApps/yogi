@@ -24,13 +24,18 @@ until the bench's anti-theater gate fires (see Gates).
 | **M3** compounding | `being-embed-openai` + memory/runtime | semantic retrieval (cosine + recency), consolidation, verifier-fed skill-learning; retrieval wired into the turn so memory accumulates |
 | **M4** self-modification `⚠` | `being-loop` | Two-Gate (Validation `2·ε_V+τ` + Capacity proxy) + epsilon-greedy Improver + `self_improve_round` (commit-or-rollback + audit) |
 | **M5** value source `⚠` | `being-value` | operator-as-customer payer: tariff + held-out grader + inflow-bounded treasury + `ExternalPayer` hook |
-| **M6** population/selection | — | **GATED — not built.** See Gates. |
+| **M6** population/selection | `being-lineage` | **GATED.** Heredity substrate only (`Lineage` + `fork`, child inherits genome, gen+1); **selection/fitness/death OFF** until the entry gate. See Gates. |
 
-**Live-verified** (`docs/FINDINGS.md`, 2026-06-21): the full M0–M5 stack runs on `qwen3:8b`
-foreground; the being **compounds directionally** (Day-0 0.900 → Day-N 1.000 via memory) on a
-deterministic bench, and the gate is correctly conservative (`compounds=false` at N=10 — won't
-over-claim). Self-mod refuses noise (rollback). Next: a larger calibrated corpus to actually fire the
-gate.
+Post-M5 hardening (all green): **hybrid IDF-lexical + embedding retrieval** wired into the turn (rare
+symbols like `⊕` retrieve reliably); `ollama_qwen3_thinking()` proposer preset.
+
+**Live-verified** (`docs/FINDINGS.md`, 2026-06-21):
+- M0–M5 run on `qwen3:8b` foreground; the being **compounds directionally** (Day-0 0.900 → Day-N
+  1.000 via memory), with the gate correctly conservative (`compounds=false` at N=10 — no over-claim).
+- **Token-space compounding CERTIFIED**: on a cold-failing made-up-operation *transfer* corpus, a
+  learned rule lifts the being **0.000 → 1.000** (CI=[1,1], `compounds=true`) — genuine transfer (new
+  operands; answer never stored), once thinking is on. Self-mod refuses noise (rollback).
+- **Load-bearing config lesson:** never `/no_think` a reasoning task — it strangles rule application.
 
 ## How to continue autonomously (the loop)
 
