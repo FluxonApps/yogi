@@ -241,3 +241,35 @@ the §13.1 anti-theater + compounding gates only *fire* on real foreground runs.
 **Status.** Engineering call grounded in the prior economic analysis (D-M1-2 + the architecture's
 exogenous-payer derivation); no new web research. The exogenous-payer commitment remains the step-0
 that turns the economic gate from methodology into a live, derived threshold.
+
+---
+
+## D-M3-3 — Compounding must measure *transfer*, not answer-lookup; skills are the 2nd live layer
+
+**Decision (web-researched).** Three commitments, from the live finding that the bench showed only a
+directional, uncertifiable memory effect:
+
+1. **Measure transfer, not recall.** The compounding bench must show that a learned lesson helps on
+   *new but related held-out* tasks, not that a stored answer is retrieved. Concrete rules: (a) **gate
+   items by cold-answerability** — keep only tasks the bare model fails *without* memory
+   (LongMemEval-V2's filter); (b) **split train/test by skill template, fixed before any run**, with a
+   *compositional* held-out set combining taught skills that never co-occurred (SCAN/MCD/query-split);
+   (c) **seeded generators + opaque entity tokens** so memorizing prior runs gains nothing; (d) report
+   **transfer accuracy AND `LiMem = Acc × (1 − consistency-under-perturbation)`**, retrieval vs
+   end-to-end separately, plus a dump-all trivial baseline as a tripwire.
+2. **Size for the effect.** Target a ≥20-point held-out lift (off the 0.90 ceiling that kept the CI at
+   zero) and **~85–100 paired tasks** for an 80%-powered McNemar CI excluding zero at d=0.20 (≫ that
+   for smaller lifts); B ≥ 2000 bootstrap (B ≠ n); measure the discordant rate on a pilot; exact
+   McNemar at small n.
+3. **The 2nd live compounding layer is verifier-fed SKILLS** (after episodic memory): extract a
+   *generalized, variabilized* lesson; **gate writing on the verifier and fold FAILURES into
+   "what to avoid"** (Letta's +9%→+15.7% lever); store/retrieve by embedding; prune by up/down-votes
+   (ExpeL). Then routing/navigator; distillation last (weights, GPU-bound).
+
+**Caveat.** At 8B the in-context-learning ceiling is genuinely lower than frontier headline numbers —
+set lift expectations modestly, which is *why* the n≈85+ sizing matters.
+
+**Citations.** LongMemEval (2410.10813) + V2 (2605.12493); "AI Agents That Matter" (2407.01502);
+query-split (1806.09029); SCAN / MCD (2404.13074); CounterBench/LiMem (2410.23123); contamination
+(2505.08389); Letta skill-learning; AWM (2409.07429); Voyager (2305.16291); ExpeL (2308.10144);
+McNemar sizing (measuringu / metricgate).

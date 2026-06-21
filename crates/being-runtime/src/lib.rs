@@ -198,6 +198,22 @@ impl<P: Proposer, C: Committer, E: Executor> Being<P, C, E> {
         self.index.len()
     }
 
+    /// Record a **verifier-confirmed, generalized** skill note so it is retrieved on future related
+    /// turns — the second live compounding layer beyond episodic memory (D-M3-3). Only *passed*
+    /// lessons compound (the verifier gates writing, per Letta/ExpeL); the note is embedded for
+    /// semantic retrieval and tagged `[skill]`. No-op without an embedder.
+    pub fn learn_skill(&mut self, lesson: &str, passed: bool, now_ms: Ms) {
+        if !passed {
+            return;
+        }
+        if let Some(embedder) = self.embedder.clone() {
+            if let Ok(v) = embedder.embed(lesson) {
+                let id = self.index.len() as u64 + 1;
+                self.index.add(id, v, format!("[skill] {lesson}"), now_ms);
+            }
+        }
+    }
+
     /// Retrieve prior memory for `input`. With an embedder: embed, semantic-search the index, then
     /// add the input to the index (memory accumulates). Otherwise / on embed error: episodic
     /// substring fallback.
@@ -362,6 +378,27 @@ mod tests {
             "expected prior cat memory surfaced, got: {resp}"
         );
         assert_eq!(b.semantic_len(), 2); // both inputs accumulated
+    }
+
+    #[test]
+    fn learned_skill_is_retrieved_on_future_turns() {
+        let sup = Supervisor::new(Account::new(10_000_000, 0, 1_000_000), i64::MAX, 0);
+        let mut b = Being::from_seed(
+            [6u8; 32],
+            Supervisor::as_port(&sup),
+            CtxEchoProposer,
+            PassThroughCommitter,
+            EchoExecutor,
+        )
+        .with_embedder(std::sync::Arc::new(KeywordEmbedder));
+        b.learn_skill("for cat questions, recall that cats purr", true, 1); // verifier-confirmed
+        b.learn_skill("dropped because not verifier-confirmed", false, 2); // not added
+        let t = b.turn("a cat question", 3);
+        let resp = t.observations.join(" ");
+        assert!(
+            resp.contains("[skill]") && resp.contains("cats purr"),
+            "expected the learned skill surfaced, got: {resp}"
+        );
     }
 
     /// A well-funded being whose turns always act (huge balance, effectively no watchdog timeout).

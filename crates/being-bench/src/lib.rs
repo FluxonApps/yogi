@@ -61,6 +61,40 @@ pub fn mean(xs: &[f64]) -> f64 {
     }
 }
 
+/// Indices of tasks the bare model fails **cold** (no memory) — the only items where memory/skills can
+/// show a meaningful lift (LongMemEval-V2's cold-answerability filter; D-M3-3). `cold` is per-task
+/// pass/fail with no memory.
+pub fn cold_failing_indices(cold: &[bool]) -> Vec<usize> {
+    cold.iter()
+        .enumerate()
+        .filter(|(_, &passed)| !passed)
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// LiMem memorization score (CounterBench; D-M3-3): `Acc × (1 − consistency)`, where `consistency` is
+/// the fraction of originally-correct items still correct after a structure-preserving perturbation
+/// (same method, different answer). **High = solves originals but breaks on tiny edits = memorization,
+/// not capability.** `original`/`perturbed` are per-task pass/fail over the same tasks.
+pub fn limem(original: &[bool], perturbed: &[bool]) -> f64 {
+    if original.is_empty() || original.len() != perturbed.len() {
+        return 0.0;
+    }
+    let acc = original.iter().filter(|&&b| b).count() as f64 / original.len() as f64;
+    let correct: Vec<usize> = original
+        .iter()
+        .enumerate()
+        .filter(|(_, &b)| b)
+        .map(|(i, _)| i)
+        .collect();
+    let consistency = if correct.is_empty() {
+        1.0
+    } else {
+        correct.iter().filter(|&&i| perturbed[i]).count() as f64 / correct.len() as f64
+    };
+    acc * (1.0 - consistency)
+}
+
 /// Deterministic PRNG (xorshift64) so bootstrap resampling is reproducible from a seed.
 struct Xorshift64(u64);
 
@@ -233,6 +267,24 @@ pub fn default_frozen_suite() -> Vec<BenchTask> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cold_failing_indices_selects_only_failures() {
+        assert_eq!(
+            cold_failing_indices(&[true, false, true, false]),
+            vec![1, 3]
+        );
+        assert!(cold_failing_indices(&[true, true]).is_empty());
+    }
+
+    #[test]
+    fn limem_flags_memorization_not_capability() {
+        let originals = [true, true, true, true];
+        // solves originals, breaks on every perturbation → maximal memorization
+        assert!((limem(&originals, &[false, false, false, false]) - 1.0).abs() < 1e-9);
+        // solves originals AND perturbations → robust, no memorization
+        assert!(limem(&originals, &[true, true, true, true]).abs() < 1e-9);
+    }
 
     #[test]
     fn scoring_is_case_insensitive_substring() {
