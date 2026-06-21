@@ -626,3 +626,30 @@ drift run (cargo build/test never load Ollama, so this is loop-safe):
 Also wired M4 into the live runtime: `being-runtime::Being::from_seed_sandboxed` (capability-gated
 executor on the turn path, fail-closed). Workspace 187 tests, green. "Crash-recoverable" is now
 literal (survives process restart), not just idempotent-replay-within-a-run.
+
+## 2026-06-21 — powered live drift acceptance: a PRINCIPLED NULL (selection ≡ drift on this task)
+
+The 6-replicate live drift acceptance on the transfer corpus finished:
+
+```
+M6 TRANSFER ACCEPTANCE: selection=0.294  vs  drift=0.294   advantage CI=[0.000, 0.000]   fires=false
+```
+
+Selection and drift are EXACTLY equal — diagnostic, not noise. The transfer behavior descriptor is
+"which of {⊕,⊗,⊙} you solve", so a cell's coordinate *determines* its fitness (#ops solved). With no
+**within-niche fitness variance**, elitist retention (keep the best per cell) and neutral-drift
+retention (keep the latest per cell) are identical — every occupant of a cell has the same fitness — so
+selection cannot beat drift here *by construction*, and the gate correctly reports null.
+
+**This completes, rather than weakens, the M6 picture:**
+- Selection beats drift **iff there is within-niche quality variance**. The synthetic noisy landscape
+  has it (elitist captures the per-cell max) → the gate FIRES there (earlier finding).
+- The transfer corpus does not (cell ⇒ fitness) → selection ≡ drift → null here.
+- The live M6 result — recombination assembling the all-3-skill solver — comes from **coverage +
+  recombination**, which neutral drift *also* achieves; it does not depend on the retention rule.
+
+So the open-ended-search thesis rests on the illumination + recombination evidence (CERT4), and the
+drift gate's value is precisely that it told us *when* fitness-based selection adds nothing — an
+anti-theater result: it did not rubber-stamp "selection wins" where selection genuinely doesn't.
+(Practical note: a drift acceptance that can fire needs a behavior axis decorrelated from fitness, so
+niches carry quality variance — same lesson as the descriptor-collapse finding, one level up.)
