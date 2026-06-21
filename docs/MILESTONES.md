@@ -24,7 +24,7 @@ committed tail is deterministic.* — **met** (26 tests, clippy clean; commits c
 - [x] `being-core-types` — provenance no-launder ladder, microdollar/Did/Hash/Sig types · commit `0471f48`
 - [x] `being-core-mutation` — the **closed `MutationKind` surface** + `apply` (no wildcard) · commit `0471f48`
 - [x] `being-core-id` — DID + Ed25519 signer + `verify` (ed25519-dalek), deterministic-from-seed · 5 tests
-- [x] `being-core-journal` — single-writer-per-DID append, blake3 hash-chain, signed entries, replay, `verify_chain` · 7 tests *(in-memory; SQLite+fsync at M1/§5)*
+- [x] `being-core-journal` — single-writer-per-DID append, blake3 hash-chain, signed entries, replay, `verify_chain` · 7 tests. **Durable persistence now live** (§5): `being-persist` (crash-safe fsync append-log + `DurableIdSet`) + `being-colony` (`DurableJournal` rebuilds a byte-identical chain on restart; `DurableForkLedger`/`DurableDedupLedger` make fork-commit + at-most-once survive restart).
 - [x] `being-core-memory` — episodic (bitemporal, no-launder by construction) / semantic (consolidated=ModelInference) / procedural (population variants) · 4 tests *(in-memory; SQLite at M2)*
 - [x] `being-runtime` seam — `Proposer`/`Committer`/`Executor` + control loop, **echo proposer**; end-to-end `turn()` (signed commitment+attestation, deterministic committed tail) · 5 tests
 - **Acceptance:** turn completes; all steps signed+journaled; committed-tail replay deterministic;

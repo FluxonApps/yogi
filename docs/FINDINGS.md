@@ -611,3 +611,18 @@ v45), then built it. Two crates, both green:
 This realizes the D-M1-3 HARD GATE (move the executor behind a separate-process/WASM boundary before
 untrusted/self-modifying code runs) as actual code, not a deferred plan. Remaining: wire the sandbox as
 the live `being-runtime::Executor` (effects emitted only after a broker grant) — an integration step.
+
+## 2026-06-21 — durable persistence built model-free while the drift run held the GPU (pending B done)
+
+Per the operator's point — "if a model is running, build the model-free work and keep the loop going" —
+implemented the spec §5 persistence the journal/ledgers had deferred, all in parallel with the ~3h
+drift run (cargo build/test never load Ollama, so this is loop-safe):
+- `being-persist` — `DurableLog` (file + fsync + per-record checksum; replay drops a torn crash tail)
+  and `DurableIdSet` (restart-surviving at-most-once id set). Pure std, no external deps.
+- `being-colony` — composes pure heredity + durable storage (keeps being-lineage pure):
+  `DurableJournal` (signed hash-chain rebuilt byte-identically on restart), `DurableForkLedger`
+  (M6 fork commits survive restart, tampered snapshots still rejected), `DurableDedupLedger`
+  (M1 at-most-once egress survives restart).
+Also wired M4 into the live runtime: `being-runtime::Being::from_seed_sandboxed` (capability-gated
+executor on the turn path, fail-closed). Workspace 187 tests, green. "Crash-recoverable" is now
+literal (survives process restart), not just idempotent-replay-within-a-run.
