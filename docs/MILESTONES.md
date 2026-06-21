@@ -101,8 +101,13 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
   `being-sandbox` capability broker LIVE (policy core): deny-by-default `Broker::authorize` over a
   `CapabilitySet` (allowlisted egress, bounded payment, per-kind MemoryWrite/Sign; pure effects free).
   No self-grant (capabilities operator-owned; `CapabilityGrant` absent from the closed surface) · 5
-  tests. Next: the wasmtime/WASI enforcement backend (executor as a zero-ambient-authority guest;
-  effects only via broker-mediated host imports).
+  tests.
+- [x] `being-sandbox-wasm` — the wasmtime/WASI **enforcement** backend (mechanism): the executor runs
+  as a WASM guest with **zero ambient authority** (its only import is the broker-mediated host fn —
+  `guest_imports() == ["host::request_effect"]`, no WASI/fs/net), so every effect is forced through
+  `Broker::authorize`. A compromised/self-modified executor still can only do what was granted · 5
+  tests. M4 isolation is now real: policy (deny-by-default broker) + mechanism (unbypassable WASM
+  boundary). Wiring it as the live `being-runtime` Executor is the remaining integration step.
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 

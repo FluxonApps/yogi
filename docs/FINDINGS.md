@@ -595,3 +595,19 @@ So BOTH M3 routes now PROMOTE live: token-space (rule-in-prompt, instant, no tra
 (distilled into a smaller faster student, generalizes + no forgetting). The "deferred" weight arm is
 no longer deferred — it is built, reproducible (`scripts/distill_lora.sh`), and demonstrated to pass
 the gate. Winning config: STUDENT=Qwen2.5-1.5B-4bit LAYERS=16 ITERS=300 LR=1e-4 + balanced replay.
+
+## 2026-06-21 — M4 isolation built: capability broker (policy) + WASM enforcement (mechanism)
+
+Removed the M4 isolation "gate" the same way: researched (WASI deny-by-default capability model, wasmtime
+v45), then built it. Two crates, both green:
+- `being-sandbox` — POLICY: deny-by-default `Broker::authorize` over an operator-owned `CapabilitySet`
+  (allowlisted egress, bounded payment, per-kind MemoryWrite/Sign; pure effects free). The being can't
+  self-grant (capabilities operator-owned; `CapabilityGrant` absent from the closed `MutationKind`).
+- `being-sandbox-wasm` — MECHANISM: the executor runs as a wasmtime guest with **zero ambient authority**
+  — its only import is `host::request_effect` (proven by `guest_imports()`), no WASI/fs/net — so every
+  effect is forced through the broker. A compromised/self-modified executor can still only do what the
+  operator granted.
+
+This realizes the D-M1-3 HARD GATE (move the executor behind a separate-process/WASM boundary before
+untrusted/self-modifying code runs) as actual code, not a deferred plan. Remaining: wire the sandbox as
+the live `being-runtime::Executor` (effects emitted only after a broker grant) — an integration step.

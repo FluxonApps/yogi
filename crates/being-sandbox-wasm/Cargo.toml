@@ -1,0 +1,14 @@
+[package]
+name = "being-sandbox-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# M4 isolation — the wasmtime/WASI ENFORCEMENT backend for the being-sandbox capability broker. A guest
+# runs with ZERO ambient authority (no WASI imports at all); its only import is the broker-mediated host
+# function, so every effect is forced through being_sandbox::Broker. This is the mechanism that makes the
+# deny-by-default policy unbypassable. Heavy dep (wasmtime) is isolated to this crate so the policy core
+# (being-sandbox) and the rest of the workspace stay light.
+[dependencies]
+being-sandbox = { path = "../being-sandbox" }
+wasmtime = { version = "45", default-features = false, features = ["cranelift", "runtime", "wat"] }
