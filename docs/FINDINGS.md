@@ -326,3 +326,15 @@ death-none-while-alive), being-value 4→7 (negative-inflow/draw clamps, zero-pr
 response as accepted and pay out the tariff. Defensible fix: reject empty ground truth (can't verify →
 don't pay). Left to the operator since it changes payer-acceptance semantics on the load-bearing
 anti-Goodhart grader.
+
+## 2026-06-21 — cross-workspace hardening pass complete (138 → 160 tests, no bugs)
+
+After the M6 loop-safe arm, swept every crate for genuine coverage gaps in load-bearing logic and
+closed them (no behavioral bugs found; one footgun flagged — the empty-ground-truth grader):
+economy (reserve-floor/cap boundaries, insolvency, credit guard), supervisor (Refused-no-reap, strict
+watchdog `>`, insolvent-at-construction), value (inflow conservation, clamps, zero-price), journal
+(isolated signature-verification branch, empty chain), router (λ cost-gate, partial cold-start), embed
+(non-numeric/integer/missing-data parse), proposer (strip_think edge branches), memory (best_for-None,
+retrieve limits, signed cosine, hybrid no-match), runtime (pure-effect Dispatched crash-recovery row).
+Workspace: 160 tests, clippy clean. The major arcs (M6 open-ended search; safety-critical + load-bearing
+coverage) are done; remaining genuine in-loop work is a small refactor/doc-accuracy tail.
