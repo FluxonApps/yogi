@@ -105,6 +105,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-bin"
+version = "0.0.0"
+dependencies = [
+ "being-colony",
+ "being-core-economy",
+ "being-core-id",
+ "being-proposer-openai",
+ "being-runtime",
+ "being-sandbox",
+ "being-supervisor",
+]
+
+[[package]]
 name = "being-colony"
 version = "0.0.0"
 dependencies = [

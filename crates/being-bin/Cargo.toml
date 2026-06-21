@@ -1,0 +1,20 @@
+[package]
+name = "being-bin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# The `yogi` binary — the deployable entrypoint (build-spec §2: run / status / …). `status` is
+# model-free; `run` drives a durable, capability-sandboxed being on the local model (foreground).
+[[bin]]
+name = "yogi"
+path = "src/main.rs"
+
+[dependencies]
+being-runtime = { path = "../being-runtime" }
+being-colony = { path = "../being-colony" }
+being-sandbox = { path = "../being-sandbox" }
+being-proposer-openai = { path = "../being-proposer-openai" }
+being-supervisor = { path = "../being-supervisor" }
+being-core-economy = { path = "../being-core-economy" }
+being-core-id = { path = "../being-core-id" }
