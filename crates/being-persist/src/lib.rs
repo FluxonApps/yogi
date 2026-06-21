@@ -32,16 +32,53 @@ pub struct DurableLog {
     file: File,
 }
 
+/// Scan framed bytes into (records, valid-prefix-byte-length), stopping at the first torn/corrupt frame.
+/// The byte length is where the durable prefix ends — everything after it is a crash-truncated tail.
+fn scan(buf: &[u8]) -> (Vec<Vec<u8>>, usize) {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos + 8 <= buf.len() {
+        let len = u32::from_le_bytes(buf[pos..pos + 4].try_into().unwrap()) as usize;
+        let sum = u32::from_le_bytes(buf[pos + 4..pos + 8].try_into().unwrap());
+        let start = pos + 8;
+        let end = start + len;
+        if end > buf.len() {
+            break; // torn tail: body truncated by a crash mid-append
+        }
+        let body = &buf[start..end];
+        if checksum(body) != sum {
+            break; // corrupt/torn frame — the prefix is the durable set
+        }
+        out.push(body.to_vec());
+        pos = end;
+    }
+    (out, pos)
+}
+
 impl DurableLog {
-    /// Open (creating if absent) the log at `path` for appending. Existing records are preserved; new
-    /// appends go after them.
+    /// Open (creating if absent) the log at `path` for appending. Existing fully-durable records are
+    /// preserved; **a torn tail from a prior crash is truncated on open** so subsequent appends stay
+    /// contiguous (otherwise new records would be stranded after the torn bytes and lost on the next
+    /// replay). After `open`, the file holds exactly the recoverable prefix.
     pub fn open(path: impl AsRef<Path>) -> io::Result<Self> {
         let path = path.as_ref().to_path_buf();
+        // Find the durable-prefix length and drop any torn tail before opening for append.
+        let valid_len = match File::open(&path) {
+            Ok(mut f) => {
+                let mut buf = Vec::new();
+                f.read_to_end(&mut buf)?;
+                scan(&buf).1 as u64
+            }
+            Err(_) => 0,
+        };
         let file = OpenOptions::new()
             .read(true)
             .append(true)
             .create(true)
             .open(&path)?;
+        if file.metadata()?.len() > valid_len {
+            file.set_len(valid_len)?; // remove the crash-truncated tail
+        }
         Ok(Self { path, file })
     }
 
@@ -64,25 +101,7 @@ impl DurableLog {
         f.seek(SeekFrom::Start(0))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)?;
-
-        let mut out = Vec::new();
-        let mut pos = 0usize;
-        while pos + 8 <= buf.len() {
-            let len = u32::from_le_bytes(buf[pos..pos + 4].try_into().unwrap()) as usize;
-            let sum = u32::from_le_bytes(buf[pos + 4..pos + 8].try_into().unwrap());
-            let start = pos + 8;
-            let end = start + len;
-            if end > buf.len() {
-                break; // torn tail: record body truncated by a crash mid-append
-            }
-            let body = &buf[start..end];
-            if checksum(body) != sum {
-                break; // corrupt/torn record — stop; the prefix is the durable set
-            }
-            out.push(body.to_vec());
-            pos = end;
-        }
-        Ok(out)
+        Ok(scan(&buf).0)
     }
 
     /// Number of fully-durable records currently in the log.
@@ -210,6 +229,44 @@ mod tests {
         // Replay recovers exactly the two committed records and stops at the torn tail.
         let recs = DurableLog::open(&p).unwrap().replay().unwrap();
         assert_eq!(recs, vec![b"committed-1".to_vec(), b"committed-2".to_vec()]);
+        std::fs::remove_file(&p).ok();
+    }
+
+    #[test]
+    fn append_after_a_torn_tail_does_not_lose_records() {
+        // Regression: a crash leaves a torn tail; on reopen it must be truncated so a NEW append is
+        // contiguous and replayable (else the new record is stranded after the torn bytes and lost).
+        let p = temp_path("recover");
+        let _ = std::fs::remove_file(&p);
+        {
+            let mut log = DurableLog::open(&p).unwrap();
+            log.append(b"committed-1").unwrap();
+            log.append(b"committed-2").unwrap();
+        }
+        // Simulate a crash mid-append: a partial frame appended directly.
+        {
+            let mut raw = OpenOptions::new().append(true).open(&p).unwrap();
+            raw.write_all(&(999u32).to_le_bytes()).unwrap();
+            raw.write_all(&(0u32).to_le_bytes()).unwrap();
+            raw.write_all(b"torn").unwrap();
+            raw.sync_data().unwrap();
+        }
+        // Reopen (truncates the torn tail) and append a fresh record.
+        {
+            let mut log = DurableLog::open(&p).unwrap();
+            assert_eq!(log.len().unwrap(), 2); // torn tail dropped on open
+            log.append(b"committed-3").unwrap();
+        }
+        // The new record is NOT lost — replay sees all three contiguous records.
+        let recs = DurableLog::open(&p).unwrap().replay().unwrap();
+        assert_eq!(
+            recs,
+            vec![
+                b"committed-1".to_vec(),
+                b"committed-2".to_vec(),
+                b"committed-3".to_vec()
+            ]
+        );
         std::fs::remove_file(&p).ok();
     }
 
