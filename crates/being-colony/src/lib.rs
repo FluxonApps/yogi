@@ -276,6 +276,12 @@ pub struct Population<S: Signer> {
     next_id: BeingId,
     generation: u64,
     rng: being_lineage::Rng,
+    /// Optional offspring variation: a closed-surface mutation applied to each newborn's genome AFTER
+    /// the fork (fork is verbatim heredity; mutation is a separate variation event). Without it the
+    /// population can only recombine existing genome material; with it, novel traits no founder had can
+    /// arise — completing the operator set (mutation + crossover + selection) under economic pressure.
+    #[allow(clippy::type_complexity)]
+    mutator: Option<Box<dyn FnMut(&Genome, &mut being_lineage::Rng) -> Genome>>,
 }
 
 impl<S: Signer> Population<S> {
@@ -309,7 +315,18 @@ impl<S: Signer> Population<S> {
             next_id,
             generation: 0,
             rng: being_lineage::Rng::new(0x5EED ^ next_id),
+            mutator: None,
         }
+    }
+
+    /// Install an offspring mutator — a closed-surface variation applied to each newborn (use
+    /// `being_core_mutation::apply` with a `MutationKind` inside). Enables novelty beyond recombination.
+    pub fn with_mutator(
+        mut self,
+        f: impl FnMut(&Genome, &mut being_lineage::Rng) -> Genome + 'static,
+    ) -> Self {
+        self.mutator = Some(Box::new(f));
+        self
     }
 
     pub fn len(&self) -> usize {
@@ -331,10 +348,15 @@ impl<S: Signer> Population<S> {
     /// Add a newborn from a fork snapshot: it gets the child lineage + recombined/inherited genome and
     /// a fresh metabolic account seeded with the birth endowment.
     fn spawn_child(&mut self, founder: BeingId, snap: &ForkSnapshot) {
+        // Inherited (or recombined) genome, then an optional closed-surface mutation for novelty.
+        let mut genome = snap.child.genome.clone();
+        if let Some(mutate) = self.mutator.as_mut() {
+            genome = mutate(&genome, &mut self.rng);
+        }
         self.members.push(Member {
             founder,
             lineage: snap.child.lineage.clone(),
-            genome: snap.child.genome.clone(),
+            genome,
             supervisor: Supervisor::new(
                 Account::new(self.cfg.birth_endowment, 0, Microdollars::MAX),
                 i64::MAX,
@@ -716,6 +738,49 @@ mod tests {
         assert!(
             has_both,
             "sexual recombination should produce a child carrying BOTH parents' skills"
+        );
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn mutation_introduces_a_trait_no_founder_had() {
+        use being_core_id::Ed25519Signer;
+        use being_core_mutation::{apply, Genome, MutationKind};
+        let path = temp_path();
+        let _ = std::fs::remove_file(&path);
+        let ledger = DurableForkLedger::open(&path).unwrap();
+        let cfg = PopulationConfig {
+            turn_cost: 50,
+            birth_endowment: 300,
+            reproduce_threshold: 250,
+            max_size: 12,
+            sexual: false,
+        };
+        // Founders have NO skills. An offspring mutator sometimes installs a novel skill — something no
+        // founder could contribute by recombination alone.
+        let mut pop = Population::new(
+            vec![(1, Genome::default(), 400), (2, Genome::default(), 400)],
+            Ed25519Signer::from_seed([15; 32]),
+            ledger,
+            cfg,
+        )
+        .with_mutator(|g, rng| {
+            if rng.next_u64() % 2 == 0 {
+                apply(MutationKind::SkillInstall("novel".into()), g.clone()).unwrap()
+            } else {
+                g.clone()
+            }
+        });
+        for t in 0..6 {
+            pop.advance(t, |_| 200); // everyone earns → everyone reproduces → lots of offspring
+        }
+        let has_novel = pop
+            .members()
+            .iter()
+            .any(|m| m.genome.installed_skills.contains("novel"));
+        assert!(
+            has_novel,
+            "mutation should introduce a trait absent from all founders"
         );
         std::fs::remove_file(&path).ok();
     }
