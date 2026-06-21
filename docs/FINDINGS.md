@@ -761,3 +761,13 @@ MutationKind surface still bounds every child (no forbidden power representable)
 now a complete open-ended evolutionary system under economic pressure; remaining work is foreground
 demonstration (genome-driven competence via the existing transfer evaluator) and deployment. 20 crates,
 197 tests, green.
+
+## 2026-06-22 — all three "must never regress" invariants now encoded as tests
+
+CLAUDE.md mandates three invariants be encoded as tests. Audited coverage: no-launder provenance
+(episodic_provenance_is_bound_by_method_no_launder) ✓ and the closed mutation surface (compile-fence
+exhaustive match, no wildcard) ✓ were covered; the microdollar-overflow invariant ("i64 with
+overflow-checks; can never silently wrap") was only a profile setting + comment. Added a
+#[should_panic(expected="overflow")] test (credit i64::MAX into a maxed balance must trap). It passes
+in BOTH debug and release — so it also verifies the workspace release overflow-checks flag is actually
+in effect. Safety-invariant test coverage is now complete. 20 crates, 198 tests, green.
