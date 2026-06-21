@@ -131,3 +131,22 @@ D-M3-3 research, made concrete.
 already ranks the right rule first), separating high-precision *skill* retrieval from broader *memory*
 retrieval. Then re-run the multi-skill cert. The compositional split needs the right *two* rules and
 nothing else — precise injection is the prerequisite for composition.
+
+## 2026-06-21 — CORRECTION: the multi-skill 0.000 runs were INVALID (backend down)
+
+The multi-skill `0.000` results above (and the follow-up "digit-collision" / "precise-injection"
+re-runs) were run against a **dead Ollama backend**: `ollama ps` showed no resident model and a single
+cheap inference failed in 0.14 s (connection refused). A previously-**certified** single-skill e2e
+(1.000) also returned 0.000 in this state — the tell that it was the backend, not the code.
+
+**Therefore the "multi-skill skill-interference" and "digit-collision" conclusions are retracted as
+unverified** — they cannot be drawn from runs where *every* arm (including cold and a known-good cert)
+returns 0.000. **Process lesson (added to discipline): always verify backend health (one cheap
+inference) before interpreting any `0.000` foreground result.** A zeroed cold-AND-skilled is the
+signature of a downed backend, not a real negative.
+
+**Still valid:** the single-skill transfer-compounding certs (apply-mechanism and end-to-end) ran when
+the backend was alive and stand. **Code kept (loop-safe, tested, but UN-validated against a live model
+until re-run):** the separate `skill_index` with top-1 precise injection, the digit-collision-free
+skill examples, and the multi-skill corpus — all reasonable designs, to be re-certified once the
+backend is back. Model runs are paused until `ollama serve` is confirmed healthy.
