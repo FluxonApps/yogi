@@ -93,8 +93,14 @@ fn recombination_experiment_runs_deterministically_and_both_arms_progress() {
 
     let report = neutral_drift_gate(&asexual, &sexual, 0.0, 2000, 7, 0.05);
     // Both arms climb well above the all-wrong baseline (search is doing real work).
-    assert!(report.drift_mean > 0.5, "asexual should make progress: {report:?}");
-    assert!(report.selection_mean > 0.5, "sexual should make progress: {report:?}");
+    assert!(
+        report.drift_mean > 0.5,
+        "asexual should make progress: {report:?}"
+    );
+    assert!(
+        report.selection_mean > 0.5,
+        "sexual should make progress: {report:?}"
+    );
 
     // Determinism: same seeds → identical verdict (replayable experiment).
     let again = neutral_drift_gate(&asexual, &sexual, 0.0, 2000, 7, 0.05);

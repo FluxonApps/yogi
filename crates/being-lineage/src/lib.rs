@@ -23,7 +23,7 @@ pub use evolve::{
 };
 
 mod fork_saga;
-pub use fork_saga::{fork_signed, CommitOutcome, ForkLedger, ForkSnapshot};
+pub use fork_saga::{fork2_signed, fork_signed, CommitOutcome, ForkLedger, ForkSnapshot};
 
 mod recombine;
 pub use recombine::{fork2, recombine};
