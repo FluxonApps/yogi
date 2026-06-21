@@ -393,3 +393,32 @@ different rule-sets in the genome → different operations solved → genuine ni
 combines rule-sets (the live multi-skill top-2 composition already hinted at this). Next experiment:
 a Colony over rule-carrying genomes scored on the transfer corpus, niched by which operations pass.
 The saturated frozen suite was the wrong substrate for open-ended search — a real, non-obvious result.
+
+## 2026-06-21 — LIVE M6 open-ended search WORKS on the transfer corpus (recombination combines skills)
+
+Pivoted M6 to where the genome genuinely changes behavior (`evolve_transfer`): rules for 3 made-up ops
+(⊕,⊗,⊙) carried as `installed_skills`, injected into the thinking-mode system prompt. Live qwen3:8b,
+6 evals, recombination on:
+
+```
+6 evals, 4 improvements, 2 recombinations, 4 niches (coverage 50%)  QD=1.333  ·  5 signed forks, depth 2
+[]      fitness 0.00  gen 0  parents 0          ← cold founder fails ALL ops
+[s0]    fitness 0.33  gen 1  parents 1  (⊕)     ← +⊕ rule solves ⊕
+[s2]    fitness 0.33  gen 1  parents 1  (⊙)     ← +⊙ rule solves ⊙
+[s0,s2] fitness 0.67  gen 2  parents 2  (⊕,⊙)   ← RECOMBINANT solves BOTH   (global best)
+```
+
+**All three predictions held live:**
+1. **Cold failure** (founder skills=[] → 0.00) — genuine rule *application*, not lookup; the model can't
+   do the made-up ops without the rule in context.
+2. **Niches spread** — 4 distinct niches / 50% coverage, because the genome actually moves in behavior
+   space (contrast the saturated frozen suite which collapsed to 1 niche under any descriptor).
+3. **Recombination fires AND pays off** — the global best is a 2-parent gen-2 child that inherited ⊕
+   from one parent and ⊙ from the other and solves both (0.67). The building-block advantage —
+   independently-acquired skills composing into novel higher-fitness behavior — demonstrated **live on a
+   local 8B**, signed into the fork ledger with full genealogy.
+
+This is the first live (non-synthetic) demonstration that the M6 open-ended-search arm does real work:
+quality-diversity illumination + selection + recombination combining skills, on the real model. The
+saturated frozen suite was simply the wrong substrate (prior finding). Next: longer runs to fill the
+remaining niches (⊗ and the all-3 composer), then the live neutral-drift acceptance on this corpus.
