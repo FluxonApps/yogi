@@ -13,7 +13,8 @@
 use being_bench::neutral_drift_gate;
 use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{
-    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, Retention, Rng, Variator,
+    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, IlluminationConfig, Retention,
+    Rng, Variator,
 };
 
 /// FNV-1a over bytes from a chosen 64-bit initial state (different inits → decorrelated streams).
@@ -72,9 +73,7 @@ fn selection_beats_neutral_drift_and_the_gate_fires() {
             1,
             &mut NoisyLandscape,
             &mut RandomPrompt,
-            iterations,
-            seed,
-            Retention::Elitist,
+            &IlluminationConfig::new(iterations, seed).with_retention(Retention::Elitist),
         );
         selection_finals.push(a_sel.mean_fitness().unwrap());
 
@@ -86,9 +85,7 @@ fn selection_beats_neutral_drift_and_the_gate_fires() {
             1,
             &mut NoisyLandscape,
             &mut RandomPrompt,
-            iterations,
-            seed,
-            Retention::NeutralDrift,
+            &IlluminationConfig::new(iterations, seed).with_retention(Retention::NeutralDrift),
         );
         drift_finals.push(a_drift.mean_fitness().unwrap());
     }

@@ -17,7 +17,10 @@ use std::collections::BTreeMap;
 use being_core_mutation::Genome;
 
 mod evolve;
-pub use evolve::{illuminate, Evaluation, Evaluator, IlluminationStats, Retention, Rng, Variator};
+pub use evolve::{
+    illuminate, Evaluation, Evaluator, IlluminationConfig, IlluminationStats, Retention, Rng,
+    Variator,
+};
 
 mod fork_saga;
 pub use fork_saga::{fork_signed, CommitOutcome, ForkLedger, ForkSnapshot};

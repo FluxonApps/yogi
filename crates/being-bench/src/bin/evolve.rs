@@ -12,7 +12,8 @@ use being_bench::{default_frozen_suite, score_response};
 use being_core_economy::Account;
 use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{
-    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, Retention, Rng, Variator,
+    illuminate, Archive, BehaviorDescriptor, Evaluation, Evaluator, IlluminationConfig, Rng,
+    Variator,
 };
 use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::{Being, EchoExecutor, PassThroughCommitter};
@@ -81,8 +82,14 @@ fn main() {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(12);
+    // Optional sexual reproduction: EVOLVE_RECOMB=0.3 breeds ~30% of children from two parents.
+    let recomb = std::env::var("EVOLVE_RECOMB")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0.0);
 
     let mut archive = Archive::new();
+    let cfg = IlluminationConfig::new(iterations, 42).with_recombination(recomb);
     let stats = illuminate(
         &mut archive,
         &descriptor,
@@ -90,15 +97,14 @@ fn main() {
         1,
         &mut BenchEvaluator,
         &mut PromptVariator,
-        iterations,
-        42,
-        Retention::Elitist,
+        &cfg,
     );
 
     println!(
-        "\nillumination: {} evaluations, {} archive improvements, {} niches filled",
+        "\nillumination: {} evaluations, {} archive improvements, {} recombinations, {} niches filled",
         stats.evaluations,
         stats.improvements,
+        stats.recombinations,
         archive.len()
     );
     println!(
