@@ -234,6 +234,54 @@ mod tests {
     }
 
     #[test]
+    fn investment_refused_via_port_neither_reaps_nor_charges() {
+        // A Refused verdict (investment that would breach the floor) is not a death condition and
+        // must leave the balance untouched — only Exceeded reaps.
+        let sup = supervisor(100_000, 10_000); // floor 0
+        let port = Supervisor::as_port(&sup);
+        assert_eq!(
+            port.reserve(SpendCategory::Distillation, 200_000, 3),
+            BudgetVerdict::Refused
+        );
+        assert!(port.is_alive());
+        assert_eq!(port.balance(), 100_000);
+        assert!(sup.death().is_none());
+    }
+
+    #[test]
+    fn watchdog_timeout_boundary_is_strict() {
+        // last heartbeat at construction = 0, timeout 1000. Exactly at the timeout is still alive;
+        // one millisecond past reaps — guards the `>` against an off-by-one to `>=`.
+        let sup = supervisor(1_000_000, 1_000);
+        sup.tick(1_000); // 1000 - 0 == 1000, not > 1000 → alive
+        assert!(sup.is_alive());
+        sup.tick(1_001); // 1001 - 0 == 1001 > 1000 → reaped
+        assert!(!sup.is_alive());
+        assert_eq!(sup.death().unwrap().cause, DeathCause::WatchdogTimeout);
+    }
+
+    #[test]
+    fn account_insolvent_at_construction_is_reaped_on_first_tick() {
+        // A being born with no balance is insolvent and the out-of-band reaper catches it.
+        let sup = supervisor(0, 10_000);
+        assert!(sup.is_alive()); // not evaluated until a tick
+        sup.tick(4);
+        assert!(!sup.is_alive());
+        let d = sup.death().unwrap();
+        assert_eq!(d.cause, DeathCause::Insolvency);
+        assert_eq!(d.at_ms, 4);
+    }
+
+    #[test]
+    fn death_is_none_while_alive() {
+        let sup = supervisor(500_000, 10_000);
+        assert!(sup.is_alive());
+        assert!(sup.death().is_none());
+        sup.tick(1); // healthy: solvent and within timeout → still no death
+        assert!(sup.death().is_none());
+    }
+
+    #[test]
     fn watchdog_thread_is_out_of_band_and_stops_on_kill() {
         fn zero_clock() -> i64 {
             0
