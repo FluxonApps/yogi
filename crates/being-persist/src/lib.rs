@@ -95,6 +95,52 @@ impl DurableLog {
     }
 }
 
+/// A durable insert-only set of 32-byte ids, backed by a [`DurableLog`]. This is exactly what the M6
+/// `ForkLedger` and the M1 `DedupLedger` need to survive a restart: today they dedup by content-address
+/// in memory (idempotent within a process); persisting the committed ids here makes at-most-once hold
+/// **across** a crash/restart too — reopen replays the log to rebuild the set.
+pub struct DurableIdSet {
+    log: DurableLog,
+    ids: std::collections::BTreeSet<[u8; 32]>,
+}
+
+impl DurableIdSet {
+    /// Open the set at `path`, rebuilding membership from the durable log (torn tail dropped).
+    pub fn open(path: impl AsRef<Path>) -> io::Result<Self> {
+        let log = DurableLog::open(path)?;
+        let mut ids = std::collections::BTreeSet::new();
+        for rec in log.replay()? {
+            if let Ok(arr) = <[u8; 32]>::try_from(rec.as_slice()) {
+                ids.insert(arr);
+            }
+        }
+        Ok(Self { log, ids })
+    }
+
+    /// Insert `id`, persisting it durably. Returns `true` if newly inserted, `false` if already present
+    /// (idempotent — a duplicate insert appends nothing, mirroring the ledgers' at-most-once semantics).
+    pub fn insert(&mut self, id: [u8; 32]) -> io::Result<bool> {
+        if self.ids.contains(&id) {
+            return Ok(false);
+        }
+        self.log.append(&id)?;
+        self.ids.insert(id);
+        Ok(true)
+    }
+
+    pub fn contains(&self, id: &[u8; 32]) -> bool {
+        self.ids.contains(id)
+    }
+
+    pub fn len(&self) -> usize {
+        self.ids.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.ids.is_empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,6 +210,26 @@ mod tests {
         // Replay recovers exactly the two committed records and stops at the torn tail.
         let recs = DurableLog::open(&p).unwrap().replay().unwrap();
         assert_eq!(recs, vec![b"committed-1".to_vec(), b"committed-2".to_vec()]);
+        std::fs::remove_file(&p).ok();
+    }
+
+    #[test]
+    fn durable_id_set_survives_restart_and_is_idempotent() {
+        let p = temp_path("idset");
+        let _ = std::fs::remove_file(&p);
+        let a = [1u8; 32];
+        let b = [2u8; 32];
+        {
+            let mut s = DurableIdSet::open(&p).unwrap();
+            assert!(s.insert(a).unwrap()); // newly inserted
+            assert!(!s.insert(a).unwrap()); // duplicate → no-op (at-most-once)
+            assert!(s.insert(b).unwrap());
+            assert_eq!(s.len(), 2);
+        }
+        // "Restart": a fresh handle rebuilds membership from the durable log.
+        let s = DurableIdSet::open(&p).unwrap();
+        assert!(s.contains(&a) && s.contains(&b));
+        assert_eq!(s.len(), 2);
         std::fs::remove_file(&p).ok();
     }
 
