@@ -115,6 +115,23 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 
 ---
 
+## Post-M5 — compounding-layer hardening (continuous, research-driven)
+
+Work beyond the M0–M6 spine, each green + committed (see [`decisions.md`](decisions.md) D-M3-3/4,
+[`FINDINGS.md`](FINDINGS.md)):
+
+- [x] **Hybrid retrieval** (`being-core-memory::search_hybrid`) — embedding + IDF-lexical, wired into
+  the turn, so rare/exact tokens (symbols like `⊕`, IDs) retrieve reliably.
+- [x] **Navigator** (`being-router`) — `HeuristicRouter` + `OutcomeLearnedRouter` (learns Think/NoThink
+  per task-class from verifier pass/fail; no model inference) + `RoutedProposer` wired into the path.
+- [x] **`ollama_qwen3_thinking()`** preset + the certified lesson: never `/no_think` a reasoning task.
+- [x] **Transfer falsification corpus** + certs (`transfer`, `transfer_e2e`, `multi_skill`) measuring
+  TRANSFER (cold-failing, seeded, compositional, LiMem), not answer-lookup.
+- [x] **Skill index** separated from memory, top-1 precise injection (anti-interference).
+- **Certified:** single-skill token-space compounding, end-to-end (0.000 → 1.000, CI=[1,1]). Multi-skill
+  + compositional: under active certification.
+- **Deferred:** per-domain weight distillation (D-M3-4) until a domain plateaus in token-space.
+
 ## Ready-to-paste `/goal` conditions
 
 **M0** (non-safety — fine to run unattended):
