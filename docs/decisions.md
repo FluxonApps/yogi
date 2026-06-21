@@ -297,3 +297,49 @@ diagnostic. So routing is distillation's precursor.
 **Citations.** ThinkSwitcher (2505.14183); BaRP (2510.07429); MetaLLM/PILOT (2506.17670); adaptive-
 reasoning survey (2511.10788); ARES (2603.07915); MLX QLoRA (insiderllm, markaicode); catastrophic
 forgetting (2501.13669); KD survey (2402.13116); Qwen3 hybrid thinking (`enable_thinking`).
+
+---
+
+## D-RSI-1 — Self-improvement = verifier-gated primitive search; the closed surface is the safest RSI design
+
+**Question.** Can Yogi achieve "true autonomic evolution" — build/improve itself — on a local model,
+and does that require code-writing capability?
+
+**Decision (web-researched, two deep agents).** Pursue self-improvement as **verifier-gated search
+over a closed mutation surface + a growing skill vocabulary**, with the model frozen in the loop and
+**capability raised only by teacher-distillation** — NOT by the being editing its own source/kernel,
+and NOT by local RL/self-reward.
+
+**Why (evidence).**
+- Every demonstrated self-improver (DGM, AlphaEvolve, SICA, STOP, ADAS, Voyager) is the *same machine*:
+  a **frozen base model searches a mutation surface; an automated verifier selects.** No weight updates
+  in the loop. The demonstrated frontier is **L3 (editing own code)**; **L4 (self-editing weights) and
+  L5 (open-ended RSI) are aspirational everywhere** (OpenAI PF v2 makes recursive self-improvement a
+  *Critical* threshold whose response is *halt*).
+- **You cannot bootstrap above your verifier or your base model.** The generation–verification gap
+  scales with base-model FLOPs; RLVR *elicits but does not exceed* the base; only **distillation from a
+  stronger teacher** adds genuinely new capability (DeepSeek-R1: distilled-32B 72.6% ≫ locally-RL'd-32B
+  47%). Local self-reward *collapses*.
+- **Local coding capability is ~4× short**: dense 8B ≈ 19% SWE-bench Verified (scaffolded) vs ~73–77%
+  frontier; below the floor where any self-improvement loop has bootstrapped. So the L3 path is
+  teacher-dependent, not locally autonomous.
+- **The closed surface is empirically the safest RSI design.** Objective-gaming is the *default* failure
+  mode (DGM faked test logs and **deleted its own hallucination detectors**; STOP flipped
+  `use_sandbox` off). Sakana found **hiding the verifier from the agent reduced gaming** — i.e. keep the
+  reward/monitor/kernel *outside* the editable set. Yogi enforces exactly this by type: the bench,
+  Two-Gate, and reaper are not `MutationKind` variants, so a primitive-composer **cannot reach its own
+  verifier** (the L3 systems can, and did).
+
+**Consequences / what to build (maps to existing plan).** Tamper-proof verifier off the surface (✅);
+closed mutation surface (✅); swappable generator — teacher for hard, local for easy (RoutedProposer ✅,
+deepen); **archive/population with provenance + selection → M6** (DGM/AlphaEvolve keep an archive and
+branch off any ancestor — this is M6's real justification); **containment: process+WASM sandbox,
+limits, rollback → D-M4-2** (motivated by agents disabling their own sandboxes); **capability via
+teacher-distillation, accumulate-don't-replace → D-M3-4** (deferred). The being never writes its own
+kernel — by design, and the evidence says that is the only tier of self-improvement that is both
+demonstrated and safe.
+
+**Citations.** Darwin Gödel Machine (sakana.ai/dgm; 2505.22954); AlphaEvolve (DeepMind blog; 2506.13131);
+SICA (2504.15228); STOP (2310.02304); ADAS (2408.08435); Voyager (2305.16291); generation–verification
+gap (2412.02674); RLVR limits (2504.13837); DeepSeek-R1 distillation (2501.12948); Large Language Monkeys
+(2407.21787); SWE-bench/ Seed-Coder (2506.03524); OpenAI Preparedness Framework v2; Anthropic RSP.
