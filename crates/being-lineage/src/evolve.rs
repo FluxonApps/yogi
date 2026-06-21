@@ -12,7 +12,7 @@
 
 use being_core_mutation::{apply, Genome, MutationKind};
 
-use crate::{fork, fork2, Archive, BehaviorDescriptor, BeingId, Lineage};
+use crate::{fork, fork2, Archive, BehaviorDescriptor, BeingId, Lineage, Phylogeny};
 
 /// The outcome of scoring a candidate genome: a scalar `fitness` (quality) plus the `behavior` vector
 /// that decides *which cell* it competes in (diversity). The two are orthogonal — that is what lets
@@ -134,6 +134,7 @@ impl IlluminationConfig {
 /// [`fork2`] their [`recombine`](crate::recombine)d crossover). The child is then varied through the
 /// variator's closed-surface mutations, evaluated, mapped to a behavior cell, and offered to the
 /// archive (kept per `cfg.retention`). Deterministic given `cfg.seed`.
+#[allow(clippy::too_many_arguments)]
 pub fn illuminate(
     archive: &mut Archive,
     descriptor: &BehaviorDescriptor,
@@ -142,6 +143,7 @@ pub fn illuminate(
     evaluator: &mut dyn Evaluator,
     variator: &mut dyn Variator,
     cfg: &IlluminationConfig,
+    mut recorder: Option<&mut Phylogeny>,
 ) -> IlluminationStats {
     let consider = |archive: &mut Archive, cell, lineage, genome, fitness| match cfg.retention {
         Retention::Elitist => archive.consider(cell, lineage, genome, fitness),
@@ -160,6 +162,9 @@ pub fn illuminate(
         next_id = founder_id + 1;
         let ev = evaluator.evaluate(&seed_genome);
         stats.evaluations += 1;
+        if let Some(p) = recorder.as_deref_mut() {
+            p.record(&founder);
+        }
         if consider(
             archive,
             descriptor.cell(&ev.behavior),
@@ -213,6 +218,9 @@ pub fn illuminate(
 
         let ev = evaluator.evaluate(&genome);
         stats.evaluations += 1;
+        if let Some(p) = recorder.as_deref_mut() {
+            p.record(&child.lineage);
+        }
         if consider(
             archive,
             descriptor.cell(&ev.behavior),
@@ -272,6 +280,7 @@ mod tests {
             &mut LenEval,
             &mut GrowPrompt,
             &IlluminationConfig::new(50, 123),
+            None,
         );
         // Seed + 50 candidates were evaluated.
         assert_eq!(stats.evaluations, 51);
@@ -298,6 +307,7 @@ mod tests {
                 &mut LenEval,
                 &mut GrowPrompt,
                 &IlluminationConfig::new(30, 77),
+                None,
             );
             (s, a.len(), a.qd_score(), a.best().unwrap().fitness)
         };
@@ -327,6 +337,7 @@ mod tests {
             &mut ConstEval,
             &mut GrowPrompt,
             &IlluminationConfig::new(20, 5),
+            None,
         );
         assert_eq!(archive.len(), 1); // one niche
         let elite = archive.elite(&[0]).unwrap();
@@ -340,6 +351,7 @@ mod tests {
     fn recombination_path_breeds_two_parent_children() {
         // recombination_rate=1.0 forces sexual breeding whenever ≥2 elites exist.
         let mut archive = Archive::new();
+        let mut phylo = Phylogeny::new();
         let cfg = IlluminationConfig::new(60, 99).with_recombination(1.0);
         let stats = illuminate(
             &mut archive,
@@ -349,6 +361,7 @@ mod tests {
             &mut LenEval,
             &mut GrowPrompt,
             &cfg,
+            Some(&mut phylo),
         );
         // Once a second niche exists, every later child is bred from two parents.
         assert!(
@@ -360,5 +373,12 @@ mod tests {
             archive.elites().any(|e| e.lineage.parents.len() == 2),
             "expected a two-parent elite in the archive"
         );
+        // The recorded genealogy stays well-formed across mutation + recombination, and captures
+        // every produced lineage (founder + one per iteration).
+        assert_eq!(phylo.len(), stats.evaluations);
+        assert!(phylo.is_well_formed());
+        assert!(phylo.max_generation() >= 1);
+        // Some recorded node is a two-parent (sexual) child.
+        assert!(phylo.nodes().iter().any(|l| l.parents.len() == 2));
     }
 }

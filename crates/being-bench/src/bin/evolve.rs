@@ -98,6 +98,7 @@ fn main() {
         &mut BenchEvaluator,
         &mut PromptVariator,
         &cfg,
+        None,
     );
 
     println!(

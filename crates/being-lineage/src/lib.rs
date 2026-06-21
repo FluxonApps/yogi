@@ -75,6 +75,58 @@ pub fn fork(parent: &Lineage, parent_genome: &Genome, child_id: BeingId) -> Offs
     }
 }
 
+/// A genealogy recorder — every [`Lineage`] produced during a run, in creation order. The archive
+/// keeps only the *surviving* elites; the phylogeny keeps the *full* ancestry, which is what a
+/// drift-vs-signal analysis (the M6 fitness-variance gate) needs and what makes cross-generation
+/// well-formedness checkable. Pure: it only records.
+#[derive(Default, Clone, Debug)]
+pub struct Phylogeny {
+    nodes: Vec<Lineage>,
+}
+
+impl Phylogeny {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.nodes.is_empty()
+    }
+
+    pub fn record(&mut self, lineage: &Lineage) {
+        self.nodes.push(lineage.clone());
+    }
+
+    pub fn nodes(&self) -> &[Lineage] {
+        &self.nodes
+    }
+
+    /// Deepest generation reached (0 if empty).
+    pub fn max_generation(&self) -> u64 {
+        self.nodes.iter().map(|l| l.generation).max().unwrap_or(0)
+    }
+
+    /// Genealogy integrity: ids are unique, founders (generation 0) have no parents, and every
+    /// descendant records at least one parent. A malformed lineage (forged edge, duplicate id) fails.
+    pub fn is_well_formed(&self) -> bool {
+        let mut seen = std::collections::BTreeSet::new();
+        for l in &self.nodes {
+            if !seen.insert(l.id) {
+                return false; // duplicate id
+            }
+            let founder = l.generation == 0;
+            if founder != l.parents.is_empty() {
+                return false; // founders ⇔ no parents
+            }
+        }
+        true
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // MAP-Elites archive (M6). DGM/AlphaEvolve keep an archive and branch off any ancestor — the engine
 // of *open-ended* search (keep diverse stepping-stones, not one hill-climb). This stores the best

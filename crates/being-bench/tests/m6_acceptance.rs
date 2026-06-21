@@ -74,6 +74,7 @@ fn selection_beats_neutral_drift_and_the_gate_fires() {
             &mut NoisyLandscape,
             &mut RandomPrompt,
             &IlluminationConfig::new(iterations, seed).with_retention(Retention::Elitist),
+            None,
         );
         selection_finals.push(a_sel.mean_fitness().unwrap());
 
@@ -86,6 +87,7 @@ fn selection_beats_neutral_drift_and_the_gate_fires() {
             &mut NoisyLandscape,
             &mut RandomPrompt,
             &IlluminationConfig::new(iterations, seed).with_retention(Retention::NeutralDrift),
+            None,
         );
         drift_finals.push(a_drift.mean_fitness().unwrap());
     }
