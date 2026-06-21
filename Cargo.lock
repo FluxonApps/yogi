@@ -85,6 +85,15 @@ name = "being-core-types"
 version = "0.0.0"
 
 [[package]]
+name = "being-embed-openai"
+version = "0.0.0"
+dependencies = [
+ "being-core-memory",
+ "serde_json",
+ "ureq",
+]
+
+[[package]]
 name = "being-proposer-openai"
 version = "0.0.0"
 dependencies = [

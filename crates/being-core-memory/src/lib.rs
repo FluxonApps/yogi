@@ -244,6 +244,13 @@ impl ProceduralStore {
 // produces the vectors is wired separately (foreground/feature-gated), never in the automated loop.
 // ---------------------------------------------------------------------------------------------
 
+/// Produces an embedding vector for a piece of text. Implemented by a backend crate
+/// (e.g. `being-embed-openai` over `nomic-embed-text`). The live call is foreground / feature-gated,
+/// never run inside the automated loop (CLAUDE.md).
+pub trait Embedder {
+    fn embed(&self, text: &str) -> Result<Vec<f32>, String>;
+}
+
 /// Cosine similarity of two equal-length vectors. Returns 0.0 on length mismatch or a zero vector.
 pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     if a.len() != b.len() {
@@ -353,6 +360,28 @@ mod vector_tests {
     use super::*;
 
     const EPS: f32 = 1e-6;
+
+    struct StubEmbedder;
+    impl Embedder for StubEmbedder {
+        fn embed(&self, text: &str) -> Result<Vec<f32>, String> {
+            Ok(if text.contains("cat") {
+                vec![1.0, 0.0]
+            } else {
+                vec![0.0, 1.0]
+            })
+        }
+    }
+
+    #[test]
+    fn embedder_feeds_index() {
+        let e = StubEmbedder;
+        let mut idx = SemanticIndex::new();
+        idx.add(1, e.embed("about cats").unwrap(), "about cats", 0);
+        idx.add(2, e.embed("about dogs").unwrap(), "about dogs", 0);
+        let q = e.embed("a cat question").unwrap();
+        let hits = idx.search(&q, 0, 1, 1.0, 1000);
+        assert_eq!(hits[0].id, 1);
+    }
 
     #[test]
     fn cosine_basics() {
