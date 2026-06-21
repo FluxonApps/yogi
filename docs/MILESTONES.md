@@ -25,7 +25,7 @@ committed tail is deterministic.*
 - [x] `being-core-mutation` — the **closed `MutationKind` surface** + `apply` (no wildcard) · commit `0471f48`
 - [x] `being-core-id` — DID + Ed25519 signer + `verify` (ed25519-dalek), deterministic-from-seed · 5 tests
 - [x] `being-core-journal` — single-writer-per-DID append, blake3 hash-chain, signed entries, replay, `verify_chain` · 7 tests *(in-memory; SQLite+fsync at M1/§5)*
-- [ ] `being-core-memory` — episodic / semantic / procedural stores (SQLite)
+- [x] `being-core-memory` — episodic (bitemporal, no-launder by construction) / semantic (consolidated=ModelInference) / procedural (population variants) · 4 tests *(in-memory; SQLite at M2)*
 - [ ] `being-runtime` seam — `Proposer`/`Committer`/`Executor` + control loop, **echo proposer**
 - **Acceptance:** turn completes; all steps signed+journaled; committed-tail replay deterministic;
   property tests — 7th `MutationKind` variant won't compile, no-launder holds, single-head-per-DID.

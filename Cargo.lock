@@ -38,6 +38,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-core-memory"
+version = "0.0.0"
+dependencies = [
+ "being-core-types",
+]
+
+[[package]]
 name = "being-core-mutation"
 version = "0.0.0"
 dependencies = [
