@@ -139,6 +139,16 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "overflow")]
+    fn credit_overflow_panics_rather_than_silently_wrapping() {
+        // Invariant (CLAUDE.md): the microdollar ledger is i64 with overflow-checks (workspace release
+        // profile + debug default), so an overflowing inflow must PANIC, never silently wrap to a
+        // garbage/negative balance. Encoded as a test per "invariants that must never regress".
+        let mut acct = Account::new(i64::MAX, 0, i64::MAX);
+        acct.credit(i64::MAX); // balance += i64::MAX overflows → overflow-checks trap
+    }
+
+    #[test]
     fn operating_debits_and_can_drive_insolvent() {
         let mut a = account();
         assert_eq!(
