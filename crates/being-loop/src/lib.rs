@@ -277,6 +277,61 @@ impl Improver for EpsilonGreedyImprover {
     }
 }
 
+// --- The self-improve round ------------------------------------------------------------------
+
+/// One bounded self-improvement round: the `Improver` picks a candidate mutation; the `scorer`
+/// grades the incumbent and the candidate genome over the same cases; the `TwoGate` decides. On
+/// Accept the new genome is returned (and the caller swaps it in); otherwise the current genome is
+/// returned unchanged (implicit rollback). Every outcome is recorded to `audit` and fed back to the
+/// `Improver`.
+///
+/// `scorer` is injected so this stays pure and loop-safe: tests pass a deterministic closure, and
+/// the foreground self-improve demo passes the real bench (which loads the model). No model is ever
+/// in this acceptance path itself.
+pub fn self_improve_round<S, I>(
+    current: &Genome,
+    arms: &[MutationKind],
+    scorer: &mut S,
+    gate: &TwoGate,
+    improver: &mut I,
+    audit: &mut AuditLog,
+) -> Genome
+where
+    S: FnMut(&Genome) -> Vec<bool>,
+    I: Improver,
+{
+    if arms.is_empty() {
+        return current.clone();
+    }
+    let arm = improver.choose(arms);
+    let kind = arms[arm].clone();
+    let summary = format!("{kind:?}");
+
+    let incumbent = scorer(current);
+    let candidate_genome = match apply(kind.clone(), current.clone()) {
+        Ok(g) => g,
+        Err(_) => {
+            improver.record(arm, false, 0.0);
+            audit.record(summary, false, 0.0);
+            return current.clone();
+        }
+    };
+    let candidate = scorer(&candidate_genome);
+
+    match gate.evaluate(current, kind, &incumbent, &candidate) {
+        GateOutcome::Accepted { genome, delta } => {
+            improver.record(arm, true, delta);
+            audit.record(summary, true, delta);
+            genome
+        }
+        _ => {
+            improver.record(arm, false, 0.0);
+            audit.record(summary, false, 0.0);
+            current.clone()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,6 +365,45 @@ mod tests {
             validation: ValidationGate::conservative(),
             caps: CapacityCaps::conservative(),
         }
+    }
+
+    #[test]
+    fn self_improve_round_accepts_a_better_genome() {
+        let gate = two_gate();
+        let mut imp = EpsilonGreedyImprover::new(0.0, 1);
+        let mut audit = AuditLog::new();
+        let arms = [MutationKind::Prompt("good".into())];
+        let mut scorer = |g: &Genome| {
+            if g.prompt == "good" {
+                vec![true; 100]
+            } else {
+                vec![false; 100]
+            }
+        };
+        let out = self_improve_round(
+            &Genome::default(),
+            &arms,
+            &mut scorer,
+            &gate,
+            &mut imp,
+            &mut audit,
+        );
+        assert_eq!(out.prompt, "good");
+        assert_eq!(audit.len(), 1);
+        assert!(audit.entries()[0].accepted);
+    }
+
+    #[test]
+    fn self_improve_round_rolls_back_when_not_better() {
+        let gate = two_gate();
+        let mut imp = EpsilonGreedyImprover::new(0.0, 1);
+        let mut audit = AuditLog::new();
+        let arms = [MutationKind::Prompt("whatever".into())];
+        let mut scorer = |_: &Genome| vec![false; 100]; // never improves
+        let current = Genome::default();
+        let out = self_improve_round(&current, &arms, &mut scorer, &gate, &mut imp, &mut audit);
+        assert_eq!(out, current); // unchanged — rollback
+        assert!(!audit.entries()[0].accepted);
     }
 
     #[test]
