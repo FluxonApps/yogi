@@ -92,6 +92,15 @@ pub fn fork2_signed(
     sign_snapshot(&[parent_a.clone(), parent_b.clone()], child, signer)
 }
 
+impl ForkSnapshot {
+    /// Attest an already-bred child: `signer` signs a snapshot over the given parent edge(s) and the
+    /// child. The public constructor the [`Colony`](crate::Colony) uses to sign each fork the engine
+    /// produces (one parent for asexual, two for sexual).
+    pub fn attest(parents: &[Lineage], child: Offspring, signer: &dyn Signer) -> ForkSnapshot {
+        sign_snapshot(parents, child, signer)
+    }
+}
+
 fn sign_snapshot(parents: &[Lineage], child: Offspring, signer: &dyn Signer) -> ForkSnapshot {
     let d = digest(signer.did(), parents, &child);
     let sig = signer.sign(&d.0);

@@ -28,6 +28,9 @@ pub use fork_saga::{fork2_signed, fork_signed, CommitOutcome, ForkLedger, ForkSn
 mod recombine;
 pub use recombine::{fork2, recombine};
 
+mod colony;
+pub use colony::Colony;
+
 /// Identifies a being within a lineage (the operator/registry assigns ids; this crate only records).
 pub type BeingId = u64;
 

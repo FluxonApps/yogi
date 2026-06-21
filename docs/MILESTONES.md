@@ -128,9 +128,13 @@ live population remains a deliberate, reviewable boundary — noted in diffs, no
   synthetic noisy landscape, selection beats the drift control and the gate fires (12 paired
   replicates).
 - [x] **Signed, crash-recoverable fork snapshot** (`being-lineage::ForkSnapshot`/`ForkLedger` +
-  `Genome::canon_bytes`): the parent signs the child's inherited state (lineage edge + canonical
-  genome); content-addressed `snapshot_id` gives at-most-once idempotent commit across replay/crash.
-  Tampered genome/edge/DID all fail verification.
+  `Genome::canon_bytes`): signer attests the child's inherited state (parent edge(s) + canonical
+  genome), N-parent (covers asexual + sexual); content-addressed `snapshot_id` gives at-most-once
+  idempotent commit across replay/crash. Tampered genome/edge/DID all fail verification.
+- [x] **`Colony`** — signed, crash-recoverable open-ended search: runs `illuminate` while a
+  `ForkObserver` signs every fork edge into the `ForkLedger` and records the full `Phylogeny`. The M6
+  acceptance object — every reproduction event is a signed, content-addressed, replay-stable snapshot
+  with the whole ancestry preserved. (One colony key attests all edges; per-being keys are a refinement.)
 - [x] Foreground `evolve` bin (`cargo run -p being-bench --bin evolve --release`) — real model-scored
   MAP-Elites: benches each genome on the frozen suite (fitness = pass-rate, behavior = mean response
   length → verbosity niches), illuminates the archive, reports QD-score + per-niche elites. Compiles
