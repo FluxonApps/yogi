@@ -15,6 +15,9 @@ use std::collections::BTreeMap;
 
 use being_core_mutation::Genome;
 
+mod evolve;
+pub use evolve::{illuminate, Evaluation, Evaluator, IlluminationStats, Rng, Variator};
+
 /// Identifies a being within a lineage (the operator/registry assigns ids; this crate only records).
 pub type BeingId = u64;
 
