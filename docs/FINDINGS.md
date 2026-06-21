@@ -86,3 +86,25 @@ is on.
 **Config lesson (load-bearing).** Never `/no_think` a task that needs reasoning. The being's proposer
 should run in thinking mode for reasoning/compounding work; `/no_think` is only for trivial recall
 where latency matters.
+
+## 2026-06-21 — transfer-compounding CERTIFIED END-TO-END (full retrieve→apply loop)
+
+Re-ran through the **full being** — no deterministic injection. `learn_skill` stored the rule; the
+turn **retrieved** it from the being's own memory via the hybrid index (the rare `⊕` matched
+lexically); the **thinking** proposer applied it:
+
+```
+cold (no skill)    mean 0.000
+with learned skill mean 1.000
+paired delta +1.000  CI [1.000, 1.000]  compounds=TRUE  -> CERTIFIED END-TO-END
+```
+
+**The complete autonomous loop self-certifies:** the being learns a skill, retrieves it from its own
+memory on a *new* task, and applies it by reasoning — lifting cold-failing transfer tasks 0→1. This
+closes the gap from the prior cert (which hand-injected the rule): **hybrid retrieval + thinking
+together make the retrieve→apply loop work without help.**
+
+**Honest scope / next frontier.** Still a controlled synthetic operation with a hand-authored skill
+note. The remaining frontier: (1) a less-synthetic, multi-skill corpus; (2) certify with the skill
+*learned from verifier feedback* (the Letta loop) rather than authored; (3) measure LiMem under
+perturbation to confirm it's not memorization. The mechanism is proven; the corpus is the next work.
