@@ -1,0 +1,8 @@
+[package]
+name = "being-loop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+being-core-mutation = { path = "../being-core-mutation" }

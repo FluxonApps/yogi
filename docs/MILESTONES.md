@@ -80,7 +80,14 @@ skill-learning(verifier) → wire + Day-N bench.*
 *`Improver` (proposes only) + closed surface + **Two-Gate** (Validation `2·ε_V+τ` + Capacity proxy)
 + sealed holdout + bias mitigation (bench is the only judge) + rollback. Isolation upgrade is
 **deferred to the executor boundary** (D-M4-2 amends the D-M1-3 gate). Human-reviewed constants: `τ`,
-the capacity schedule `K[m]`, holdout policy.*
+the capacity schedule `K[m]`, holdout policy. Constants approved.*
+
+- [x] `being-loop` — Two-Gate (`ValidationGate` 2·ε_V+τ + `CapacityCaps` proxy), `TwoGate::evaluate`
+  (apply→capacity→validation; rollback implicit), epsilon-greedy `Improver`, `AuditLog` · 9 tests,
+  pure/loop-safe (no model in the acceptance path)
+- [ ] wire into `being-runtime`: a self-improve round (bench incumbent vs candidate genome → gate →
+  commit/rollback + audit) + a foreground self-improve demo
+- [ ] isolation upgrade **not required at M4** (D-M4-2) — deferred to the executor boundary
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 

@@ -95,6 +95,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-loop"
+version = "0.0.0"
+dependencies = [
+ "being-core-mutation",
+]
+
+[[package]]
 name = "being-proposer-openai"
 version = "0.0.0"
 dependencies = [
