@@ -722,3 +722,15 @@ were genuinely buildable and got built — model-free, green:
 Plus two real bugs fixed by self-review (DurableLog torn-tail; broker negative-payment). Lesson: on a
 real system there is almost always genuine next work; "needs your direction" was, here, mostly my own
 deferral — the gates were removable. 20 crates, 194 tests, green.
+
+## 2026-06-22 — M6 live population with reproduction + death (the named next step, built)
+
+CLAUDE.md named "wiring reproduction/death to a live model-backed population" as the deliberate next
+step. Built it as being_colony::Population: a live population of members each with a real
+Supervisor/Account + lineage. Per generation it charges metabolism, credits caller-supplied verified
+revenue (the live model plugs in via the revenue closure — the engine itself is loop-safe), REAPS
+insolvent members (real death via the reaper) and lets solvent members REPRODUCE via a signed fork
+committed to the durable ledger (capped at max_size). Selection is purely economic. Test: over 6
+generations an earner lineage reproduces and fills the niche while a loafer lineage starves to
+extinction. Distinct from the genome-archive Colony (QD search, no economy/death) — this is Darwinian
+selection by solvency on live beings. 20 crates, 195 tests, green.

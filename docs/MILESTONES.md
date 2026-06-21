@@ -130,8 +130,12 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
   not code.
 
 ## M6 — Research arm (population + selection)  `[~] in progress`
-*Open-ended-search arm built loop-safe (gates lifted by operator). Wiring reproduction/death to a
-live population remains a deliberate, reviewable boundary — noted in diffs, not blocked.*
+*Open-ended-search arm built loop-safe (gates lifted by operator). **Reproduction/death are now wired
+to a live population** (`being_colony::Population`): members carry a real Supervisor/Account + lineage;
+each generation charges metabolism, credits caller-supplied verified revenue (the live model plugs in
+via the revenue closure), reaps the insolvent (death) and forks the solvent (reproduction, signed +
+durable). Selection is purely economic; the engine is loop-safe (revenue injected). Demonstrated:
+an earner lineage spreads while a loafer lineage goes extinct over generations.*
 - [x] `being-lineage` — `Lineage` (id/parents/generation) + `fork` (asexual; child inherits the
   genome verbatim) + `fork2`/`recombine` (sexual uniform-crossover; child records both parents).
   Variation only via the closed surface; recombination only copies existing parent values, so no
