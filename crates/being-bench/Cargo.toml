@@ -15,9 +15,16 @@ path = "src/bin/bench.rs"
 name = "compound"
 path = "src/bin/compound.rs"
 
+# Bounded self-modification demo (loads qwen3:8b repeatedly). Foreground only.
+[[bin]]
+name = "selfimprove"
+path = "src/bin/selfimprove.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }
 being-embed-openai = { path = "../being-embed-openai" }
 being-supervisor = { path = "../being-supervisor" }
 being-core-economy = { path = "../being-core-economy" }
+being-core-mutation = { path = "../being-core-mutation" }
+being-loop = { path = "../being-loop" }
