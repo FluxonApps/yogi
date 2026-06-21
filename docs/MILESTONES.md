@@ -105,9 +105,11 @@ the capacity schedule `K[m]`, holdout policy. Constants approved.*
 - [x] `being-sandbox-wasm` — the wasmtime/WASI **enforcement** backend (mechanism): the executor runs
   as a WASM guest with **zero ambient authority** (its only import is the broker-mediated host fn —
   `guest_imports() == ["host::request_effect"]`, no WASI/fs/net), so every effect is forced through
-  `Broker::authorize`. A compromised/self-modified executor still can only do what was granted · 5
-  tests. M4 isolation is now real: policy (deny-by-default broker) + mechanism (unbypassable WASM
-  boundary). Wiring it as the live `being-runtime` Executor is the remaining integration step.
+  `Broker::authorize`. A compromised/self-modified executor still can only do what was granted · 5 tests.
+- [x] **Wired into the live runtime:** `being-runtime::SandboxedExecutor<E>` gates every committed step
+  through the broker before it runs (fail-closed: unrecognized actions denied) · tested. **M4 isolation
+  is complete** — policy (deny-by-default broker) + mechanism (unbypassable WASM boundary) + live
+  enforcement (capability-gated executor), realizing the D-M1-3 HARD GATE as working code.
 - **Acceptance:** a genome mutation passes both gates, is signed/journaled/reversible; Capacity-Gate
   false-admit rate ≤ the Validation Gate's false-discovery budget.
 
