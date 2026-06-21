@@ -90,6 +90,10 @@ name = "being-core-types"
 version = "0.0.0"
 
 [[package]]
+name = "being-distill"
+version = "0.0.0"
+
+[[package]]
 name = "being-embed-openai"
 version = "0.0.0"
 dependencies = [

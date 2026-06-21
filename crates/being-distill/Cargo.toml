@@ -1,0 +1,9 @@
+[package]
+name = "being-distill"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Pure distillation decision machinery (gap detection + promotion gate). The LoRA training that loads
+# the model is foreground/heavy and lands separately; this half is loop-safe (no model, no I/O).
+[dependencies]

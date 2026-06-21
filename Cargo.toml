@@ -16,6 +16,7 @@ members = [
     "crates/being-value",
     "crates/being-lineage",
     "crates/being-router",
+    "crates/being-distill",
 ]
 
 [workspace.package]
