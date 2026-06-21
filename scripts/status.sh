@@ -37,7 +37,8 @@ render() {
   local crates commits tests build phase now why upd
   crates=$(ls crates 2>/dev/null | wc -l | tr -d ' ')
   commits=$(git rev-list --count HEAD 2>/dev/null || echo '?')
-  tests=$(field TESTS); [ -z "$tests" ] && tests=$(grep -rho '#\[test\]' crates --include=*.rs 2>/dev/null | wc -l | tr -d ' ')
+  # Live count of #[test] across all crates (src + tests/) — never goes stale (no manual field).
+  tests=$(grep -rho '#\[test\]' crates --include=*.rs 2>/dev/null | wc -l | tr -d ' ')
   build=$(field BUILD); [ -z "$build" ] && build="?"
   phase=$(field PHASE); [ -z "$phase" ] && phase="autonomous loop"
   now=$(field NOW);     [ -z "$now" ]   && now="(idle)"
