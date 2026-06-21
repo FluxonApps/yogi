@@ -747,3 +747,17 @@ now in the live population: selection (economic) + crossover (sexual) + death (r
 operator — point mutation of offspring via the closed surface — is the next buildable increment (a
 caller-supplied Variator over offspring genomes); recombination already supplies variation meanwhile.
 20 crates, 196 tests, green.
+
+## 2026-06-22 — offspring mutation completes the live Population's operator set
+
+Added an optional offspring mutator (Population::with_mutator): a closed-surface mutation applied to
+each newborn AFTER the fork (fork stays verbatim heredity; mutation is a separate variation event).
+This is NOT redundant with the Colony's Variator — recombination only shuffles existing genome
+material, so without mutation an economic population could never acquire a trait no founder had. With
+it, the live economically-selected population has the FULL evolutionary operator set: mutation +
+crossover (sexual) + selection (solvency) + death (reaper), over durable signed heredity. Test:
+founders with no skills produce, via mutation, a descendant carrying a novel skill. The closed
+MutationKind surface still bounds every child (no forbidden power representable). The live population is
+now a complete open-ended evolutionary system under economic pressure; remaining work is foreground
+demonstration (genome-driven competence via the existing transfer evaluator) and deployment. 20 crates,
+197 tests, green.
