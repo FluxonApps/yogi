@@ -253,6 +253,68 @@ pub fn transfer_corpus(n: usize, seed: u64) -> Vec<TransferTask> {
         .collect()
 }
 
+/// A multi-skill transfer corpus (D-M3-3): three distinct made-up operations (each with its own rule
+/// note), single-operation transfer tasks, AND a **compositional** held-out split that combines two
+/// operations the model never saw together — the SCAN/MCD test that skills *compose*, not just
+/// transfer in isolation. Deterministic.
+pub struct MultiSkillCorpus {
+    pub skills: Vec<String>,
+    pub single: Vec<TransferTask>,
+    pub compositional: Vec<TransferTask>,
+}
+
+pub fn multi_skill_corpus(n: usize, seed: u64) -> MultiSkillCorpus {
+    fn oplus(a: i64, b: i64) -> i64 {
+        a * b + a + b
+    }
+    fn otimes(a: i64, b: i64) -> i64 {
+        a * b - a - b
+    }
+    fn odot(a: i64, b: i64) -> i64 {
+        2 * (a + b)
+    }
+
+    let skills = vec![
+        "Rule for ⊕: a ⊕ b = (a×b) + a + b. Example: 2 ⊕ 3 = 2*3+2+3 = 11.".to_string(),
+        "Rule for ⊗: a ⊗ b = (a×b) − a − b. Example: 4 ⊗ 5 = 4*5-4-5 = 11.".to_string(),
+        "Rule for ⊙: a ⊙ b = 2 × (a + b). Example: 3 ⊙ 4 = 2*(3+4) = 14.".to_string(),
+    ];
+
+    let mut rng = Xorshift64::new(seed);
+    let mut next = || (rng.next() % 8 + 2) as i64; // operands 2..=9
+
+    let mut single = Vec::with_capacity(n * 3);
+    let mut compositional = Vec::with_capacity(n);
+    for _ in 0..n {
+        let (a, b) = (next(), next());
+        single.push(TransferTask {
+            prompt: format!("What is {a} ⊕ {b}?"),
+            expected: oplus(a, b).to_string(),
+        });
+        let (a, b) = (next(), next());
+        single.push(TransferTask {
+            prompt: format!("What is {a} ⊗ {b}?"),
+            expected: otimes(a, b).to_string(),
+        });
+        let (a, b) = (next(), next());
+        single.push(TransferTask {
+            prompt: format!("What is {a} ⊙ {b}?"),
+            expected: odot(a, b).to_string(),
+        });
+        // compositional: (a ⊕ b) ⊗ c — two rules that never co-occurred in the single set.
+        let (a, b, c) = (next(), next(), next());
+        compositional.push(TransferTask {
+            prompt: format!("What is ({a} ⊕ {b}) ⊗ {c}?"),
+            expected: otimes(oplus(a, b), c).to_string(),
+        });
+    }
+    MultiSkillCorpus {
+        skills,
+        single,
+        compositional,
+    }
+}
+
 /// A small frozen suite for the foreground demo (provenance-isolated: fixed here, never from the
 /// being's own failures).
 pub fn default_frozen_suite() -> Vec<BenchTask> {
@@ -319,6 +381,22 @@ mod tests {
         assert!(c1
             .iter()
             .all(|t| t.expected.parse::<i64>().map(|v| v >= 8).unwrap_or(false)));
+    }
+
+    #[test]
+    fn multi_skill_corpus_deterministic_and_well_formed() {
+        let c1 = multi_skill_corpus(4, 7);
+        let c2 = multi_skill_corpus(4, 7);
+        assert_eq!(c1.skills.len(), 3);
+        assert_eq!(c1.single.len(), 12); // 4 per op * 3 ops
+        assert_eq!(c1.compositional.len(), 4);
+        let p1: Vec<&str> = c1.single.iter().map(|t| t.prompt.as_str()).collect();
+        let p2: Vec<&str> = c2.single.iter().map(|t| t.prompt.as_str()).collect();
+        assert_eq!(p1, p2); // deterministic for a seed
+        assert!(c1
+            .compositional
+            .iter()
+            .all(|t| t.expected.parse::<i64>().is_ok()));
     }
 
     #[test]
