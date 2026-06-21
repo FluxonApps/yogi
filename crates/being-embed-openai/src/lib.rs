@@ -123,6 +123,17 @@ mod tests {
         assert!(parse_embedding_response("not json").is_err());
         assert!(parse_embedding_response(r#"{"data":[]}"#).is_err());
         assert!(parse_embedding_response(r#"{"data":[{"embedding":[]}]}"#).is_err());
+        // missing data key entirely
+        assert!(parse_embedding_response(r#"{"object":"list"}"#).is_err());
+        // a non-numeric element makes the whole vector invalid (the Option-collect failure branch)
+        assert!(parse_embedding_response(r#"{"data":[{"embedding":["x",0.2]}]}"#).is_err());
+    }
+
+    #[test]
+    fn parse_accepts_json_integer_components() {
+        // Some backends emit whole numbers without a decimal point; as_f64 must still accept them.
+        let v = parse_embedding_response(r#"{"data":[{"embedding":[1,2,-3]}]}"#).unwrap();
+        assert_eq!(v, vec![1.0, 2.0, -3.0]);
     }
 
     /// Live call — loads `nomic-embed-text`. Foreground/manual only:
