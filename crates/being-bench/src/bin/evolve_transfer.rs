@@ -9,12 +9,13 @@
 //! combines a ⊕-genome with a ⊗-genome into a child that solves both. This is the live setting where
 //! open-ended search has something to illuminate.
 
-use being_bench::multi_skill_corpus;
+use being_bench::{multi_skill_corpus, neutral_drift_gate};
 use being_core_economy::Account;
 use being_core_id::Ed25519Signer;
 use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{
-    BehaviorDescriptor, Colony, Evaluation, Evaluator, IlluminationConfig, Rng, Variator,
+    illuminate, Archive, BehaviorDescriptor, Colony, Evaluation, Evaluator, IlluminationConfig,
+    Retention, Rng, Variator,
 };
 use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::{Being, EchoExecutor, PassThroughCommitter};
@@ -181,4 +182,71 @@ fn main() {
         s.sort();
         println!("\nglobal best: fitness={:.2} skills={s:?}", best.fitness);
     }
+
+    // EVOLVE_DRIFT=1: the live M6 acceptance on the transfer corpus — replicate elitist (selection) vs
+    // matched neutral-drift arms, judged by neutral_drift_gate. Expensive (replicates × 2 arms × evals,
+    // thinking mode). Opt-in.
+    if std::env::var("EVOLVE_DRIFT").as_deref() == Ok("1") {
+        run_drift_acceptance(&evaluator.tasks, &evaluator.rules, &descriptor, iters, seed);
+    }
+}
+
+/// The live M6 acceptance on the transfer corpus: does fitness-based selection reliably beat a matched
+/// neutral-drift control? Each replicate runs both arms (same seed), measured by archive mean-fitness,
+/// and the difference is judged by `neutral_drift_gate`.
+fn run_drift_acceptance(
+    tasks: &[(String, String)],
+    rules: &[String],
+    descriptor: &BehaviorDescriptor,
+    iters: usize,
+    base_seed: u64,
+) {
+    let replicates = std::env::var("EVOLVE_REPLICATES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(2);
+    eprintln!("M6 transfer drift acceptance: {replicates} replicates × 2 arms (thinking mode) ...");
+
+    let (mut selection, mut drift) = (Vec::new(), Vec::new());
+    for i in 0..replicates {
+        let seed = base_seed + i as u64 * 17;
+        for (arm, out) in [
+            (Retention::Elitist, &mut selection),
+            (Retention::NeutralDrift, &mut drift),
+        ] {
+            let mut archive = Archive::new();
+            let mut ev = TransferEvaluator {
+                tasks: tasks.to_vec(),
+                rules: rules.to_vec(),
+            };
+            let cfg = IlluminationConfig::new(iters, seed)
+                .with_retention(arm)
+                .with_recombination(0.5);
+            illuminate(
+                &mut archive,
+                descriptor,
+                Genome::default(),
+                1,
+                &mut ev,
+                &mut SkillSetVariator,
+                &cfg,
+                None,
+            );
+            out.push(archive.mean_fitness().unwrap_or(0.0));
+        }
+    }
+
+    let report = neutral_drift_gate(&drift, &selection, 0.0, 2000, 7, 0.05);
+    println!(
+        "\nM6 TRANSFER ACCEPTANCE: selection={:.3} vs drift={:.3}  advantage CI=[{:.3},{:.3}]  fires={}",
+        report.selection_mean, report.drift_mean, report.ci.lower, report.ci.upper, report.fires
+    );
+    println!(
+        "{}",
+        if report.fires {
+            "→ selection beats neutral drift on the live transfer corpus: real open-ended signal."
+        } else {
+            "→ no significant edge over drift at this budget: honest null (try more replicates/iters)."
+        }
+    );
 }
