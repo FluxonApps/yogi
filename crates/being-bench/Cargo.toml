@@ -40,6 +40,11 @@ path = "src/bin/multi_skill.rs"
 name = "evolve"
 path = "src/bin/evolve.rs"
 
+# M6 open-ended search on the transfer corpus (rule-carrying genomes; real behavioral diversity).
+[[bin]]
+name = "evolve_transfer"
+path = "src/bin/evolve_transfer.rs"
+
 [dependencies]
 being-runtime = { path = "../being-runtime" }
 being-proposer-openai = { path = "../being-proposer-openai" }

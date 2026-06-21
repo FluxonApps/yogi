@@ -84,8 +84,7 @@ impl Variator for PromptVariator {
 fn main() {
     eprintln!("M6 illumination (foreground — loads qwen3:8b repeatedly) ...");
     // Building-block niches: (first-half passes, second-half passes). 7 tasks → 4 + 3 → 5×4 = 20 cells.
-    let descriptor =
-        BehaviorDescriptor::bounded([(0.0, 1.0, 5), (0.0, 1.0, 4)]).unwrap();
+    let descriptor = BehaviorDescriptor::bounded([(0.0, 1.0, 5), (0.0, 1.0, 4)]).unwrap();
     let iterations = std::env::var("EVOLVE_ITERS")
         .ok()
         .and_then(|s| s.parse().ok())
