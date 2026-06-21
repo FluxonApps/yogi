@@ -6,3 +6,5 @@ license.workspace = true
 
 [dependencies]
 being-core-types = { path = "../being-core-types" }
+# M5 earn-wiring: verified payer revenue credits the being's metabolic account.
+being-core-economy = { path = "../being-core-economy" }

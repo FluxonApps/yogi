@@ -130,9 +130,62 @@ impl<G: Grader> ExternalPayer for OperatorPayer<G> {
     }
 }
 
+/// **M5 earn-wiring (D-M5-1):** settle a delivered task through the payer and credit the verified
+/// revenue to the being's metabolic [`Account`](being_core_economy::Account). Returns the microdollars
+/// earned (0 if the grader rejected, or the bounded treasury is exhausted).
+///
+/// This closes the loop that makes value capture *real*: a being's balance can grow **only** by
+/// genuinely-verified success against a payer that is exogenous to it — the prices ([`Tariff`]), the
+/// grading ([`Grader`]), and the funds ([`Treasury`]) all live outside the being's closed
+/// [`being_core_mutation::MutationKind`] surface, so it cannot mutate its way to revenue; it can only
+/// earn by solving held-out tasks whose ground truth it does not control. (The remaining step to a
+/// *fully* exogenous payer is deployment — a real external customer — not code.)
+pub fn earn<P: ExternalPayer>(
+    payer: &mut P,
+    account: &mut being_core_economy::Account,
+    task_class: &str,
+    response: &str,
+    ground_truth: &str,
+) -> Microdollars {
+    let revenue = payer.settle(task_class, response, ground_truth);
+    if revenue > 0 {
+        account.credit(revenue);
+    }
+    revenue
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_being_earns_its_keep_only_by_verified_success() {
+        use being_core_economy::{Account, BudgetVerdict, SpendCategory};
+        let mut payer = OperatorPayer::new(Tariff::new(100), SubstringGrader, Treasury::new(1_000));
+        let mut acct = Account::new(50, 0, 1_000_000); // small starting balance
+
+        // A verified-correct answer earns its price (100), credited to the metabolic account.
+        assert_eq!(
+            earn(&mut payer, &mut acct, "q", "the answer is Paris", "paris"),
+            100
+        );
+        // …which funds the turn's operating cost — the being stays solvent because it earned.
+        assert_eq!(
+            acct.charge(SpendCategory::Operating, 30),
+            BudgetVerdict::WithinBudget
+        );
+        assert_eq!(acct.balance(), 50 + 100 - 30);
+
+        // A wrong answer earns nothing (the grader rejects) — value capture requires real success.
+        assert_eq!(earn(&mut payer, &mut acct, "q", "London", "Paris"), 0);
+
+        // The exogenous treasury is BOUNDED: drain the remaining 900 (9×100), then even correct
+        // answers earn 0 — the being cannot conjure revenue beyond what the payer actually funds.
+        for _ in 0..9 {
+            assert_eq!(earn(&mut payer, &mut acct, "q", "paris", "paris"), 100);
+        }
+        assert_eq!(earn(&mut payer, &mut acct, "q", "paris", "paris"), 0);
+    }
 
     #[test]
     fn tariff_uses_class_price_then_default() {
