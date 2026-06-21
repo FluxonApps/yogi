@@ -1,0 +1,10 @@
+[package]
+name = "being-persist"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Durable append-only log (pure std: file + fsync + per-record checksum). Crash-safe persistence for the
+# journal / fork-ledger / dedup-ledger, which are in-memory today. No external deps (local-only ethos),
+# no model — safe to build/run in the automated loop. Replay tolerates a torn final record (crash mid-append).
+[dependencies]

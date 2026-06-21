@@ -19,6 +19,7 @@ members = [
     "crates/being-distill",
     "crates/being-sandbox",
     "crates/being-sandbox-wasm",
+    "crates/being-persist",
 ]
 
 [workspace.package]
