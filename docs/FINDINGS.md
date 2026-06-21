@@ -771,3 +771,22 @@ overflow-checks; can never silently wrap") was only a profile setting + comment.
 #[should_panic(expected="overflow")] test (credit i64::MAX into a maxed balance must trap). It passes
 in BOTH debug and release — so it also verifies the workspace release overflow-checks flag is actually
 in effect. Safety-invariant test coverage is now complete. 20 crates, 198 tests, green.
+
+## 2026-06-22 — scanning incompleteness markers found 3 real deferrals (all built)
+
+Rather than guess at "what's left", grepped the source for placeholder/lands-later markers — which
+surfaced genuine spec-deferred items (not demos, not deployment):
+1. **Real W3C did:key** — the DID was a research placeholder `did:key:hex:<hex>`; implemented the
+   standard Ed25519 `did:key:z<base58btc(0xED01 ++ pubkey)>` (pure base58btc, no deps), verified
+   against the canonical `did:key:z6Mk…` signature + sign/verify roundtrip. (Plus corrected the now-
+   stale Did/Hash/Sig "placeholder" doc comments — they're real did:key/blake3/ed25519.)
+2. **The trust+risk policy gate** — the committer was pass-through ("real policy gate lands later").
+   Built RiskPolicyCommitter: commits only steps at/below a risk ceiling (Pure<MemoryWrite<Egress<
+   Sign<Payment), fail-closed on unknown actions, refusals recorded in Commitment.rejected. It's the
+   being's OWN self-restraint, defense-in-depth UPSTREAM of the operator capability sandbox (a
+   Pure-ceiling being is read-only by policy even if granted egress).
+3. **Audit completeness** — encode_commitment journaled only committed steps; now it also journals the
+   rejected steps + reasons, so the policy gate's refusals are tamper-evident in the signed hash-chain.
+Remaining markers are genuinely non-code (OS-keystore key storage = deployment) or already covered
+(embedding retrieval exists in SemanticIndex; EchoProposer/Ollama proposer both present). 20 crates,
+200 tests, green.
