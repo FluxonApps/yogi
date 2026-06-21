@@ -306,6 +306,20 @@ mod tests {
     }
 
     #[test]
+    fn strip_think_edge_cases() {
+        // Text on both sides of the block is preserved; only the block is excised.
+        assert_eq!(strip_think("A<think>reasoning</think>B"), "AB");
+        // An empty block is removed cleanly.
+        assert_eq!(strip_think("<think></think>answer"), "answer");
+        // Malformed order (close before open) fails the `b > a` guard → left unchanged.
+        let weird = "</think>x<think>";
+        assert_eq!(strip_think(weird), weird);
+        // An unterminated open tag (no closing tag, e.g. truncated by max_tokens) → left unchanged.
+        let truncated = "<think>only open, no close";
+        assert_eq!(strip_think(truncated), truncated);
+    }
+
+    #[test]
     fn parse_errors_on_malformed_or_empty() {
         assert!(parse_chat_response("not json").is_err());
         assert!(parse_chat_response(r#"{"choices":[]}"#).is_err());
