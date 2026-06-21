@@ -74,6 +74,7 @@ checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 name = "being-bench"
 version = "0.0.0"
 dependencies = [
+ "being-colony",
  "being-core-economy",
  "being-core-id",
  "being-core-mutation",
@@ -83,6 +84,7 @@ dependencies = [
  "being-loop",
  "being-proposer-openai",
  "being-runtime",
+ "being-sandbox",
  "being-supervisor",
 ]
 

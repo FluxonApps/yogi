@@ -64,6 +64,9 @@ being-lineage = { path = "../being-lineage" }
 being-core-id = { path = "../being-core-id" }
 # M3 gap detection / promotion gate (distill bin).
 being-distill = { path = "../being-distill" }
+# Full-integration capstone (full_being bin): durable journal + capability sandbox composed on a being.
+being-colony = { path = "../being-colony" }
+being-sandbox = { path = "../being-sandbox" }
 
 # M3 distillation flywheel end-to-end on the transfer corpus (cold vs distilled). Foreground.
 [[bin]]
