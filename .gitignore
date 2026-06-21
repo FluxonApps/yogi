@@ -1,0 +1,21 @@
+# Rust
+/target
+**/target
+**/*.rs.bk
+
+# Local runtime artifacts
+*.db
+*.sqlite
+*.sqlite3
+/models
+/data
+
+# Secrets / env
+.env
+*.key
+
+# OS / editor
+.DS_Store
+/.idea
+/.vscode
+*.swp
