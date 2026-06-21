@@ -12,7 +12,22 @@
 
 use being_core_mutation::{apply, Genome, MutationKind};
 
-use crate::{fork, fork2, Archive, BehaviorDescriptor, BeingId, Lineage, Phylogeny};
+use crate::{fork, fork2, Archive, BehaviorDescriptor, BeingId, Lineage, Offspring, Phylogeny};
+
+/// Observes every fork the engine performs — the founder and each bred child — together with the
+/// parent(s) it was bred from. Lets a caller record genealogy and/or sign + commit a durable fork log
+/// without the engine knowing about journals or signers. `parents` is empty for the founder, holds one
+/// entry for an asexual fork, and two for a sexual fork; `child` carries the FINAL (post-variation)
+/// genome that the archive will store.
+pub trait ForkObserver {
+    fn on_fork(&mut self, parents: &[(Lineage, Genome)], child: &Offspring);
+}
+
+impl ForkObserver for Phylogeny {
+    fn on_fork(&mut self, _parents: &[(Lineage, Genome)], child: &Offspring) {
+        self.record(&child.lineage);
+    }
+}
 
 /// The outcome of scoring a candidate genome: a scalar `fitness` (quality) plus the `behavior` vector
 /// that decides *which cell* it competes in (diversity). The two are orthogonal — that is what lets
@@ -143,7 +158,7 @@ pub fn illuminate(
     evaluator: &mut dyn Evaluator,
     variator: &mut dyn Variator,
     cfg: &IlluminationConfig,
-    mut recorder: Option<&mut Phylogeny>,
+    mut observer: Option<&mut dyn ForkObserver>,
 ) -> IlluminationStats {
     let consider = |archive: &mut Archive, cell, lineage, genome, fitness| match cfg.retention {
         Retention::Elitist => archive.consider(cell, lineage, genome, fitness),
@@ -162,14 +177,19 @@ pub fn illuminate(
         next_id = founder_id + 1;
         let ev = evaluator.evaluate(&seed_genome);
         stats.evaluations += 1;
-        if let Some(p) = recorder.as_deref_mut() {
-            p.record(&founder);
+        let cell = descriptor.cell(&ev.behavior);
+        let founder_off = Offspring {
+            lineage: founder,
+            genome: seed_genome,
+        };
+        if let Some(o) = observer.as_deref_mut() {
+            o.on_fork(&[], &founder_off);
         }
         if consider(
             archive,
-            descriptor.cell(&ev.behavior),
-            founder,
-            seed_genome,
+            cell,
+            founder_off.lineage,
+            founder_off.genome,
             ev.fitness,
         ) {
             stats.improvements += 1;
@@ -190,7 +210,7 @@ pub fn illuminate(
         let sexual = parents.len() >= 2
             && cfg.recombination_rate > 0.0
             && rng.unit_f64() < cfg.recombination_rate;
-        let child = if sexual {
+        let (child, selected) = if sexual {
             // Two DISTINCT parents: draw j over n-1 and skip past i so it never equals i.
             let i = rng.below(parents.len());
             let mut j = rng.below(parents.len() - 1);
@@ -200,10 +220,12 @@ pub fn illuminate(
             let (la, ga) = &parents[i];
             let (lb, gb) = &parents[j];
             stats.recombinations += 1;
-            fork2(la, ga, lb, gb, next_id, &mut rng)
+            let child = fork2(la, ga, lb, gb, next_id, &mut rng);
+            (child, vec![parents[i].clone(), parents[j].clone()])
         } else {
-            let (pl, pg) = &parents[rng.below(parents.len())];
-            fork(pl, pg, next_id)
+            let k = rng.below(parents.len());
+            let (pl, pg) = &parents[k];
+            (fork(pl, pg, next_id), vec![parents[k].clone()])
         };
         next_id += 1;
 
@@ -218,14 +240,20 @@ pub fn illuminate(
 
         let ev = evaluator.evaluate(&genome);
         stats.evaluations += 1;
-        if let Some(p) = recorder.as_deref_mut() {
-            p.record(&child.lineage);
+        let cell = descriptor.cell(&ev.behavior);
+        // Observe the FINAL (post-variation) child so a signed snapshot commits the stored genome.
+        let final_child = Offspring {
+            lineage: child.lineage,
+            genome,
+        };
+        if let Some(o) = observer.as_deref_mut() {
+            o.on_fork(&selected, &final_child);
         }
         if consider(
             archive,
-            descriptor.cell(&ev.behavior),
-            child.lineage,
-            genome,
+            cell,
+            final_child.lineage,
+            final_child.genome,
             ev.fitness,
         ) {
             stats.improvements += 1;
@@ -361,7 +389,7 @@ mod tests {
             &mut LenEval,
             &mut GrowPrompt,
             &cfg,
-            Some(&mut phylo),
+            Some(&mut phylo as &mut dyn ForkObserver),
         );
         // Once a second niche exists, every later child is bred from two parents.
         assert!(
@@ -397,7 +425,7 @@ mod tests {
             &mut LenEval,
             &mut GrowPrompt,
             &cfg,
-            Some(&mut phylo),
+            Some(&mut phylo as &mut dyn ForkObserver),
         );
 
         // Genealogy: unique ids, founders⇔no-parents, every produced lineage captured.

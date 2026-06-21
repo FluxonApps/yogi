@@ -18,8 +18,8 @@ use being_core_mutation::Genome;
 
 mod evolve;
 pub use evolve::{
-    illuminate, Evaluation, Evaluator, IlluminationConfig, IlluminationStats, Retention, Rng,
-    Variator,
+    illuminate, Evaluation, Evaluator, ForkObserver, IlluminationConfig, IlluminationStats,
+    Retention, Rng, Variator,
 };
 
 mod fork_saga;
