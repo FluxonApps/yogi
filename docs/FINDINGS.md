@@ -1052,3 +1052,15 @@ internalizes a rule the model can RELIABLY APPLY (high self-gen yield); the vowe
 the 8B couldn't apply a 5-way cycle reliably (yield starved 9/38), NOT because it's a string task.
 Three goals 0→8/8, zero forgetting, zero frontier salary, on a sub-frontier local model. P1+P2 done.
 The boundary condition = condition-3 (application floor) of the research note, now empirically located.
+
+## 2026-06-22 — pure-STaR sweet spot is narrow for a strong 8B → pivot to the agent-driven capstone
+
+Probe (4-step arithmetic chains, qwen3:8b /no_think): 1/12, but ~all "None" (no parseable answer) —
+the 8B can't do multi-step arithmetic ONE-SHOT without reasoning; with thinking it's ~saturated. So the
+PURE same-mode STaR band (partial competence the model can self-improve from) is NARROW for a strong
+reasoning model on cheap-verifiable tasks: easy → saturated in thinking mode; hard → ~0. The rule-
+internalization regime (proven 3× here) sidesteps this by withholding the rule to manufacture the
+cold≈0 / taught≈high headroom. Honest conclusion: pure same-mode STaR isn't the clean next demo on this
+model; the higher-value step is the AGENT-DRIVEN loop — consolidate the proven pieces (metacog awareness
++ ratchet) into ONE autonomous self-improvement cycle (assess→decide→practice→re-assess), the operator's
+"awareness+practice+loop, nothing human" vision realized.
