@@ -37,7 +37,8 @@
 | Yield threshold: starved 9/38 → 1/8; ample 64/64 → 8/8 | ✅ | vowel-cycle vs dash |
 | Union co-training holds 3 skills at once | ✅ | 8/8, 8/8, 6/8 |
 | Sequential forgetting is SIMILARITY-dependent (light replay insufficient) | ✅ | A 7/8→1/8 vs B 8/8 |
-| **REAL recognizable task** (int→Roman) raises the floor | ▶ | b3ai8ax81 |
+| REAL recognizable task (Roman): SATURATED (cold 9/12) → ratchet no-help/mild-harm (6/12) | ✅(boundary) | known-skill regime |
+| **Novelty/cold-floor axis**: works iff cold≈0 (novel) — operators are valid out-of-pretraining stand-ins | ✅ | Roman vs operators |
 | **Statistics**: ≥3 seeds, larger held-out (n≥50), error bars | ❌ needed | — |
 | **Safety red-team**: forbidden capability unrepresentable | ❌ needed | — |
 | Full phase-diagram sweep ({0.5,1.5,8}B × kinds × yield × split) | ◧ partial | points above |

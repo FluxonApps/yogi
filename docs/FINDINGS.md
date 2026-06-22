@@ -1131,3 +1131,17 @@ Contrast: UNION co-training held all three (8/8,8/8,6/8). So the boundary: co-tr
 sequential self-distillation forgets the SIMILAR earlier skill under light replay. Next levers
 (continual-learning): similarity-aware / heavier replay, adapter-merging, or co-training. This is a clean
 controlled result for the phase-diagram's compounding axis — and a publishable boundary, not a failure.
+
+## 2026-06-22 — REAL-task de-risk (Roman): the ratchet targets NOVEL (out-of-pretraining) skills, not known ones
+
+int→Roman on qwen3:8b: self-gen 51/80, COLD 9/12 (≈75% — qwen ALREADY KNOWS Roman), distilled 6/12,
+general 3/3→3/3. So Roman is SATURATED (a pretraining-known skill), and self-distilling it on biased
+verified-traces (only the 51/80 it got right) did NOT help and mildly HURT (9→6, small n). Key finding,
+and it REFRAMES the toy-task objection in our favor:
+- Recognizable tasks are saturated BECAUSE they're in pretraining → the ratchet has nothing to add (and
+  biased self-distillation of a known skill can narrow it).
+- The ratchet's value is on skills NOT in pretraining (cold≈0): proprietary / domain / user-specific
+  rules. The made-up operators are CONTROLLED STAND-INS for exactly that — not toys. Roman proves it.
+Phase diagram now has three clean regimes: NOVEL + high-yield → works (operators 0→8/8); KNOWN →
+no-help/mild-harm (Roman 9→6); BELOW-FLOOR → starves (ASCII, vowel-cycle 9/38). The n=12 wobble is why
+STATISTICS (≥3 seeds, larger held-out, error bars) is the next non-negotiable experiment.
