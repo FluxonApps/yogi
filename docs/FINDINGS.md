@@ -814,3 +814,22 @@ entrypoint instead of scattered per-bin invocations. With being-core-policy (the
 completes the spec's named crate set; the remaining spec-named absences are foreground tooling
 (being-distill-train = scripts/distill_lora.sh), generation-state loading (covered by lineage/persist),
 or deployment. 22 crates, 206 tests, green.
+
+## 2026-06-22 — first live ASCII evolution (qwen draws, Claude judges): modest rise, then plateau
+
+Ran ascii_evolve (6 generations × 2 subjects, salary cap 14 `claude -p` judge calls). End-to-end live:
+qwen3:8b draws → structural gate → Claude judges (CoT+criteria rubric) → illuminate selects.
+- **Quality curve (best genome fitness):** 0.15 → 0.30 → 0.30 → 0.30 → 0.30 → 0.30. Rose once (the QD
+  search found a better prompt/exemplar genome), then plateaued.
+- **Best single drawing:** a recognizable HOUSE scored 0.60 (roof + walls + door); the gen-0 "cat" was
+  a tower scored 0.20 — Claude discriminates honestly (bad ASCII → low score, no rubber-stamping).
+- **Salary used 8/14** (NOT exhausted) → the plateau is *not* budget-limited; it's variator/ceiling-limited.
+- **Coverage: niches=1** → all genomes' aggregate behavior landed in one style×size cell; QD diversity
+  didn't spread.
+Honest takeaways: (1) the judge premise holds live — Claude scores ASCII sensibly (0.20 tower vs 0.60
+house). (2) The qwen base + a small prompt/exemplar variator has a low ceiling and plateaus fast — so
+prompt-shuffling is NOT where the compounding is. (3) The real lever is DISTILLATION: capture the
+teacher's good drawings → improve the local model (the project's core thesis, and the "survival = need
+the frontier less" loop). (4) The niche axes need to be more ASCII-sensitive for QD coverage. Next:
+either distillation (teacher→student), or note that selection-vs-drift on this fast-plateauing landscape
+would be underpowered as-is. Reported straight, plateau and all.
