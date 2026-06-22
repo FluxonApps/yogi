@@ -962,3 +962,17 @@ ization" was easier — its random split put 9-operands in TRAIN too.) Principle
 distill the model's own self-generated REASONING (CoT: "⊕ means 3a+2b, so 3*9+2*3 = 33"), not just the
 answer — so it learns the PROCEDURE and applies it to unseen operands. + more replay for forgetting.
 Rerunning (run #3).
+
+## 2026-06-22 — P1 ratchet run #3 (CoT) on the 1.5B: forgetting fixed, but STILL no generalization
+
+CoT-reasoning distillation, op=3a+2b, MLX Qwen2.5-1.5B: self-gen 51/64, train loss 0.023, but cold
+held-out 0/8 → distilled 0/8 (NO rise) — general 3/3→3/3 (forgetting FIXED by CoT+broadened replay).
+Three-run verdict on the 1.5B: it distills its own verified traces but MEMORIZES them (loss 0.023)
+rather than INDUCING the function, so it can't extrapolate to the held-out operand `9` (unseen value;
+this is an extrapolation split, stricter than M3's interpolation). Per the pre-stated guardrail: STOP
+tweaking the 1.5B recipe — this is the result for the 1.5B.
+TWO honest threads converge on the same next step: (a) the guardrail says stop the 1.5B; (b) the
+operator correctly flagged the 1.5B is the WRONG model — the being's agent is qwen3:8b. So the next run
+is the COHERENCE FIX: the ratchet on the REAL 8B agent (M3 lesson: capacity gates generalization —
+0.5B can't learn ⊕, 1.5B can; the 8B has far more capacity to induce, not memorize). Also consider an
+interpolation split (operands seen, held-out pairs) as a fairer generalization test.
