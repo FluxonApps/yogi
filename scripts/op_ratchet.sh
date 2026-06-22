@@ -21,16 +21,18 @@ mkdir -p "$DATA"
 #    verifier (compute a*b+a+b) keeps only correct ones, written as cold(no-rule)->answer. + balanced
 #    replay (M3 lesson: preserve adjacent skills so non-inferiority holds).
 "$PY" - "$DATA" "$STUDENT" <<'PY'
-import json, sys, re, random
+import json, sys, re, random, os
 from mlx_lm import load, generate
 d, mp = sys.argv[1], sys.argv[2]
+NT = " /no_think" if os.environ.get("THINK_OFF") else ""   # qwen3 etc. are thinking models — disable <think>
 op   = lambda a,b: 3*a + 2*b      # easy arithmetic — isolates rule-internalization from arithmetic
 # A single COLD prompt (NO rule) used for train + eval; it invites reasoning so the model learns the
-# PROCEDURE, not a lookup → generalizes to unseen operands.
-cold = lambda a,b: f"What is {a} ⊕ {b}? Show your working step by step, then give the integer."
+# PROCEDURE, not a lookup → generalizes to unseen operands. /no_think suffix is baked in consistently.
+cold = lambda a,b: f"What is {a} ⊕ {b}? Show your working step by step, then give the integer.{NT}"
 # self-gen uses the rule IN-CONTEXT to produce a correct REASONING trace; we distill that trace.
 taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = 3*a + 2*b. {cold(a,b)}"
-parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', t))
+strip_think = lambda t: t.split('</think>')[-1]            # ignore any <think> block before parsing
+parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', strip_think(t)))
 model, tok = load(mp)
 def ask(p, mx=24):
     text = tok.apply_chat_template([{"role":"user","content":p}], add_generation_prompt=True, tokenize=False)
@@ -73,7 +75,8 @@ model,tok=load(mp,adapter_path=ad); p=t=0
 for line in open(data):
     ex=json.loads(line); t+=1
     text=tok.apply_chat_template([{"role":"user","content":ex["prompt"]}],add_generation_prompt=True,tokenize=False)
-    if ex["completion"].strip() in generate(model,tok,prompt=text,max_tokens=160,verbose=False): p+=1
+    out=generate(model,tok,prompt=text,max_tokens=300,verbose=False).split('</think>')[-1]
+    if ex["completion"].strip() in out: p+=1
 print(f"PASS {p}/{t}")
 PY
 
