@@ -940,3 +940,14 @@ each elite evolved toward. Safety = the toolspace BOUNDARY (sandboxed/judged/no 
 human in the loop — see docs/evolution-and-safety.md (the central thesis stated plainly). This is the
 honest answer to "base capability shouldn't matter": evolve the system's action space, within a fence
 that rises only on earned trust.
+
+## 2026-06-22 — P1 ratchet run #1: FAIL (self-gen yield), diagnosed + fixed
+
+First self-generating ratchet (op = a·b+a+b, MLX Qwen2.5-1.5B): cold held-out 0/8 → distilled 0/8 (NO
+floor rise) + general 3/3→1/3 (forgetting). Root cause: SELF-GENERATION yielded only 5/64 verified
+traces — the 1.5B can't compute a·b+a+b one-shot (2-digit multiply), so the distill set was tiny → no
+learning + overfit-forgetting. This was a CONFOUND: the run tested the 1.5B's arithmetic, not the
+thesis (rule-internalization). Fix (isolate the variable): operator → 3a+2b (easy arithmetic, still a
+novel mapping, cold≈0), and let the model REASON during self-gen (CoT, keep only the verified final
+answer). Honest note: this is not goalpost-moving — arithmetic difficulty is a separate axis; the P1
+claim is that distilling self-generated VERIFIED traces internalizes a novel rule. Rerunning.

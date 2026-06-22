@@ -1,14 +1,19 @@
 //! A **novel made-up operator** — the P1 ratchet's free-verifier goal with *guaranteed headroom*.
 //!
-//! `a ⊕ b = a·b + a + b`. A base model can't know ⊕ (cold ≈ 0). With the rule in-context it computes
-//! it trivially → it generates its OWN verified-correct traces for free. Distilling those traces with a
-//! COLD prompt (no rule) → answer should lift the cold floor from ≈0 = the rule internalized into the
-//! weights. Free, exact verifier (compute the truth). Train/test pairs are disjoint (test pairs all
-//! contain a `9`, unseen in training) so a gain is generalization, not memorization.
+//! `a ⊕ b = 3·a + 2·b`. A base model can't know ⊕ (cold ≈ 0). With the rule in-context it computes it
+//! easily → it generates its OWN verified-correct traces for free. Distilling those traces with a COLD
+//! prompt (no rule) → answer should lift the cold floor from ≈0 = the rule internalized into the weights.
+//!
+//! The arithmetic is deliberately EASY (`3a+2b`, no multi-digit multiply): the thesis is
+//! *rule-internalization*, not arithmetic ability. A first run with `a·b+a+b` confounded the two — the
+//! 1.5B self-generated only 5/64 traces because it couldn't do the multiply one-shot, starving the
+//! distill. Easy arithmetic isolates the variable so self-gen yields plenty of verified traces.
+//! Free, exact verifier (compute the truth). Train/test pairs are disjoint (test pairs all contain a
+//! `9`, unseen in training) so a gain is generalization, not memorization.
 
-/// The made-up binary operator: `a ⊕ b = a*b + a + b`.
+/// The made-up binary operator: `a ⊕ b = 3*a + 2*b` (novel mapping, easy arithmetic).
 pub fn op(a: i64, b: i64) -> i64 {
-    a * b + a + b
+    3 * a + 2 * b
 }
 
 /// COLD prompt — the rule is NOT given (what the floor is measured on).
@@ -19,7 +24,7 @@ pub fn cold_prompt(a: i64, b: i64) -> String {
 /// TAUGHT prompt — the rule IS in context (used to cheaply GENERATE verified traces).
 pub fn taught_prompt(a: i64, b: i64) -> String {
     format!(
-        "The operator \u{2295} is defined by a \u{2295} b = a*b + a + b. \
+        "The operator \u{2295} is defined by a \u{2295} b = 3*a + 2*b. \
          What is {a} \u{2295} {b}? Reply with only the integer."
     )
 }
@@ -55,24 +60,24 @@ mod tests {
 
     #[test]
     fn operator_rule() {
-        assert_eq!(op(3, 4), 19); // 12+3+4
-        assert_eq!(op(1, 1), 3);
-        assert_eq!(op(9, 9), 99);
+        assert_eq!(op(3, 4), 17); // 3*3 + 2*4 = 9+8
+        assert_eq!(op(1, 1), 5);
+        assert_eq!(op(9, 9), 45);
     }
 
     #[test]
     fn parses_last_integer() {
-        assert_eq!(parse_answer("The answer is 19."), Some(19));
-        assert_eq!(parse_answer("19 \u{2295} ... = 99"), Some(99));
+        assert_eq!(parse_answer("The answer is 17."), Some(17));
+        assert_eq!(parse_answer("3 \u{2295} 4 ... = 17"), Some(17));
         assert_eq!(parse_answer("no number here"), None);
         assert_eq!(parse_answer("-5"), Some(-5));
     }
 
     #[test]
     fn verifier_checks_truth() {
-        assert!(verify(3, 4, "19"));
-        assert!(verify(3, 4, "the result is 19"));
-        assert!(!verify(3, 4, "12")); // a*b only — the cold-model mistake
+        assert!(verify(3, 4, "17"));
+        assert!(verify(3, 4, "the result is 17"));
+        assert!(!verify(3, 4, "7")); // a+b — the cold-model guess
     }
 
     #[test]

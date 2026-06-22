@@ -24,9 +24,10 @@ mkdir -p "$DATA"
 import json, sys, re, random
 from mlx_lm import load, generate
 d, mp = sys.argv[1], sys.argv[2]
-op   = lambda a,b: a*b+a+b
+op   = lambda a,b: 3*a + 2*b      # easy arithmetic — isolates rule-internalization from arithmetic
 cold = lambda a,b: f"What is {a} ⊕ {b}? Reply with only the integer."
-taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = a*b + a + b. What is {a} ⊕ {b}? Reply with only the integer."
+# self-gen prompt LETS THE MODEL REASON (boosts verified yield); we keep only the verified final answer.
+taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = 3*a + 2*b. Compute {a} ⊕ {b}. Think briefly, then end with the integer."
 parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', t))
 model, tok = load(mp)
 def ask(p, mx=24):
@@ -35,10 +36,10 @@ def ask(p, mx=24):
 train = [(a,b) for a in range(1,9) for b in range(1,9)]      # 1..8 (disjoint from the 9-containing test)
 test  = [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)]
 rows, gen_ok = [], 0
-for a,b in train:                                            # self-generate WITH rule in-context
-    if parse(ask(taught(a,b))) == op(a,b):
+for a,b in train:                                            # self-generate WITH rule in-context (CoT allowed)
+    if parse(ask(taught(a,b), mx=200)) == op(a,b):           # free verifier keeps only correct
         gen_ok += 1
-        rows.append({"prompt": cold(a,b), "completion": f" {op(a,b)}"})  # distill the COLD form
+        rows.append({"prompt": cold(a,b), "completion": f" {op(a,b)}"})  # distill the COLD one-shot form
 replay = [{"prompt":"What is 3 + 5? Reply with only the number.","completion":" 8"},
           {"prompt":"What is 9 - 4? Reply with only the number.","completion":" 5"},
           {"prompt":"What is the capital of Japan? One word.","completion":" Tokyo"},
