@@ -43,6 +43,20 @@ if KIND == "string":                                       # dash-insertion ciph
     taught = lambda w: f'The ⊙ transform inserts a hyphen between every pair of adjacent letters (e.g. cat -> c-a-t). {cold(w)}'
     truth_str = lambda w: tr(w)
     ok = lambda resp, w: tr(w) in nows(strip_think(resp))
+elif KIND == "roman":                                      # REAL recognizable task — int → Roman numeral
+    def i2r(n):
+        vals=[(1000,'M'),(900,'CM'),(500,'D'),(400,'CD'),(100,'C'),(90,'XC'),(50,'L'),(40,'XL'),(10,'X'),(9,'IX'),(5,'V'),(4,'IV'),(1,'I')]
+        r=''
+        for v,sym in vals:
+            while n>=v: r+=sym; n-=v
+        return r
+    pool=list(range(1,4000)); random.seed(3); random.shuffle(pool)
+    train_i=sorted(pool[:80]); test_i=sorted(pool[80:92])  # disjoint held-out — generalization, not lookup
+    nows=lambda s:''.join(c for c in s.upper() if not c.isspace())
+    cold=lambda n:f"Convert the number {n} to a Roman numeral. Output only the Roman numeral.{NT}"
+    taught=lambda n:f"Roman numerals: I=1,V=5,X=10,L=50,C=100,D=500,M=1000; subtractive IV=4,IX=9,XL=40,XC=90,CD=400,CM=900. Convert {n} to a Roman numeral. Output only the Roman numeral.{NT}"
+    truth_str=lambda n:i2r(n)
+    ok=lambda resp,n:i2r(n) in nows(strip_think(resp))
 else:                                                      # operator ⊕ = OP_EXPR (novel arithmetic rule)
     EXPR = os.environ.get("OP_EXPR", "3*a+2*b"); RULE = os.environ.get("RULE", "3*a + 2*b")
     op = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})
