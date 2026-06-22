@@ -925,3 +925,18 @@ brute-forcing a known failure (and waste GPU/salary).
 **Path forward = a base with ASCII capability (vision or large-proprietary) — out of the local 16GB/8B
 budget.** Within the local constraint, the harness is the transferable deliverable; the honest result
 is that the chosen domain exposed a hard base-capability ceiling distillation cannot cross at this scale.
+
+## 2026-06-22 — the meta-move goes INTO the being: an evolvable TOOLSPACE (nothing human)
+
+Operator: "this manual strategy should have happened directly if Yogi is built right" + "nothing
+should be human, I'm OK with the toolspace". Correct — I (operator) was doing the meta-evolution
+(inventing program-synthesis/refine). The fix: make the ACTION SPACE itself evolvable. Built
+DrawTool::{Direct, Program, Refine} selected by the being's closed-surface `tool_policy`, a
+ToolspaceGenerator that dispatches to the genome's chosen tool, and a ToolspaceVariator that mutates
+the tool choice (ToolPolicy) — so the being DISCOVERS its drawing strategy by fitness, not me.
+Confirmed qwen returns empty for program-emission (even allowed to think) — fine: the being's
+evolution routes around the dead tool itself (no human pruning). ascii_evolve now reports the tool
+each elite evolved toward. Safety = the toolspace BOUNDARY (sandboxed/judged/no self-grant), not a
+human in the loop — see docs/evolution-and-safety.md (the central thesis stated plainly). This is the
+honest answer to "base capability shouldn't matter": evolve the system's action space, within a fence
+that rises only on earned trust.

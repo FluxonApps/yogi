@@ -952,9 +952,198 @@ impl Generator for OllamaGenerator {
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// TOOLSPACE: the being evolves WHICH drawing strategy to use — the action space itself is evolvable.
+// "Nothing human" (operator, 2026-06-22): the operator provides a capability-bounded toolspace; the
+// being's closed-surface evolution (a `ToolPolicy` mutation) DISCOVERS which tool/composition works,
+// selected by fitness — strategy-discovery happens IN the being, not the operator. Safety is the
+// toolspace BOUNDARY (every tool is sandboxed/judged, none can self-grant capability), not a human in
+// the loop. Maximal autonomy inside a bounded enclosure.
+// ---------------------------------------------------------------------------------------------
+
+/// A drawing strategy the being can select via its (closed-surface) `tool_policy`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DrawTool {
+    /// Emit ASCII directly (the base's native, weak action).
+    Direct,
+    /// Emit a shape PROGRAM rendered deterministically (transcends spatial-char weakness).
+    Program,
+    /// Draw, get a Claude critique, then redraw with the feedback (Self-Refine; weak-gen+strong-critic).
+    Refine,
+}
+
+impl DrawTool {
+    pub const ALL: [DrawTool; 3] = [DrawTool::Direct, DrawTool::Program, DrawTool::Refine];
+
+    /// Decode the being's chosen tool from its genome's `tool_policy` (default = Direct).
+    pub fn from_genome(g: &Genome) -> DrawTool {
+        match g.tool_policy.as_slice() {
+            b"program" => DrawTool::Program,
+            b"refine" => DrawTool::Refine,
+            _ => DrawTool::Direct,
+        }
+    }
+
+    pub fn tag(self) -> &'static [u8] {
+        match self {
+            DrawTool::Direct => b"direct",
+            DrawTool::Program => b"program",
+            DrawTool::Refine => b"refine",
+        }
+    }
+}
+
+/// Ask Claude (frontier critic) for specific, actionable fixes to a drawing. Foreground (`claude -p`).
+pub fn claude_critique(subject: &str, art: &str) -> String {
+    let p = format!(
+        "This is an attempt at ASCII art of a {subject}:\n{art}\n\n\
+         In 1-2 sentences give SPECIFIC, actionable fixes to make it read more clearly as a {subject}. \
+         No preamble."
+    );
+    match std::process::Command::new("claude")
+        .arg("-p")
+        .arg(&p)
+        .output()
+    {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).into_owned(),
+        _ => String::new(),
+    }
+}
+
+/// The toolspace generator: dispatches to the being's genome-selected [`DrawTool`]. Foreground (model
+/// calls; Refine also spends a `claude -p` critique). The being evolves the tool via `ToolPolicy`.
+pub struct ToolspaceGenerator {
+    proposer: OpenAiChatProposer,
+    pub w: usize,
+    pub h: usize,
+}
+
+impl ToolspaceGenerator {
+    pub fn new(w: usize, h: usize) -> Self {
+        Self {
+            proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3_thinking()),
+            w,
+            h,
+        }
+    }
+
+    fn ask(&mut self, input: String, retrieved: Vec<String>) -> String {
+        extract_art(
+            &self
+                .proposer
+                .try_propose(&ContextPack { input, retrieved })
+                .unwrap_or_default(),
+        )
+    }
+
+    fn direct(&mut self, genome: &Genome, subject: &str) -> String {
+        let (input, retrieved) = draw_prompt(genome, subject, &default_exemplar_library());
+        self.ask(input, retrieved)
+    }
+
+    fn program(&mut self, subject: &str) -> String {
+        let raw = self.ask(program_prompt(subject, self.w, self.h), Vec::new());
+        run_program(&raw, self.w, self.h).render()
+    }
+
+    fn refine(&mut self, genome: &Genome, subject: &str) -> String {
+        let first = self.direct(genome, subject);
+        if first.trim().is_empty() {
+            return first;
+        }
+        let crit = claude_critique(subject, &first);
+        if crit.trim().is_empty() {
+            return first;
+        }
+        let input = format!(
+            "Your ASCII {subject}:\n{first}\n\nA critic says: {crit}\n\n\
+             Redraw the {subject} applying those fixes. Output ONLY the art."
+        );
+        let revised = self.ask(input, Vec::new());
+        if revised.trim().is_empty() {
+            first
+        } else {
+            revised
+        }
+    }
+}
+
+impl Generator for ToolspaceGenerator {
+    fn generate(&mut self, genome: &Genome, subject: &str) -> String {
+        match DrawTool::from_genome(genome) {
+            DrawTool::Direct => self.direct(genome, subject),
+            DrawTool::Program => self.program(subject),
+            DrawTool::Refine => self.refine(genome, subject),
+        }
+    }
+}
+
+/// Variator that evolves the being's TOOL choice (action-space search) plus a prompt nudge — so the
+/// being discovers the best drawing strategy itself, via the closed `ToolPolicy`/`Prompt` surface.
+pub struct ToolspaceVariator {
+    pub style_directives: Vec<String>,
+}
+
+impl Default for ToolspaceVariator {
+    fn default() -> Self {
+        Self {
+            style_directives: vec![
+                "Use bold, simple shapes.".into(),
+                "Add detail and texture.".into(),
+                "Keep it minimal and clean.".into(),
+            ],
+        }
+    }
+}
+
+impl Variator for ToolspaceVariator {
+    fn vary(&mut self, rng: &mut Rng, _parent: &Genome) -> Vec<MutationKind> {
+        if rng.next_u64().is_multiple_of(2) {
+            // Switch the drawing tool (explore the action space).
+            let t = DrawTool::ALL[(rng.next_u64() as usize) % DrawTool::ALL.len()];
+            vec![MutationKind::ToolPolicy(t.tag().to_vec())]
+        } else if !self.style_directives.is_empty() {
+            let i = (rng.next_u64() as usize) % self.style_directives.len();
+            vec![MutationKind::Prompt(self.style_directives[i].clone())]
+        } else {
+            vec![]
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn drawtool_decodes_from_genome_and_being_evolves_it() {
+        let mut g = Genome::default();
+        assert_eq!(DrawTool::from_genome(&g), DrawTool::Direct); // default action
+        g.tool_policy = b"program".to_vec();
+        assert_eq!(DrawTool::from_genome(&g), DrawTool::Program);
+        g.tool_policy = b"refine".to_vec();
+        assert_eq!(DrawTool::from_genome(&g), DrawTool::Refine);
+        g.tool_policy = b"unknown".to_vec();
+        assert_eq!(DrawTool::from_genome(&g), DrawTool::Direct); // unknown → safe default
+    }
+
+    #[test]
+    fn toolspace_variator_explores_tools_and_prompts() {
+        let mut v = ToolspaceVariator::default();
+        let mut rng = Rng::new(7);
+        let (mut tools, mut prompts) = (0, 0);
+        for _ in 0..60 {
+            for m in v.vary(&mut rng, &Genome::default()) {
+                match m {
+                    MutationKind::ToolPolicy(_) => tools += 1,
+                    MutationKind::Prompt(_) => prompts += 1,
+                    _ => {}
+                }
+            }
+        }
+        // The being explores the ACTION SPACE (tool choice) AND prompts — strategy-discovery in-being.
+        assert!(tools > 0 && prompts > 0);
+    }
 
     #[test]
     fn canvas_dsl_composes_a_house_from_primitives() {

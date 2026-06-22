@@ -6,9 +6,12 @@
 //! evolves the drawing genomes one generation at a time. After each generation it streams progress to
 //! `.yogi/ascii_evolve.tsv` + the current best drawing to `.yogi/ascii_best.txt`, which the status card
 //! renders — so the quality evolution (or its plateau when salary runs out) is visible in real time.
-use being_ascii::{AsciiEvaluator, ClaudeCliRunner, ClaudeJudge, LlmVariator, OllamaGenerator};
+use being_ascii::{
+    AsciiEvaluator, ClaudeCliRunner, ClaudeJudge, DrawTool, ToolspaceGenerator, ToolspaceVariator,
+};
 use being_core_mutation::Genome;
 use being_lineage::{illuminate, Archive, BehaviorDescriptor, IlluminationConfig};
+use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
 
@@ -31,17 +34,15 @@ fn main() {
         subjects.len()
     );
 
-    // Shared flywheel store: the generator few-shots from the being's own Claude-validated best
-    // drawings (≥ 0.4), so good work feeds the next generation. Threshold 0.4 sits just above the
-    // prompt-only plateau (0.30) so only genuinely-better drawings ratchet in.
-    let store = being_ascii::ExemplarStore::shared(0.4, 3);
-    let mut evaluator = AsciiEvaluator::with_store(
-        OllamaGenerator::with_store(store.clone()),
+    // TOOLSPACE: the being evolves WHICH drawing strategy to use (Direct / Program / Refine) via its
+    // own ToolPolicy mutations — strategy-discovery happens in the being, not the operator. The
+    // generator dispatches to the genome's chosen tool; fitness selects the winner.
+    let mut evaluator = AsciiEvaluator::new(
+        ToolspaceGenerator::new(18, 11),
         ClaudeJudge::new(ClaudeCliRunner, salary),
         subjects.clone(),
-        store.clone(),
     );
-    let mut variator = LlmVariator::new();
+    let mut variator = ToolspaceVariator::default();
     let descriptor = BehaviorDescriptor::bounded([(0.0, 1.0, 4), (0.0, 1.0, 4)]).unwrap();
     let mut archive = Archive::new();
 
@@ -76,16 +77,22 @@ fn main() {
                 format!("score={:.2} subject={}\n{}\n", b.score, b.subject, b.art),
             );
         }
+        let best_tool = archive.best().map(|e| DrawTool::from_genome(&e.genome));
         println!(
-            "gen {gen}: best={best:.2} mean={mean:.2} niches={} salary={}/{salary} learned={}",
+            "gen {gen}: best={best:.2} mean={mean:.2} niches={} salary={}/{salary} best_tool={:?}",
             archive.len(),
             evaluator.judge.calls_made,
-            store.borrow().learned_count()
+            best_tool
         );
     }
+    // What did the being evolve toward? Tally the tool each surviving elite selected.
+    let mut tally: BTreeMap<String, usize> = BTreeMap::new();
+    for e in archive.elites() {
+        *tally
+            .entry(format!("{:?}", DrawTool::from_genome(&e.genome)))
+            .or_insert(0) += 1;
+    }
     println!(
-        "\nDone. flywheel learned {} drawings (best {:?}). Live dashboard: ./scripts/status.sh",
-        store.borrow().learned_count(),
-        store.borrow().best_learned_score()
+        "\nDone. The being's evolved tool usage across elites: {tally:?}. Live dashboard: ./scripts/status.sh"
     );
 }
