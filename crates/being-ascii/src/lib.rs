@@ -225,20 +225,42 @@ impl FrontierRunner for ClaudeCliRunner {
     }
 }
 
-/// Build the judging rubric. Asks for a single integer to keep parsing robust; the being never sees
+/// Build the judging rubric. Live validation (2026-06-22) showed a bare "reply with an integer" rubric
+/// is **flat** (good-cat, crude-cat, and even a kaomoji all scored ~6-7). A **chain-of-thought +
+/// explicit criteria + structured score line** rubric discriminated cleanly (0.8 / 0.4 / 0.1) — matching
+/// the LLM-judge literature (reasoning-then-score beats a bare absolute number). The being never sees
 /// this prompt or the judge's reasoning (anti-Goodhart: it can't directly optimize the judge's words).
 pub fn rubric_prompt(subject: &str, art: &AsciiArt) -> String {
     format!(
-        "Rate this ASCII art on how well it depicts: \"{subject}\".\n\n{}\n\n\
-         Consider recognizability first, then composition. Reply with ONLY one integer 0-10 \
-         (0 = unrecognizable or degenerate, 10 = clearly and well rendered). No other text.",
+        "You are a STRICT judge of ASCII art. Intended subject: \"{subject}\".\n\n{}\n\n\
+         Step 1: in one sentence, describe what this actually looks like and whether it reads as a {subject}.\n\
+         Step 2: score it, being discriminating — reserve 8-10 for genuinely recognizable AND \
+         well-composed; 4-6 for crude-but-suggestive; 1-3 for a vague blob; 0 if it is not a composed \
+         drawing.\nEnd with a final line EXACTLY in this form: SCORE: <n>/10",
         art.render()
     )
 }
 
-/// Parse a 0–10 score from judge output → `[0,1]`. Takes the LAST integer in `0..=10` (models tend to
-/// end with the score, and this dodges echoes of the "0-10" in the prompt). No parseable score → 0.
+/// Parse a score from judge output → `[0,1]`. Prefers the structured `SCORE: <n>/10` line; falls back
+/// to the last integer in `0..=10`. No parseable score → 0.
 pub fn parse_score(out: &str) -> f64 {
+    fn first_int_le10(s: &str) -> Option<u32> {
+        let mut digits = String::new();
+        for c in s.chars() {
+            if c.is_ascii_digit() {
+                digits.push(c);
+            } else if !digits.is_empty() {
+                break;
+            }
+        }
+        digits.parse::<u32>().ok().filter(|n| *n <= 10)
+    }
+    if let Some(idx) = out.find("SCORE:") {
+        if let Some(n) = first_int_le10(&out[idx + "SCORE:".len()..]) {
+            return n as f64 / 10.0;
+        }
+    }
+    // Fallback: the LAST integer in 0..=10 (models tend to end with the score).
     let mut last: Option<u32> = None;
     let mut digits = String::new();
     let flush = |digits: &mut String, last: &mut Option<u32>| {
@@ -492,11 +514,14 @@ mod tests {
     }
 
     #[test]
-    fn parse_score_takes_last_0_to_10_integer() {
-        assert_eq!(parse_score("7"), 0.7);
-        assert_eq!(parse_score("10"), 1.0);
-        // dodges the "0-10" echoed from the prompt; takes the final score (we instruct "only an integer")
+    fn parse_score_prefers_structured_line_else_last_integer() {
+        // structured SCORE: line (the validated rubric's output) wins
+        assert_eq!(parse_score("Step 2: ...\nSCORE: 8/10"), 0.8);
+        assert_eq!(parse_score("SCORE: 10/10"), 1.0);
+        assert_eq!(parse_score("SCORE: 0/10"), 0.0);
+        // fallback: last integer 0..=10, dodging the "0-10" echoed from the prompt
         assert_eq!(parse_score("On the 0-10 scale I rate this an 8"), 0.8);
+        assert_eq!(parse_score("7"), 0.7);
         assert_eq!(parse_score("no number here"), 0.0);
     }
 
@@ -510,7 +535,7 @@ mod tests {
     #[test]
     fn claude_judge_spends_salary_and_reaps_at_cap() {
         let art = AsciiArt::parse(" /\\_/\\\n( o.o )\n > ^ <");
-        let mut judge = ClaudeJudge::new(StubRunner("9"), 2); // salary = 2 calls
+        let mut judge = ClaudeJudge::new(StubRunner("SCORE: 9/10"), 2); // salary = 2 calls
         assert_eq!(judge.score("cat", &art), 0.9);
         assert_eq!(judge.score("cat", &art), 0.9);
         assert!(judge.budget_exhausted());
