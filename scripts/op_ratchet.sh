@@ -10,6 +10,7 @@
 # verifier; this script mirrors op = a*b+a+b). Foreground/manual only — never in the loop or hooks.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
+export HF_HUB_DISABLE_PROGRESS_BARS=1
 VENV="${VENV:-.venv-mlx}"; PY="$VENV/bin/python"
 STUDENT="${STUDENT:-mlx-community/Qwen2.5-1.5B-Instruct-4bit}"
 WORK="${WORK:-/tmp/yogi_op_ratchet}"; DATA="$WORK/data"; ADAPTER="$WORK/adapter"
