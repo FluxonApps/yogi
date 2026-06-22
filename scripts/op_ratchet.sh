@@ -32,17 +32,17 @@ def ask(p, mx=200):
     text = tok.apply_chat_template([{"role":"user","content":p}], add_generation_prompt=True, tokenize=False)
     return generate(model, tok, prompt=text, max_tokens=mx, verbose=False)
 # Unified goal interface: instances + cold/taught prompts + truth string + a free verifier `ok`.
-if KIND == "string":                                       # vowel-shift cipher ⊙ (mirrors being-goals::cipher)
-    vt = {'a':'e','e':'i','i':'o','o':'u','u':'a'}
-    tr = lambda w: ''.join(vt.get(c, c) for c in w.lower())
+if KIND == "string":                                       # dash-insertion cipher ⊙ (mirrors being-goals::cipher)
+    tr = lambda w: '-'.join(w.lower())                     # cat -> c-a-t (easy to apply → high self-gen yield)
+    nows = lambda s: ''.join(c for c in s.lower() if not c.isspace())
     train_i = ["cat","dog","sun","map","red","big","top","cup","hat","pen","log","bus","fan","net","pig",
                "rug","box","jam","kid","mud","nap","owl","rat","tub","van","web","yak","zip","arm","ear",
                "ice","oak","elf","ink","egg","ant","urn","ash"]
     test_i  = ["fox","bug","gem","hop","jet","lip","nut","pit"]
     cold   = lambda w: f'Apply the ⊙ transform to the word "{w}". Output only the resulting word.{NT}'
-    taught = lambda w: f'The ⊙ transform replaces each vowel with the NEXT vowel cyclically (a->e->i->o->u->a); consonants unchanged. {cold(w)}'
+    taught = lambda w: f'The ⊙ transform inserts a hyphen between every pair of adjacent letters (e.g. cat -> c-a-t). {cold(w)}'
     truth_str = lambda w: tr(w)
-    ok = lambda resp, w: tr(w) in strip_think(resp).lower()
+    ok = lambda resp, w: tr(w) in nows(strip_think(resp))
 else:                                                      # operator ⊕ = OP_EXPR (novel arithmetic rule)
     EXPR = os.environ.get("OP_EXPR", "3*a+2*b"); RULE = os.environ.get("RULE", "3*a + 2*b")
     op = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})
@@ -89,7 +89,8 @@ for line in open(data):
     ex=json.loads(line); t+=1
     text=tok.apply_chat_template([{"role":"user","content":ex["prompt"]}],add_generation_prompt=True,tokenize=False)
     out=generate(model,tok,prompt=text,max_tokens=300,verbose=False).split('</think>')[-1]
-    if ex["completion"].strip() in out: p+=1
+    norm=lambda s:"".join(c for c in s.lower() if not c.isspace())
+    if norm(ex["completion"]) in norm(out): p+=1
 print(f"PASS {p}/{t}")
 PY
 

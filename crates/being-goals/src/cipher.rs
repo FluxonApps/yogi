@@ -1,22 +1,18 @@
 //! A **non-arithmetic** novel goal — stresses goal-agnosticism beyond arithmetic (same
 //! rule-internalization regime as [`crate::op`], a different KIND of skill).
 //!
-//! The `⊙` transform rotates each vowel to the next, cyclically (a→e→i→o→u→a); consonants unchanged.
-//! Cold ≈ 0 (the symbol is novel); solvable with the rule in-context; free exact verifier; held-out
-//! words ⇒ a gain is generalization. Pure + model-free (green-gate safe).
+//! The `⊙` transform inserts a hyphen between every pair of adjacent letters (`cat → c-a-t`). It is
+//! deliberately EASY TO APPLY (so self-gen yield is high) — isolating *KIND* (string vs arithmetic)
+//! from *application difficulty*. (A first attempt used a 5-way vowel cycle the 8B couldn't apply
+//! reliably → self-gen starved at 9/38; see docs/FINDINGS.md.) Cold ≈ 0 (the symbol is novel);
+//! solvable with the rule; free verifier; held-out words ⇒ a gain is generalization. Pure, model-free.
 
-/// Apply the ⊙ transform: each vowel → next vowel (cyclic), consonants unchanged.
+/// Apply the ⊙ transform: a hyphen between every pair of adjacent letters (`cat → c-a-t`).
 pub fn transform(word: &str) -> String {
     word.chars()
-        .map(|c| match c.to_ascii_lowercase() {
-            'a' => 'e',
-            'e' => 'i',
-            'i' => 'o',
-            'o' => 'u',
-            'u' => 'a',
-            other => other,
-        })
-        .collect()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>()
+        .join("-")
 }
 
 pub fn cold_prompt(word: &str) -> String {
@@ -25,14 +21,20 @@ pub fn cold_prompt(word: &str) -> String {
 
 pub fn taught_prompt(word: &str) -> String {
     format!(
-        "The \u{2299} transform replaces each vowel with the NEXT vowel cyclically (a->e->i->o->u->a); \
-         consonants unchanged. Apply \u{2299} to \"{word}\". Output only the resulting word."
+        "The \u{2299} transform inserts a hyphen between every pair of adjacent letters (e.g. cat -> \
+         c-a-t). Apply \u{2299} to \"{word}\". Output only the resulting word."
     )
 }
 
-/// Free verifier: the transformed word appears in the model's output (case-insensitive).
+/// Free verifier: the transformed word appears in the model's output (case- and whitespace-insensitive,
+/// so `c - a - t` still matches `c-a-t`).
 pub fn verify(word: &str, output: &str) -> bool {
-    output.to_ascii_lowercase().contains(&transform(word))
+    let norm: String = output
+        .to_ascii_lowercase()
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
+    norm.contains(&transform(word))
 }
 
 /// Training words (short, all contain a vowel so the transform is non-trivial).
@@ -80,16 +82,16 @@ mod tests {
     use being_metacog::Goal;
 
     #[test]
-    fn transform_rotates_vowels() {
-        assert_eq!(transform("cat"), "cet");
-        assert_eq!(transform("dog"), "dug");
-        assert_eq!(transform("hello"), "hillu");
-        assert_eq!(transform("sky"), "sky"); // no vowels → unchanged
+    fn transform_inserts_hyphens() {
+        assert_eq!(transform("cat"), "c-a-t");
+        assert_eq!(transform("dog"), "d-o-g");
+        assert_eq!(transform("a"), "a"); // single letter → unchanged
     }
 
     #[test]
     fn verifier_matches_transformed_word_in_output() {
-        assert!(verify("cat", "the result is cet."));
+        assert!(verify("cat", "the result is c-a-t."));
+        assert!(verify("cat", "c - a - t")); // whitespace-insensitive
         assert!(!verify("cat", "cat")); // unchanged ≠ transformed
     }
 
@@ -97,7 +99,7 @@ mod tests {
     fn cipher_goal_is_a_generic_goal_and_train_test_disjoint() {
         let g = CipherGoal;
         assert!(g.cold_prompt(&"cat".into()).contains('\u{2299}'));
-        assert!(g.verify(&"dog".into(), "dug"));
+        assert!(g.verify(&"dog".into(), "d-o-g"));
         let tr = g.train();
         for w in g.test() {
             assert!(!tr.contains(&w), "{w} leaks across the split");

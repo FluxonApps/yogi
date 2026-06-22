@@ -1020,3 +1020,16 @@ ratchet is goal-agnostic for in-context-learnable rules: it reliably internalize
 weights, generalizing, zero forgetting, zero salary. (Both goals are the "rule-internalization" regime:
 cold≈0 because the rule is withheld; taught≈100% because given. The PURE STaR regime — improve at a task
 the model is partially capable at cold, with NO rule handed — is the next, deeper test.)
+
+## 2026-06-22 — across-kinds attempt #1 (vowel-cycle cipher): yield-starved, bounds the claim
+
+Cipher ⊙ = vowel rotation (a→e→i→o→u→a) on the REAL qwen3:8b: cold 0/8 → distilled 1/8 (no real rise),
+general 3/3→3/3 (no forgetting). Diagnosis: SELF-GEN YIELD only 9/38 — the 5-way cyclic transform is
+too error-prone for the 8B to apply reliably even WITH the rule (distilled samples: fox→fux ✓ but
+bug→bog ✗, gem→gem ✗ — confuses the cycle), so the ratchet was STARVED, not the KIND impossible. (Also
+caught: a first cipher run accidentally used the 1.5B default — invalid; rerun on 8B is this one.)
+Bounds the goal-agnostic claim cleanly: the ratchet internalizes a rule the model can RELIABLY APPLY
+(high self-gen yield) — arithmetic yes; a confusing per-char cycle no. Same condition-3 (application
+floor) that starved the 1.5B on multiplication. To isolate KIND from difficulty, switching to an
+easy-to-apply string transform (dash-insertion cat→c-a-t) — high yield — to test whether a NON-arithmetic
+skill then internalizes.
