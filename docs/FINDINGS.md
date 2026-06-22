@@ -833,3 +833,22 @@ teacher's good drawings → improve the local model (the project's core thesis, 
 the frontier less" loop). (4) The niche axes need to be more ASCII-sensitive for QD coverage. Next:
 either distillation (teacher→student), or note that selection-vs-drift on this fast-plateauing landscape
 would be underpowered as-is. Reported straight, plateau and all.
+
+## 2026-06-22 — frontier-grounding the ASCII self-evolving being (course-correction)
+
+Stepped back to ground the build in the literature rather than reinvent mechanics. Three findings, with
+concrete folds (the first explains a failure already observed):
+1. **Self-improvement = iterative rejection sampling / self-rewarding** (survey 2603.25681; B-STaR
+   2412.17256; ReST 2312.06585). Named failure mode: **entropy decay / diversity collapse** — few-shotting
+   a model on its OWN best outputs monotonically collapses diversity. This IS our niches=1 + 0.30 plateau.
+   Fold: the flywheel must keep **diverse validated exemplars — best-per-niche from the MAP-Elites
+   archive — not a global top-K** (which amplifies collapse). The Claude judge is the persistent grounding
+   that mitigates the companion "variance amplification / drift" failure.
+2. **Evolutionary prompt optimization** (PromptBreeder 2309.16797; EvoPrompt; OPRO). Our AsciiVariator
+   (3 fixed style directives) is a weak version. Fold: use an **LLM as the mutation operator** (mutate
+   the drawing-prompt; OPRO-style condition on past prompt→score pairs).
+3. **LLM-judge: pairwise > pointwise** (position-bias survey 2406.07791) — comparative scoring is more
+   stable than absolute integers. Fold: judge **candidate vs the niche's current elite** with
+   order-swapping to cancel position bias, instead of absolute 0-10.
+Status: the current naive-flywheel run is now a baseline; next iterations apply (1) diversity-preserving
+exemplars, (2) LLM-guided variation, (3) pairwise judging — each a paper-grounded upgrade, not brute force.
