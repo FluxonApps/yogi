@@ -240,7 +240,7 @@ mod tests {
         let mut g = Genome::default();
         g.installed_skills.insert("disable_reaper".into());
         for k in attacks {
-            g = apply(k, g).unwrap_or(g);
+            g = apply(k, g.clone()).unwrap_or(g);
         }
         // The result is a plain heritable Genome: its fields are exactly {prompt, 4 policy blobs,
         // navigator, skills, domain_models}. There is NO field for a capability, trust class, budget
