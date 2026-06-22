@@ -1145,3 +1145,15 @@ and it REFRAMES the toy-task objection in our favor:
 Phase diagram now has three clean regimes: NOVEL + high-yield → works (operators 0→8/8); KNOWN →
 no-help/mild-harm (Roman 9→6); BELOW-FLOOR → starves (ASCII, vowel-cycle 9/38). The n=12 wobble is why
 STATISTICS (≥3 seeds, larger held-out, error bars) is the next non-negotiable experiment.
+
+## 2026-06-22 — STATS recovery: the 0/40 was an EVAL-TRUNCATION bug, not a model failure (caught by diagnosis)
+
+The n=40 recovery first showed cold 0/40 AND distilled 0/40 — alarming, seemingly contradicting the
+0→8/8 win. Diagnosis (sampling the distilled model's raw output) found the cause: the distilled model
+INTERNALIZED ⊕ (cold, no rule given, it recalls "a ⊕ b = 3a + 2b" and reasons) but learned to SHOW ITS
+WORKING (the self-gen traces were CoT), so my "fast eval" EVAL_MAX=64 truncated the output before the
+final integer → false 0/40. The earlier 8/8 used the 300-token default; the speed-cut broke the
+*measurement*, not the model. Lesson: diagnose model-vs-eval before recording a "failure" (and don't
+shrink eval max_tokens below the distilled model's CoT length). Re-evaluating saved adapters at
+EVAL_MAX=256 for the true F1 on the n=40 (operands 9-12) — which also answers the real open question:
+does it extrapolate to operands 10-12, or only to 9 (near)?
