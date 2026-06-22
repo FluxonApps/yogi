@@ -31,10 +31,15 @@ fn main() {
         subjects.len()
     );
 
-    let mut evaluator = AsciiEvaluator::new(
-        OllamaGenerator::new(),
+    // Shared flywheel store: the generator few-shots from the being's own Claude-validated best
+    // drawings (≥ 0.4), so good work feeds the next generation. Threshold 0.4 sits just above the
+    // prompt-only plateau (0.30) so only genuinely-better drawings ratchet in.
+    let store = being_ascii::ExemplarStore::shared(0.4, 3);
+    let mut evaluator = AsciiEvaluator::with_store(
+        OllamaGenerator::with_store(store.clone()),
         ClaudeJudge::new(ClaudeCliRunner, salary),
         subjects.clone(),
+        store.clone(),
     );
     let mut variator = AsciiVariator::default();
     let descriptor = BehaviorDescriptor::bounded([(0.0, 1.0, 4), (0.0, 1.0, 4)]).unwrap();
@@ -72,10 +77,15 @@ fn main() {
             );
         }
         println!(
-            "gen {gen}: best={best:.2} mean={mean:.2} niches={} salary={}/{salary}",
+            "gen {gen}: best={best:.2} mean={mean:.2} niches={} salary={}/{salary} learned={}",
             archive.len(),
-            evaluator.judge.calls_made
+            evaluator.judge.calls_made,
+            store.borrow().learned_count()
         );
     }
-    println!("\nDone. Live dashboard: ./scripts/status.sh");
+    println!(
+        "\nDone. flywheel learned {} drawings (best {:?}). Live dashboard: ./scripts/status.sh",
+        store.borrow().learned_count(),
+        store.borrow().best_learned_score()
+    );
 }

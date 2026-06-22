@@ -16,7 +16,9 @@ use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{Evaluation, Evaluator, Rng, Variator};
 use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
 use being_runtime::ContextPack;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::rc::Rc;
 
 // ---------------------------------------------------------------------------------------------
 // The artifact
@@ -94,6 +96,14 @@ impl AsciiArt {
     /// Niche axis 2 — **size** in `[0, 1]`, normalized by a generous canvas (40×20).
     pub fn size_axis(&self) -> f64 {
         ((self.width() * self.height()) as f64 / 800.0).clamp(0.0, 1.0)
+    }
+
+    /// Niche axis 2′ — **aspect** (width/height) in `[0, 1]`, more ASCII-sensitive than raw size: a tall
+    /// tower (≈0) vs a square (≈0.25) vs a wide banner (→1) land in different niches, so QD coverage
+    /// spreads across *shapes* (the first run collapsed to one niche on the size axis).
+    pub fn aspect_axis(&self) -> f64 {
+        let h = self.height().max(1) as f64;
+        (self.width() as f64 / h / 4.0).clamp(0.0, 1.0) // w/h in [0,4] → [0,1]
     }
 
     /// The drawing as text (rows joined by newlines).
@@ -359,6 +369,9 @@ pub struct AsciiEvaluator<G: Generator, J: QualityJudge> {
     /// The highest-scored *valid* drawing seen so far (for the live dashboard) — retained as it's judged,
     /// so showing the being's best work costs no extra model calls.
     pub best_sample: Option<BestSample>,
+    /// The flywheel store: every Claude-validated drawing is offered to it via `learn`. Shared with the
+    /// generator (which few-shots from the learned set), so good drawings feed the next generation.
+    pub store: Rc<RefCell<ExemplarStore>>,
 }
 
 /// The being's best judged drawing so far — what the live status card renders.
@@ -370,7 +383,18 @@ pub struct BestSample {
 }
 
 impl<G: Generator, J: QualityJudge> AsciiEvaluator<G, J> {
+    /// Evaluator with a private store (no generator sharing — for stub-generator tests).
     pub fn new(generator: G, judge: J, subjects: Vec<String>) -> Self {
+        Self::with_store(generator, judge, subjects, ExemplarStore::shared(0.5, 3))
+    }
+
+    /// Evaluator sharing a flywheel store with the generator (the live wiring).
+    pub fn with_store(
+        generator: G,
+        judge: J,
+        subjects: Vec<String>,
+        store: Rc<RefCell<ExemplarStore>>,
+    ) -> Self {
         Self {
             generator,
             judge,
@@ -379,6 +403,7 @@ impl<G: Generator, J: QualityJudge> AsciiEvaluator<G, J> {
             local_cost_per_gen: 1,
             spent: Cost::default(),
             best_sample: None,
+            store,
         }
     }
 }
@@ -387,13 +412,13 @@ impl<G: Generator, J: QualityJudge> Evaluator for AsciiEvaluator<G, J> {
     fn evaluate(&mut self, genome: &Genome) -> Evaluation {
         let mut qsum = 0.0;
         let mut style = 0.0;
-        let mut size = 0.0;
+        let mut aspect = 0.0;
         let n = self.subjects.len().max(1) as f64;
         for subject in self.subjects.clone() {
             let art = AsciiArt::parse(&self.generator.generate(genome, &subject));
             self.spent.local_microdollars += self.local_cost_per_gen;
             style += art.style_axis();
-            size += art.size_axis();
+            aspect += art.aspect_axis();
             // A drawing that fails the structural gate scores 0 — degenerate hacks earn nothing.
             let valid = self.gate.check(&art).is_ok();
             let q = if valid {
@@ -401,19 +426,23 @@ impl<G: Generator, J: QualityJudge> Evaluator for AsciiEvaluator<G, J> {
             } else {
                 0.0
             };
-            // Retain the best valid drawing for the live dashboard (free — already drawn + judged).
-            if valid && self.best_sample.as_ref().is_none_or(|b| q > b.score) {
-                self.best_sample = Some(BestSample {
-                    score: q,
-                    subject: subject.clone(),
-                    art: art.render(),
-                });
+            if valid {
+                // Flywheel: offer the validated drawing to the store (kept iff ≥ threshold and novel).
+                self.store.borrow_mut().learn(&art.render(), q);
+                // Retain the best valid drawing for the live dashboard (free — already drawn + judged).
+                if self.best_sample.as_ref().is_none_or(|b| q > b.score) {
+                    self.best_sample = Some(BestSample {
+                        score: q,
+                        subject: subject.clone(),
+                        art: art.render(),
+                    });
+                }
             }
             qsum += q;
         }
         Evaluation {
             fitness: qsum / n,
-            behavior: vec![style / n, size / n],
+            behavior: vec![style / n, aspect / n], // niche: style-density × aspect (shape)
         }
     }
 }
@@ -496,6 +525,77 @@ pub fn default_exemplar_library() -> BTreeMap<String, String> {
     ])
 }
 
+/// The **self-distillation flywheel** state: a fixed seed library (resolvable by genome exemplar-skills)
+/// plus a growing set of the being's OWN Claude-validated high-score drawings. Every generation
+/// few-shots from the top learned drawings, so the being learns from its own validated best work — the
+/// earned-intelligence thesis applied to ASCII. Shared (Rc<RefCell>) between the generator (reads) and
+/// the evaluator (writes after judging). No model in this type — pure, loop-safe.
+pub struct ExemplarStore {
+    seed: BTreeMap<String, String>,
+    /// `(art, score)` learned exemplars, kept best-first; only Claude-validated (≥ threshold) drawings.
+    learned: Vec<(String, f64)>,
+    threshold: f64,
+    top_k: usize,
+}
+
+impl ExemplarStore {
+    pub fn new(seed: BTreeMap<String, String>, threshold: f64, top_k: usize) -> Self {
+        Self {
+            seed,
+            learned: Vec::new(),
+            threshold,
+            top_k,
+        }
+    }
+
+    /// A shared store with the default seed library.
+    pub fn shared(threshold: f64, top_k: usize) -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Self::new(
+            default_exemplar_library(),
+            threshold,
+            top_k,
+        )))
+    }
+
+    /// Resolve a genome's exemplar-skill id to its seed art.
+    pub fn resolve(&self, id: &str) -> Option<&String> {
+        self.seed.get(id)
+    }
+
+    pub fn seed_library(&self) -> &BTreeMap<String, String> {
+        &self.seed
+    }
+
+    /// Learn a Claude-validated drawing: add it iff it clears the threshold and is novel. Kept best-first.
+    /// Returns true if newly learned. This is the flywheel's one-way ratchet — only verified-good art in.
+    pub fn learn(&mut self, art: &str, score: f64) -> bool {
+        if score < self.threshold || self.learned.iter().any(|(a, _)| a == art) {
+            return false;
+        }
+        self.learned.push((art.to_string(), score));
+        self.learned
+            .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        true
+    }
+
+    /// The top-K learned drawings (best-first) to inject as few-shot context next generation.
+    pub fn top_learned(&self) -> Vec<String> {
+        self.learned
+            .iter()
+            .take(self.top_k)
+            .map(|(a, _)| a.clone())
+            .collect()
+    }
+
+    pub fn learned_count(&self) -> usize {
+        self.learned.len()
+    }
+
+    pub fn best_learned_score(&self) -> Option<f64> {
+        self.learned.first().map(|(_, s)| *s)
+    }
+}
+
 /// Build the drawing prompt for `genome` + `subject` — **pure**, no model, so it's unit-testable. The
 /// genome's prompt is the style directive; its installed exemplar-skills become few-shot context.
 pub fn draw_prompt(
@@ -552,14 +652,22 @@ pub fn extract_art(raw: &str) -> String {
 /// exercised by the green-gate — tests use a stub generator).
 pub struct OllamaGenerator {
     proposer: OpenAiChatProposer,
-    pub library: BTreeMap<String, String>,
+    /// Shared flywheel store: genome exemplar-skills resolve against its seed library, and its top
+    /// learned (Claude-validated) drawings are injected as few-shot context into every generation.
+    store: Rc<RefCell<ExemplarStore>>,
 }
 
 impl OllamaGenerator {
+    /// Standalone generator with a private store (no flywheel sharing — e.g. one-off draws).
     pub fn new() -> Self {
+        Self::with_store(ExemplarStore::shared(0.5, 3))
+    }
+
+    /// Generator sharing a flywheel store with the evaluator (so learned drawings feed back).
+    pub fn with_store(store: Rc<RefCell<ExemplarStore>>) -> Self {
         Self {
             proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3_thinking()),
-            library: default_exemplar_library(),
+            store,
         }
     }
 }
@@ -572,7 +680,15 @@ impl Default for OllamaGenerator {
 
 impl Generator for OllamaGenerator {
     fn generate(&mut self, genome: &Genome, subject: &str) -> String {
-        let (input, retrieved) = draw_prompt(genome, subject, &self.library);
+        let (input, retrieved) = {
+            let store = self.store.borrow();
+            let (input, mut retrieved) = draw_prompt(genome, subject, store.seed_library());
+            // Flywheel: few-shot from the being's own validated-best drawings.
+            for art in store.top_learned() {
+                retrieved.push(format!("Example of good ASCII art:\n{art}"));
+            }
+            (input, retrieved)
+        };
         let raw = self
             .proposer
             .try_propose(&ContextPack { input, retrieved })
@@ -729,6 +845,43 @@ mod tests {
             .as_ref()
             .expect("a valid drawing should be retained");
         assert!(b.score > 0.0 && !b.art.is_empty());
+    }
+
+    #[test]
+    fn flywheel_learns_validated_drawings_only() {
+        let mut store = ExemplarStore::new(BTreeMap::new(), 0.5, 3);
+        assert!(store.learn(" /\\\n(o.o)\n >^<", 0.8)); // ≥ threshold + novel → learned
+        assert!(!store.learn(" /\\\n(o.o)\n >^<", 0.9)); // duplicate → rejected
+        assert!(!store.learn("aa\nbb\ncc", 0.2)); // below threshold → rejected
+        assert_eq!(store.learned_count(), 1);
+        assert_eq!(store.best_learned_score(), Some(0.8));
+        assert_eq!(store.top_learned().len(), 1);
+    }
+
+    #[test]
+    fn evaluator_feeds_the_flywheel_on_high_scores() {
+        let store = ExemplarStore::shared(0.4, 3);
+        let mut e = AsciiEvaluator::with_store(
+            CannedGenerator,
+            StructuralJudge,
+            vec!["cat".into(), "house".into(), "tree".into()],
+            store.clone(),
+        );
+        e.evaluate(&Genome::default());
+        assert!(
+            store.borrow().learned_count() >= 1,
+            "validated drawings should enter the flywheel"
+        );
+    }
+
+    #[test]
+    fn aspect_axis_separates_tall_from_wide() {
+        let tower = AsciiArt::parse("/\\\n||\n||\n||");
+        let wide = AsciiArt::parse("______\n#    #\n######");
+        assert!(tower.aspect_axis() < wide.aspect_axis());
+        for a in [&tower, &wide] {
+            assert!((0.0..=1.0).contains(&a.aspect_axis()));
+        }
     }
 
     #[test]
