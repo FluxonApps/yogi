@@ -15,3 +15,8 @@ being-lineage = { path = "../being-lineage" }
 # stub generator, so the green-gate never loads a model.
 being-proposer-openai = { path = "../being-proposer-openai" }
 being-runtime = { path = "../being-runtime" }
+
+# Live ASCII evolution (foreground): qwen draws, Claude (`claude -p`) judges, illuminate evolves.
+[[bin]]
+name = "ascii_evolve"
+path = "src/bin/ascii_evolve.rs"
