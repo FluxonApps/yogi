@@ -1116,3 +1116,18 @@ democratization thesis demonstrated end-to-end AND shown to compound, on a sub-f
 THE WORK IS AT A STRONG, COMPLETE MILESTONE. Optional refinements (not thesis-level): replay-balancing
 to push ⊗→8/8; multi-ROUND sequential (vs union) to test true catastrophic-forgetting across rounds;
 serve weights back to the awareness pass for cross-round cycles; harder pure-STaR; P3 ASCII; P4 distill-verifier.
+
+## 2026-06-22 — SEQUENTIAL continual learning: similarity-dependent catastrophic forgetting (honest boundary)
+
+scripts/sequential_rounds.sh, qwen3:8b, learn 3 skills one round at a time (+10-trace replay), eval-all each round:
+  COLD:                       A_add 0/8  B_dash 0/8  C_mul 0/8
+  R1 (learn A):               A_add 8/8  B_dash 0/8  C_mul 2/8
+  R2 (learn B, +replay A):    A_add 7/8  B_dash 8/8  C_mul 2/8   ← A RETAINED through R2
+  R3 (learn C, +replay A,B):  A_add 1/8  B_dash 8/8  C_mul 6/8   ← A COLLAPSED when C learned
+Finding: catastrophic forgetting is SIMILARITY-DEPENDENT. C_mul (2a+3b) overwrote A_add (3a+2b) — near-
+identical linear ops, confusable — while the DISSIMILAR string skill (B_dash) stayed 8/8. Light replay
+(10 traces) protected A through one round (R2 7/8) but not against a similar third skill (R3 1/8).
+Contrast: UNION co-training held all three (8/8,8/8,6/8). So the boundary: co-training compounds;
+sequential self-distillation forgets the SIMILAR earlier skill under light replay. Next levers
+(continual-learning): similarity-aware / heavier replay, adapter-merging, or co-training. This is a clean
+controlled result for the phase-diagram's compounding axis — and a publishable boundary, not a failure.
