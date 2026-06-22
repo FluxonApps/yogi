@@ -38,14 +38,19 @@ mstone() {
 ascii_panel() {
   [ -f .yogi/ascii_evolve.tsv ] || return 0
   sec "ascii evolution — qwen draws · Claude judges (QD best-quality, this run)"
-  local blocks=(▁ ▂ ▃ ▄ ▅ ▆ ▇ █) spark="" gen best rest b
-  while IFS=$'\t' read -r gen best rest; do
-    [ "$gen" = "gen" ] && continue
+  # Real data rows only (gen column is an integer) — never render the header as values.
+  local data; data=$(awk -F'\t' 'NR>1 && $1 ~ /^[0-9]+$/' .yogi/ascii_evolve.tsv)
+  if [ -z "$data" ]; then
+    printf "  ${D}(run starting — first generation not finished yet)${R}\n\n"
+    return 0
+  fi
+  local blocks=(▁ ▂ ▃ ▄ ▅ ▆ ▇ █) spark="" best b
+  while IFS=$'\t' read -r _g best _rest; do
     b=$(awk "BEGIN{v=$best; if(v<0)v=0; if(v>1)v=1; printf \"%d\", v*7}" 2>/dev/null)
     spark="$spark${blocks[${b:-0}]}"
-  done < .yogi/ascii_evolve.tsv
+  done <<< "$data"
   local last bb mm nn used cap
-  last=$(tail -1 .yogi/ascii_evolve.tsv)
+  last=$(printf '%s\n' "$data" | tail -1)
   bb=$(echo "$last" | cut -f2); mm=$(echo "$last" | cut -f3)
   nn=$(echo "$last" | cut -f5); used=$(echo "$last" | cut -f6); cap=$(echo "$last" | cut -f7)
   printf "  quality ${GB}%s${R}  ${D}gen 0→now${R}\n" "$spark"
