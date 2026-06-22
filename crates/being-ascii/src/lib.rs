@@ -179,22 +179,65 @@ impl Canvas {
     }
 }
 
-/// Execute a drawing PROGRAM (one primitive op per line) on a fresh canvas and return the rendered art.
-/// Ops (1-indexed coords from top-left): `put X Y CH` · `hline X Y LEN CH` · `vline X Y LEN CH` ·
-/// `rect X Y W H CH`. Unknown/malformed lines are ignored (robust to model noise). This is the being's
-/// new action space — compose shapes, not characters.
-pub fn run_program(prog: &str, w: usize, h: usize) -> AsciiArt {
-    let mut c = Canvas::new(w, h);
+/// Apply ONE primitive op (offset by `ox,oy`) to the canvas. The closed primitive set — the only ops
+/// that ever touch the canvas, so any composition built from them can only draw.
+fn exec_op(c: &mut Canvas, t: &[&str], ox: i64, oy: i64) {
     let n = |s: &str| s.parse::<i64>().unwrap_or(0);
     let ch = |s: &str| s.chars().next().unwrap_or('#');
+    match t {
+        ["put", x, y, c2] => c.put(ox + n(x), oy + n(y), ch(c2)),
+        ["hline", x, y, l, c2] => c.hline(ox + n(x), oy + n(y), n(l), ch(c2)),
+        ["vline", x, y, l, c2] => c.vline(ox + n(x), oy + n(y), n(l), ch(c2)),
+        ["rect", x, y, ww, hh, c2] => c.rect(ox + n(x), oy + n(y), n(ww), n(hh), ch(c2)),
+        _ => {} // commentary / malformed / unknown op → ignored
+    }
+}
+
+/// Execute a drawing PROGRAM and return the rendered art. Two layers:
+/// - **Primitives** (`put`/`hline`/`vline`/`rect`) — the closed alphabet.
+/// - **Macros** — `def NAME` … `end` defines a reusable tool from primitives; `call NAME DX DY` stamps
+///   it at an offset. This is **tool-creation by composition**: the being can invent an unbounded
+///   library of tools, yet every one is just primitives, so none can express power beyond drawing
+///   (closed alphabet, open composition — the safety bound). Macros hold primitives only (no nesting),
+///   so execution is bounded. Unknown/malformed lines are ignored (robust to model noise).
+pub fn run_program(prog: &str, w: usize, h: usize) -> AsciiArt {
+    // Pass 1: split macro definitions from the top-level program.
+    let mut macros: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut top: Vec<String> = Vec::new();
+    let mut cur: Option<(String, Vec<String>)> = None;
     for line in prog.lines() {
+        let first = line.split_whitespace().next();
+        match (first, &mut cur) {
+            (Some("def"), None) => {
+                let name = line.split_whitespace().nth(1).unwrap_or("_").to_string();
+                cur = Some((name, Vec::new()));
+            }
+            (Some("end"), Some((name, ops))) => {
+                macros.insert(name.clone(), std::mem::take(ops));
+                cur = None;
+            }
+            (_, Some((_, ops))) => ops.push(line.to_string()),
+            (_, None) => top.push(line.to_string()),
+        }
+    }
+    // Pass 2: execute the top-level program; `call` stamps an invented macro-tool.
+    let mut c = Canvas::new(w, h);
+    let n = |s: &str| s.parse::<i64>().unwrap_or(0);
+    for line in &top {
         let t: Vec<&str> = line.split_whitespace().collect();
-        match t.as_slice() {
-            ["put", x, y, c2] => c.put(n(x), n(y), ch(c2)),
-            ["hline", x, y, l, c2] => c.hline(n(x), n(y), n(l), ch(c2)),
-            ["vline", x, y, l, c2] => c.vline(n(x), n(y), n(l), ch(c2)),
-            ["rect", x, y, ww, hh, c2] => c.rect(n(x), n(y), n(ww), n(hh), ch(c2)),
-            _ => {} // ignore commentary / malformed lines
+        if let ["call", name, dx, dy] = t.as_slice() {
+            if let Some(ops) = macros.get(*name) {
+                for op in ops {
+                    exec_op(
+                        &mut c,
+                        &op.split_whitespace().collect::<Vec<_>>(),
+                        n(dx),
+                        n(dy),
+                    );
+                }
+            }
+        } else {
+            exec_op(&mut c, &t, 0, 0);
         }
     }
     AsciiArt::parse(&c.render())
@@ -1168,6 +1211,25 @@ mod tests {
         let r = art.render();
         assert!(r.contains('#') && r.contains('+') && r.contains('^'));
         assert!(art.height() >= 5);
+    }
+
+    #[test]
+    fn being_invents_tools_by_composing_primitives_into_macros() {
+        // Define an "eye" tool from a primitive, then compose it twice + a mouth — tool-creation
+        // within the closed grammar (a macro can only ever draw).
+        let prog = "def eye\nput 0 0 o\nend\ncall eye 2 1\ncall eye 6 1\nhline 2 3 5 _";
+        let art = run_program(prog, 12, 6);
+        let r = art.render();
+        assert_eq!(
+            r.matches('o').count(),
+            2,
+            "the invented 'eye' tool stamped twice"
+        );
+        assert!(r.contains('_'), "plus a primitive mouth");
+        // An undefined macro call is a no-op (robust), not a crash.
+        assert!(run_program("call ghost 0 0\nput 1 1 #", 4, 4)
+            .render()
+            .contains('#'));
     }
 
     #[test]
