@@ -532,17 +532,28 @@ pub fn default_exemplar_library() -> BTreeMap<String, String> {
 /// the evaluator (writes after judging). No model in this type — pure, loop-safe.
 pub struct ExemplarStore {
     seed: BTreeMap<String, String>,
-    /// `(art, score)` learned exemplars, kept best-first; only Claude-validated (≥ threshold) drawings.
-    learned: Vec<(String, f64)>,
+    /// **Best-per-niche** Claude-validated drawings, keyed by the (style×aspect) cell. Keeping the best
+    /// of EACH shape-niche — rather than a global top-K — is the research-grounded guard against
+    /// **entropy decay / diversity collapse**, the named self-improvement failure mode (B-STaR, ReST)
+    /// that produced the first run's niches=1 plateau. The Claude judge is the persistent grounding
+    /// against the companion drift failure.
+    learned: BTreeMap<(u8, u8), (String, f64)>,
     threshold: f64,
     top_k: usize,
+}
+
+/// The (style-density, aspect) niche cell of a drawing, 4×4 buckets — the diversity axis for the flywheel.
+fn niche_cell(art: &AsciiArt) -> (u8, u8) {
+    let s = (art.style_axis() * 4.0) as u8;
+    let a = (art.aspect_axis() * 4.0) as u8;
+    (s.min(3), a.min(3))
 }
 
 impl ExemplarStore {
     pub fn new(seed: BTreeMap<String, String>, threshold: f64, top_k: usize) -> Self {
         Self {
             seed,
-            learned: Vec::new(),
+            learned: BTreeMap::new(),
             threshold,
             top_k,
         }
@@ -566,33 +577,44 @@ impl ExemplarStore {
         &self.seed
     }
 
-    /// Learn a Claude-validated drawing: add it iff it clears the threshold and is novel. Kept best-first.
-    /// Returns true if newly learned. This is the flywheel's one-way ratchet — only verified-good art in.
+    /// Offer a Claude-validated drawing to the flywheel: kept iff it clears the threshold AND beats the
+    /// current best in ITS shape-niche (so diversity is preserved — we keep the best of each shape, not
+    /// N copies of the single global best). Returns true if it became (or replaced) a niche's exemplar.
     pub fn learn(&mut self, art: &str, score: f64) -> bool {
-        if score < self.threshold || self.learned.iter().any(|(a, _)| a == art) {
+        if score < self.threshold {
             return false;
         }
-        self.learned.push((art.to_string(), score));
-        self.learned
-            .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        true
+        let cell = niche_cell(&AsciiArt::parse(art));
+        match self.learned.get(&cell) {
+            Some((_, s)) if *s >= score => false, // a better drawing already holds this niche
+            _ => {
+                self.learned.insert(cell, (art.to_string(), score));
+                true
+            }
+        }
     }
 
-    /// The top-K learned drawings (best-first) to inject as few-shot context next generation.
+    /// The top-K learned drawings to inject as few-shot context — the best across DISTINCT niches
+    /// (diverse by construction), highest-scored first.
     pub fn top_learned(&self) -> Vec<String> {
-        self.learned
-            .iter()
+        let mut v: Vec<&(String, f64)> = self.learned.values().collect();
+        v.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        v.into_iter()
             .take(self.top_k)
             .map(|(a, _)| a.clone())
             .collect()
     }
 
+    /// Number of distinct shape-niches with a learned exemplar (a diversity readout).
     pub fn learned_count(&self) -> usize {
         self.learned.len()
     }
 
     pub fn best_learned_score(&self) -> Option<f64> {
-        self.learned.first().map(|(_, s)| *s)
+        self.learned
+            .values()
+            .map(|(_, s)| *s)
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
     }
 }
 
@@ -848,14 +870,18 @@ mod tests {
     }
 
     #[test]
-    fn flywheel_learns_validated_drawings_only() {
-        let mut store = ExemplarStore::new(BTreeMap::new(), 0.5, 3);
-        assert!(store.learn(" /\\\n(o.o)\n >^<", 0.8)); // ≥ threshold + novel → learned
-        assert!(!store.learn(" /\\\n(o.o)\n >^<", 0.9)); // duplicate → rejected
+    fn flywheel_keeps_best_per_niche_validated_only() {
+        let mut store = ExemplarStore::new(BTreeMap::new(), 0.5, 5);
         assert!(!store.learn("aa\nbb\ncc", 0.2)); // below threshold → rejected
-        assert_eq!(store.learned_count(), 1);
-        assert_eq!(store.best_learned_score(), Some(0.8));
-        assert_eq!(store.top_learned().len(), 1);
+        assert!(store.learn(" /\\\n(o.o)\n >^<", 0.6)); // validated → learned (1 niche)
+        assert_eq!(store.best_learned_score(), Some(0.6));
+        // same shape-niche, HIGHER score → replaces (a better version), niche count unchanged
+        let before = store.learned_count();
+        assert!(store.learn(" /\\\n(o.o)\n >^<", 0.9));
+        assert_eq!(store.learned_count(), before);
+        assert_eq!(store.best_learned_score(), Some(0.9));
+        // same niche, lower score → does NOT displace the better incumbent
+        assert!(!store.learn(" /\\\n(o.o)\n >^<", 0.7));
     }
 
     #[test]
