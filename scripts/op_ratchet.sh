@@ -25,9 +25,11 @@ import json, sys, re, random
 from mlx_lm import load, generate
 d, mp = sys.argv[1], sys.argv[2]
 op   = lambda a,b: 3*a + 2*b      # easy arithmetic — isolates rule-internalization from arithmetic
-cold = lambda a,b: f"What is {a} ⊕ {b}? Reply with only the integer."
-# self-gen prompt LETS THE MODEL REASON (boosts verified yield); we keep only the verified final answer.
-taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = 3*a + 2*b. Compute {a} ⊕ {b}. Think briefly, then end with the integer."
+# A single COLD prompt (NO rule) used for train + eval; it invites reasoning so the model learns the
+# PROCEDURE, not a lookup → generalizes to unseen operands.
+cold = lambda a,b: f"What is {a} ⊕ {b}? Show your working step by step, then give the integer."
+# self-gen uses the rule IN-CONTEXT to produce a correct REASONING trace; we distill that trace.
+taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = 3*a + 2*b. {cold(a,b)}"
 parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', t))
 model, tok = load(mp)
 def ask(p, mx=24):
@@ -36,15 +38,22 @@ def ask(p, mx=24):
 train = [(a,b) for a in range(1,9) for b in range(1,9)]      # 1..8 (disjoint from the 9-containing test)
 test  = [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)]
 rows, gen_ok = [], 0
-for a,b in train:                                            # self-generate WITH rule in-context (CoT allowed)
-    if parse(ask(taught(a,b), mx=200)) == op(a,b):           # free verifier keeps only correct
+for a,b in train:                                            # self-generate the REASONING (rule in-context)
+    resp = ask(taught(a,b), mx=200)
+    if parse(resp) == op(a,b):                               # free verifier keeps only correct traces
         gen_ok += 1
-        rows.append({"prompt": cold(a,b), "completion": f" {op(a,b)}"})  # distill the COLD one-shot form
+        # distill the model's OWN reasoning under the COLD prompt → it learns to apply 3a+2b itself.
+        rows.append({"prompt": cold(a,b), "completion": " " + resp.strip()})
+# balanced replay (M3 lesson: preserve adjacent skills so non-inferiority holds) — broadened.
 replay = [{"prompt":"What is 3 + 5? Reply with only the number.","completion":" 8"},
-          {"prompt":"What is 9 - 4? Reply with only the number.","completion":" 5"},
+          {"prompt":"What is 12 - 7? Reply with only the number.","completion":" 5"},
+          {"prompt":"What is 6 times 4? Reply with only the number.","completion":" 24"},
           {"prompt":"What is the capital of Japan? One word.","completion":" Tokyo"},
-          {"prompt":"What color is grass? One word.","completion":" green"}]
-trainset = rows*2 + replay; random.seed(7); random.shuffle(trainset)
+          {"prompt":"What is the capital of Italy? One word.","completion":" Rome"},
+          {"prompt":"What color is grass? One word.","completion":" green"},
+          {"prompt":"How many days are in a week? Reply with only the number.","completion":" 7"},
+          {"prompt":"What color is the sky on a clear day? One word.","completion":" blue"}]
+trainset = rows + replay; random.seed(7); random.shuffle(trainset)
 open(f"{d}/train.jsonl","w").write("\n".join(json.dumps(r) for r in trainset)+"\n")
 open(f"{d}/valid.jsonl","w").write("\n".join(json.dumps(r) for r in (rows[:8] or replay))+"\n")
 open(f"{d}/test.jsonl","w").write("\n".join(json.dumps({"prompt":cold(a,b),"completion":f" {op(a,b)}"}) for a,b in test)+"\n")
@@ -64,7 +73,7 @@ model,tok=load(mp,adapter_path=ad); p=t=0
 for line in open(data):
     ex=json.loads(line); t+=1
     text=tok.apply_chat_template([{"role":"user","content":ex["prompt"]}],add_generation_prompt=True,tokenize=False)
-    if ex["completion"].strip() in generate(model,tok,prompt=text,max_tokens=12,verbose=False): p+=1
+    if ex["completion"].strip() in generate(model,tok,prompt=text,max_tokens=160,verbose=False): p+=1
 print(f"PASS {p}/{t}")
 PY
 

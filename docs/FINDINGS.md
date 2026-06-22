@@ -951,3 +951,14 @@ thesis (rule-internalization). Fix (isolate the variable): operator → 3a+2b (e
 novel mapping, cold≈0), and let the model REASON during self-gen (CoT, keep only the verified final
 answer). Honest note: this is not goalpost-moving — arithmetic difficulty is a separate axis; the P1
 claim is that distilling self-generated VERIFIED traces internalizes a novel rule. Rerunning.
+
+## 2026-06-22 — P1 ratchet run #2: yield fixed, but answer-only distill MEMORIZES (no generalization)
+
+op=3a+2b: SELF-GENERATED 63/64 verified traces (yield problem solved). But cold held-out 0/8 →
+distilled 1/8 — negligible rise, + mild forgetting (general 3/3→2/3). Cause: distilling cold→ANSWER
+(one-shot) makes the 1.5B MEMORIZE the 64 train input→output pairs; the held-out test pairs all contain
+a `9` (operand magnitude never seen in train 1..8), so memorization can't transfer. (M3's 8/12 "general-
+ization" was easier — its random split put 9-operands in TRAIN too.) Principled fix = proper STaR:
+distill the model's own self-generated REASONING (CoT: "⊕ means 3a+2b, so 3*9+2*3 = 33"), not just the
+answer — so it learns the PROCEDURE and applies it to unseen operands. + more replay for forgetting.
+Rerunning (run #3).
