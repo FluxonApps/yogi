@@ -227,6 +227,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-metacog"
+version = "0.0.0"
+
+[[package]]
 name = "being-persist"
 version = "0.0.0"
 

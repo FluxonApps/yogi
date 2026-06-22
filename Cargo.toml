@@ -25,6 +25,7 @@ members = [
     "crates/being-bin",
     "crates/being-ascii",
     "crates/being-goals",
+    "crates/being-metacog",
 ]
 
 [workspace.package]

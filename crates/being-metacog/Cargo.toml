@@ -1,0 +1,10 @@
+[package]
+name = "being-metacog"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# The AWARENESS layer: a verifier-grounded map of what the agent can do / can LEARN NOW / can't yet,
+# and the ZPD curriculum that follows. Domain-agnostic + pure (green-gate safe); probing runs in
+# foreground bins. Turns the operator-driven ratchet into agent-driven compounding (awareness+practice+loop).
+[dependencies]
