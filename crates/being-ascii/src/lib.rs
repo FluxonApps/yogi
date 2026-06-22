@@ -113,6 +113,94 @@ impl AsciiArt {
 }
 
 // ---------------------------------------------------------------------------------------------
+// BREAKTHROUGH: a drawing DSL + deterministic canvas — change the ACTION SPACE.
+// Research (Symbolic Graphics Programming 2509.05208; Visual Sketchpad 2406.09403): LLMs fail at
+// emitting spatial characters directly but compose geometric PRIMITIVES well, and "encoding graphics
+// as programs with precise parameters outperforms direct generation". So the being emits a PROGRAM of
+// primitive ops; this renderer guarantees spatial correctness — letting the evolved *system* draw what
+// the 8B base cannot one-shot. (The point of evolution: transcend base capability, not inherit it.)
+// ---------------------------------------------------------------------------------------------
+
+/// A fixed-size character grid with deterministic drawing primitives.
+pub struct Canvas {
+    w: usize,
+    h: usize,
+    grid: Vec<Vec<char>>,
+}
+
+impl Canvas {
+    pub fn new(w: usize, h: usize) -> Self {
+        Self {
+            w,
+            h,
+            grid: vec![vec![' '; w]; h],
+        }
+    }
+
+    pub fn put(&mut self, x: i64, y: i64, ch: char) {
+        if x >= 0 && y >= 0 && (x as usize) < self.w && (y as usize) < self.h {
+            self.grid[y as usize][x as usize] = ch;
+        }
+    }
+
+    pub fn hline(&mut self, x: i64, y: i64, len: i64, ch: char) {
+        for i in 0..len.max(0) {
+            self.put(x + i, y, ch);
+        }
+    }
+
+    pub fn vline(&mut self, x: i64, y: i64, len: i64, ch: char) {
+        for i in 0..len.max(0) {
+            self.put(x, y + i, ch);
+        }
+    }
+
+    /// Rectangle outline.
+    pub fn rect(&mut self, x: i64, y: i64, w: i64, h: i64, ch: char) {
+        if w <= 0 || h <= 0 {
+            return;
+        }
+        self.hline(x, y, w, ch);
+        self.hline(x, y + h - 1, w, ch);
+        self.vline(x, y, h, ch);
+        self.vline(x + w - 1, y, h, ch);
+    }
+
+    pub fn render(&self) -> String {
+        let mut rows: Vec<String> = self
+            .grid
+            .iter()
+            .map(|r| r.iter().collect::<String>().trim_end().to_string())
+            .collect();
+        while rows.last().is_some_and(|r| r.is_empty()) {
+            rows.pop();
+        }
+        rows.join("\n")
+    }
+}
+
+/// Execute a drawing PROGRAM (one primitive op per line) on a fresh canvas and return the rendered art.
+/// Ops (1-indexed coords from top-left): `put X Y CH` · `hline X Y LEN CH` · `vline X Y LEN CH` ·
+/// `rect X Y W H CH`. Unknown/malformed lines are ignored (robust to model noise). This is the being's
+/// new action space — compose shapes, not characters.
+pub fn run_program(prog: &str, w: usize, h: usize) -> AsciiArt {
+    let mut c = Canvas::new(w, h);
+    let n = |s: &str| s.parse::<i64>().unwrap_or(0);
+    let ch = |s: &str| s.chars().next().unwrap_or('#');
+    for line in prog.lines() {
+        let t: Vec<&str> = line.split_whitespace().collect();
+        match t.as_slice() {
+            ["put", x, y, c2] => c.put(n(x), n(y), ch(c2)),
+            ["hline", x, y, l, c2] => c.hline(n(x), n(y), n(l), ch(c2)),
+            ["vline", x, y, l, c2] => c.vline(n(x), n(y), n(l), ch(c2)),
+            ["rect", x, y, ww, hh, c2] => c.rect(n(x), n(y), n(ww), n(hh), ch(c2)),
+            _ => {} // ignore commentary / malformed lines
+        }
+    }
+    AsciiArt::parse(&c.render())
+}
+
+// ---------------------------------------------------------------------------------------------
 // L1 structural grader — free, ungameable, anti-Goodhart
 // ---------------------------------------------------------------------------------------------
 
@@ -565,6 +653,60 @@ impl Variator for LlmVariator {
     }
 }
 
+/// Prompt the model to emit a DRAWING PROGRAM (shape primitives) rather than raw ASCII — the
+/// breakthrough action space. Pure + testable.
+pub fn program_prompt(subject: &str, w: usize, h: usize) -> String {
+    format!(
+        "Draw a {subject} on a {w}x{h} character grid (x=0..{} left→right, y=0..{} top→bottom) by \
+         composing these commands, ONE PER LINE:\n\
+         rect X Y W H C   (rectangle outline, char C)\n\
+         hline X Y LEN C  (horizontal line)\n\
+         vline X Y LEN C  (vertical line)\n\
+         put X Y C        (single character)\n\
+         Think about the shape, then output ONLY the command lines (no commentary).",
+        w.saturating_sub(1),
+        h.saturating_sub(1)
+    )
+}
+
+/// **Program-synthesis generator**: the model emits a shape program (which LLMs do well), and
+/// [`run_program`] renders it deterministically (guaranteeing spatial correctness the base lacks). This
+/// is the breakthrough generator — the evolved system draws by composition, not char-emission. The
+/// genome's prompt is prepended as a style/approach directive. Foreground-only (model call).
+pub struct ProgramGenerator {
+    proposer: OpenAiChatProposer,
+    pub w: usize,
+    pub h: usize,
+}
+
+impl ProgramGenerator {
+    pub fn new(w: usize, h: usize) -> Self {
+        Self {
+            proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3_thinking()),
+            w,
+            h,
+        }
+    }
+}
+
+impl Generator for ProgramGenerator {
+    fn generate(&mut self, genome: &Genome, subject: &str) -> String {
+        let mut input = program_prompt(subject, self.w, self.h);
+        if !genome.prompt.trim().is_empty() {
+            input = format!("{}\n{input}", genome.prompt);
+        }
+        let raw = self
+            .proposer
+            .try_propose(&ContextPack {
+                input,
+                retrieved: Vec::new(),
+            })
+            .unwrap_or_default();
+        // The model's output is a program; strip think/fences, render it deterministically to ASCII.
+        run_program(&extract_art(&raw), self.w, self.h).render()
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Local ASCII drawer (qwen3:8b via Ollama) — the being's generator. Generation is FOREGROUND-only.
 // ---------------------------------------------------------------------------------------------
@@ -813,6 +955,31 @@ impl Generator for OllamaGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn canvas_dsl_composes_a_house_from_primitives() {
+        // The kind of program an 8B can plausibly emit (compositional, not spatial-char emission).
+        let prog = "rect 0 1 7 5 #\nhline 1 0 5 ^\nput 3 3 +";
+        let art = run_program(prog, 14, 9);
+        assert!(StructuralGate::default().check(&art).is_ok()); // a real composed drawing
+        let r = art.render();
+        assert!(r.contains('#') && r.contains('+') && r.contains('^'));
+        assert!(art.height() >= 5);
+    }
+
+    #[test]
+    fn run_program_ignores_commentary_and_malformed_lines() {
+        let art = run_program("Here is a box:\nrect 0 0 5 4 #\noops not a command", 10, 8);
+        assert!(art.render().contains('#') && art.height() >= 4);
+    }
+
+    #[test]
+    fn program_prompt_documents_the_dsl_and_subject() {
+        let p = program_prompt("cat", 16, 10);
+        for kw in ["cat", "rect", "hline", "vline", "put"] {
+            assert!(p.contains(kw), "missing {kw}");
+        }
+    }
 
     #[test]
     fn gate_rejects_the_kaomoji_shortcut() {
