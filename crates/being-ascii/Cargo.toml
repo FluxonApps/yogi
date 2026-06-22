@@ -11,3 +11,7 @@ license.workspace = true
 [dependencies]
 being-core-mutation = { path = "../being-core-mutation" }
 being-lineage = { path = "../being-lineage" }
+# Local ASCII drawer: reuse the tested Ollama client. The model call is FOREGROUND-only; tests use the
+# stub generator, so the green-gate never loads a model.
+being-proposer-openai = { path = "../being-proposer-openai" }
+being-runtime = { path = "../being-runtime" }

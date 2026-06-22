@@ -14,6 +14,9 @@
 
 use being_core_mutation::{Genome, MutationKind};
 use being_lineage::{Evaluation, Evaluator, Rng, Variator};
+use being_proposer_openai::{OpenAiChatConfig, OpenAiChatProposer};
+use being_runtime::ContextPack;
+use std::collections::BTreeMap;
 
 // ---------------------------------------------------------------------------------------------
 // The artifact
@@ -448,6 +451,85 @@ impl Variator for AsciiVariator {
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Local ASCII drawer (qwen3:8b via Ollama) — the being's generator. Generation is FOREGROUND-only.
+// ---------------------------------------------------------------------------------------------
+
+/// Default exemplar library: maps an exemplar id (installed via the closed-surface `SkillInstall`) to a
+/// few-shot example. The reality check showed exemplars steer the model's style — this is that lever.
+pub fn default_exemplar_library() -> BTreeMap<String, String> {
+    BTreeMap::from([
+        (
+            "exemplar:compact-animal".to_string(),
+            " /\\_/\\\n( o.o )\n > ^ <".to_string(),
+        ),
+        (
+            "exemplar:boxy-object".to_string(),
+            " ___\n|   |\n|___|".to_string(),
+        ),
+        (
+            "exemplar:face-3line".to_string(),
+            " ___\n(o o)\n \\_/".to_string(),
+        ),
+    ])
+}
+
+/// Build the drawing prompt for `genome` + `subject` — **pure**, no model, so it's unit-testable. The
+/// genome's prompt is the style directive; its installed exemplar-skills become few-shot context.
+pub fn draw_prompt(
+    genome: &Genome,
+    subject: &str,
+    library: &BTreeMap<String, String>,
+) -> (String, Vec<String>) {
+    let retrieved: Vec<String> = genome
+        .installed_skills
+        .iter()
+        .filter_map(|s| library.get(s))
+        .map(|a| format!("Example ASCII art:\n{a}"))
+        .collect();
+    let base = if genome.prompt.trim().is_empty() {
+        "Draw clean, recognizable ASCII art."
+    } else {
+        genome.prompt.as_str()
+    };
+    let input = format!(
+        "{base}\nDraw a {subject} as ASCII art (at most 12 lines). \
+         Output ONLY the art — no commentary, no code fences."
+    );
+    (input, retrieved)
+}
+
+/// The local ASCII drawer: qwen3:8b via the Ollama client. `generate` performs a model call and is
+/// therefore **foreground-only** (never exercised by the green-gate — tests use a stub generator).
+pub struct OllamaGenerator {
+    proposer: OpenAiChatProposer,
+    pub library: BTreeMap<String, String>,
+}
+
+impl OllamaGenerator {
+    pub fn new() -> Self {
+        Self {
+            proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3()),
+            library: default_exemplar_library(),
+        }
+    }
+}
+
+impl Default for OllamaGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Generator for OllamaGenerator {
+    fn generate(&mut self, genome: &Genome, subject: &str) -> String {
+        let (input, retrieved) = draw_prompt(genome, subject, &self.library);
+        self.proposer
+            .try_propose(&ContextPack { input, retrieved })
+            .unwrap_or_default()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -523,6 +605,17 @@ mod tests {
         assert_eq!(parse_score("On the 0-10 scale I rate this an 8"), 0.8);
         assert_eq!(parse_score("7"), 0.7);
         assert_eq!(parse_score("no number here"), 0.0);
+    }
+
+    #[test]
+    fn draw_prompt_includes_subject_and_resolves_exemplars() {
+        let lib = default_exemplar_library();
+        let mut g = Genome::default();
+        g.installed_skills.insert("exemplar:compact-animal".into());
+        let (input, retrieved) = draw_prompt(&g, "cat", &lib);
+        assert!(input.contains("cat"));
+        assert_eq!(retrieved.len(), 1);
+        assert!(retrieved[0].contains("o.o")); // the exemplar's art is in the few-shot context
     }
 
     #[test]

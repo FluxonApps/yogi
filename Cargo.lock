@@ -91,6 +91,8 @@ version = "0.0.0"
 dependencies = [
  "being-core-mutation",
  "being-lineage",
+ "being-proposer-openai",
+ "being-runtime",
 ]
 
 [[package]]
