@@ -11,7 +11,7 @@ echo "════ 1. ASSESS (awareness) — verifier-grounded: what can the age
 cargo build -q -p being-goals --bin metacog_assess 2>/dev/null
 ASSESS="$(./target/debug/metacog_assess 2>/dev/null)"
 echo "$ASSESS" | grep -E "capability map|AWARE" || echo "$ASSESS" | tail -2
-FRONTIER="$(printf '%s' "$ASSESS" | grep -oE 'PracticeFrontier\(([0-9]+)\)' | grep -oE '[0-9]+' | head -1)"
+FRONTIER="$(printf '%s' "$ASSESS" | grep -oE 'frontier=[0-9]+' | grep -oE '[0-9]+' | head -1)"
 FRONTIER="${FRONTIER:-0}"
 
 if [ "$FRONTIER" -eq 0 ]; then
