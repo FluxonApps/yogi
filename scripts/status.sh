@@ -33,34 +33,23 @@ mstone() {
   printf '%s  ' "$mark"
 }
 
-# Live ASCII-evolution panel: reads .yogi/ascii_evolve.tsv (per-generation) + .yogi/ascii_best.txt
-# (current best drawing), written by the `ascii_evolve` bin. Only shows when a run exists.
-ascii_panel() {
-  [ -f .yogi/ascii_evolve.tsv ] || return 0
-  sec "ascii evolution — qwen draws · Claude judges (QD best-quality, this run)"
-  # Real data rows only (gen column is an integer) — never render the header as values.
-  local data; data=$(awk -F'\t' 'NR>1 && $1 ~ /^[0-9]+$/' .yogi/ascii_evolve.tsv)
-  if [ -z "$data" ]; then
-    printf "  ${D}(run starting — first generation not finished yet)${R}\n\n"
-    return 0
-  fi
-  local blocks=(▁ ▂ ▃ ▄ ▅ ▆ ▇ █) spark="" best b
-  while IFS=$'\t' read -r _g best _rest; do
-    b=$(awk "BEGIN{v=$best; if(v<0)v=0; if(v>1)v=1; printf \"%d\", v*7}" 2>/dev/null)
-    spark="$spark${blocks[${b:-0}]}"
-  done <<< "$data"
-  local last bb mm nn used cap
-  last=$(printf '%s\n' "$data" | tail -1)
-  bb=$(echo "$last" | cut -f2); mm=$(echo "$last" | cut -f3)
-  nn=$(echo "$last" | cut -f5); used=$(echo "$last" | cut -f6); cap=$(echo "$last" | cut -f7)
-  printf "  quality ${GB}%s${R}  ${D}gen 0→now${R}\n" "$spark"
-  printf "  ${D}best${R} ${GB}%s${R}   ${D}mean${R} %s   ${D}niches${R} %s   ${D}salary${R} %s/%s ${D}claude calls${R}\n" \
-    "${bb:-?}" "${mm:-?}" "${nn:-?}" "${used:-?}" "${cap:-?}"
-  if [ -f .yogi/ascii_best.txt ]; then
-    printf "  ${D}best drawing so far:${R}\n"
-    sed 's/^/    /' .yogi/ascii_best.txt | head -16
-  fi
-  printf '\n'
+# Democratization-ratchet panel (docs/plan P1): the live make-or-break metric — does distilling the
+# being's own verified successes raise its HELD-OUT floor? Reads RATCHET_* fields from .yogi/status.txt.
+ratchet_panel() {
+  sec "democratization ratchet (docs/plan P1) — can a local model raise its OWN floor?"
+  local goal k cold dist traces salary verdict
+  goal=$(field RATCHET_GOAL);      [ -z "$goal" ]    && goal="tautogram"
+  k=$(field RATCHET_K);            [ -z "$k" ]       && k="?"
+  cold=$(field RATCHET_COLD);      [ -z "$cold" ]    && cold="—"
+  dist=$(field RATCHET_DISTILLED); [ -z "$dist" ]    && dist="—"
+  traces=$(field RATCHET_TRACES);  [ -z "$traces" ]  && traces="0"
+  salary=$(field RATCHET_SALARY);  [ -z "$salary" ]  && salary="0 (free verifier)"
+  verdict=$(field RATCHET_VERDICT);[ -z "$verdict" ] && verdict="measuring cold baseline…"
+  printf "  ${D}goal${R} %s ${D}K=%s${R}   ${D}verifier${R} ${G}FREE${R}   ${D}frontier salary${R} ${GB}%s${R}\n" \
+    "$goal" "$k" "$salary"
+  printf "  ${D}held-out floor${R}   cold ${B}%s${R}  ${D}→${R}  distilled ${GB}%s${R}   ${D}(self-generated traces ${R}%s${D})${R}\n" \
+    "$cold" "$dist" "$traces"
+  printf "  ${D}verdict${R}  ${GB}%s${R}\n\n" "$(fit "$verdict" $((W-11)))"
 }
 
 render() {
@@ -88,28 +77,24 @@ render() {
   local bcol="$G"; [ "$build" != "green" ] && bcol="$Y"
   printf "  crates ${GB}%s${R}   tests ${GB}%s${R}   commits ${GB}%s${R}   build ${bcol}● %s${R}\n\n" "$crates" "$tests" "$commits" "$build"
 
-  sec "milestones"
-  printf "  "; for m in 0 1 2 3 4 5 6; do mstone "$m"; done
-  printf "  ${D}(M6 selection LIVE — recombination assembles the all-3-skill solver, 1.0)${R}\n\n"
+  # The current thesis, featured.
+  ratchet_panel
 
-  sec "compounding layers — model held constant"
-  printf "  ${G}●${R} memory (hybrid embed+lexical)   ${D}live · wired${R}\n"
-  printf "  ${G}●${R} skills (verifier-fed)           ${D}live · top-2 inject${R}\n"
-  printf "  ${G}●${R} navigator / router              ${D}live · heuristic + outcome-learned${R}\n"
-  printf "  ${G}●${R} distillation flywheel           ${D}live · gap→distill→gate PROMOTES${R}\n"
-  printf "  ${G}●${R} population + selection (M6)      ${D}live · recombination composes skills${R}\n\n"
+  sec "plan — democratization roadmap (docs/plan)"
+  local plan; plan=$(field PLAN)
+  [ -z "$plan" ] && plan="P0 domain · P1 ratchet▸ · P2 tools · P3 bootstrap · P4 wean-off-frontier · P5 generalize"
+  printf "  ${DD}%s${R}\n\n" "$(fit "$plan" $((W-2)))"
 
-  sec "certified — token-space compounding (verifier-gated)"
+  sec "engine (built · M0–M6 ✓)"
+  printf "  ${G}●${R} substrate    ${D}closed mutation surface · QD illuminate · population+selection · signed fork${R}\n"
+  printf "  ${G}●${R} compounding  ${D}memory · skills · navigator · distillation flywheel · evolvable toolspace${R}\n"
+  printf "  ${G}●${R} distiller    ${D}MLX LoRA pipeline (M3) — the ratchet's weight-update step${R}\n"
   if grep -q '^CERT' .yogi/status.txt 2>/dev/null; then
     grep '^CERT' .yogi/status.txt | sed "s/^CERT[0-9]*:[[:space:]]*//" | while IFS= read -r l; do
-      printf "  ${G}›${R} %s\n" "$(fit "$l" $((W-4)))"
+      printf "  ${G}›${R} ${D}%s${R}\n" "$(fit "$l" $((W-4)))"
     done
-  else
-    printf "  ${D}(awaiting live cert results)${R}\n"
   fi
   printf '\n'
-
-  ascii_panel
 
   sec "recent commits"
   git log --oneline -6 2>/dev/null | while IFS= read -r l; do printf "  ${D}%s${R}\n" "$(fit "$l" $((W-2)))"; done
