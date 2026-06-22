@@ -20,3 +20,8 @@ being-runtime = { path = "../being-runtime" }
 [[bin]]
 name = "ascii_evolve"
 path = "src/bin/ascii_evolve.rs"
+
+# Teacher-distillation corpus: Claude (frontier) draws subjects → LoRA-format jsonl. Foreground.
+[[bin]]
+name = "ascii_corpus"
+path = "src/bin/ascii_corpus.rs"

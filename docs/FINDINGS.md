@@ -887,3 +887,16 @@ niche-exemplars (up from 1). Two findings:
    learned set as training data). This repeats the project's M3 token-space→weight pattern: in-context
    compounds to a ceiling, weight-distillation is the next lever. Next: build the ASCII weight-distill
    step (validated drawings → LoRA → serve → re-eval), reusing scripts/distill_lora.sh.
+
+## 2026-06-22 — reframe: TEACHER distillation, not self-distillation (Claude draws good ASCII)
+
+Key correction before building the weight step. Self-distillation (LoRA-tune qwen on its OWN validated
+drawings) is bounded by qwen's own ceiling (~0.40) — you can't exceed your best by training on it.
+Verified the alternative empirically: `claude -p` DRAWS good ASCII (a recognizable cat with face/body/
+paws; a clean house) — far above qwen's tower-"cat". So the ceiling-breaking lever is TEACHER
+distillation (knowledge distillation, well-established): LoRA-tune qwen on CLAUDE's drawings — the
+project's actual frontier→local thesis. Built `ascii_corpus` (foreground): Claude draws N subjects,
+extract_art strips its code fences, the structural gate filters, and corpus_line writes
+{prompt, completion} JSONL (mlx_lm.lora format). Next: LoRA-tune qwen on this corpus, then eval by
+GENERATING held-out subjects + judging (not substring match — ASCII can't be exact-matched). Honest
+risk remains: ASCII spatial structure may be hard for an 8B to learn even from a good teacher (valid null).

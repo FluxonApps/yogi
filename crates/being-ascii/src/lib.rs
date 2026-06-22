@@ -588,6 +588,34 @@ pub fn default_exemplar_library() -> BTreeMap<String, String> {
     ])
 }
 
+/// JSON-escape a string (the subset needed for `prompt`/`completion` corpus fields — quotes,
+/// backslashes, newlines, control chars). Pure; avoids a serde dependency.
+pub fn json_escape(s: &str) -> String {
+    let mut o = String::with_capacity(s.len() + 8);
+    for c in s.chars() {
+        match c {
+            '"' => o.push_str("\\\""),
+            '\\' => o.push_str("\\\\"),
+            '\n' => o.push_str("\\n"),
+            '\r' => o.push_str("\\r"),
+            '\t' => o.push_str("\\t"),
+            c if (c as u32) < 0x20 => o.push_str(&format!("\\u{:04x}", c as u32)),
+            c => o.push(c),
+        }
+    }
+    o
+}
+
+/// One MLX-LoRA training line: `{"prompt": …, "completion": …}` (the format `scripts/distill_lora.sh`
+/// expects). Used to build the **teacher-distillation corpus** (instruction → the teacher's drawing).
+pub fn corpus_line(prompt: &str, completion: &str) -> String {
+    format!(
+        "{{\"prompt\": \"{}\", \"completion\": \"{}\"}}",
+        json_escape(prompt),
+        json_escape(completion)
+    )
+}
+
 /// The **self-distillation flywheel** state: a fixed seed library (resolvable by genome exemplar-skills)
 /// plus a growing set of the being's OWN Claude-validated high-score drawings. Every generation
 /// few-shots from the top learned drawings, so the being learns from its own validated best work — the
@@ -961,6 +989,16 @@ mod tests {
             store.borrow().learned_count() >= 1,
             "validated drawings should enter the flywheel"
         );
+    }
+
+    #[test]
+    fn corpus_line_escapes_art_safely() {
+        let line = corpus_line("Draw a \"cat\"", " /\\_/\\\n(o.o)");
+        // valid: escapes quotes, backslashes, newlines so it's a parseable JSONL record
+        assert!(line.contains("\\\"cat\\\""));
+        assert!(line.contains("/\\\\_/\\\\")); // backslashes doubled
+        assert!(line.contains("\\n")); // newline escaped, not literal
+        assert!(!line.contains('\n')); // no raw newline in the line
     }
 
     #[test]
