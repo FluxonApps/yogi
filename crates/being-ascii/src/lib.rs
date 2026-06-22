@@ -356,6 +356,17 @@ pub struct AsciiEvaluator<G: Generator, J: QualityJudge> {
     /// Notional local cost charged per generation (the model run); accumulates across evaluations.
     pub local_cost_per_gen: i64,
     pub spent: Cost,
+    /// The highest-scored *valid* drawing seen so far (for the live dashboard) — retained as it's judged,
+    /// so showing the being's best work costs no extra model calls.
+    pub best_sample: Option<BestSample>,
+}
+
+/// The being's best judged drawing so far — what the live status card renders.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BestSample {
+    pub score: f64,
+    pub subject: String,
+    pub art: String,
 }
 
 impl<G: Generator, J: QualityJudge> AsciiEvaluator<G, J> {
@@ -367,6 +378,7 @@ impl<G: Generator, J: QualityJudge> AsciiEvaluator<G, J> {
             subjects,
             local_cost_per_gen: 1,
             spent: Cost::default(),
+            best_sample: None,
         }
     }
 }
@@ -383,11 +395,21 @@ impl<G: Generator, J: QualityJudge> Evaluator for AsciiEvaluator<G, J> {
             style += art.style_axis();
             size += art.size_axis();
             // A drawing that fails the structural gate scores 0 — degenerate hacks earn nothing.
-            qsum += if self.gate.check(&art).is_ok() {
+            let valid = self.gate.check(&art).is_ok();
+            let q = if valid {
                 self.judge.score(&subject, &art).clamp(0.0, 1.0)
             } else {
                 0.0
             };
+            // Retain the best valid drawing for the live dashboard (free — already drawn + judged).
+            if valid && self.best_sample.as_ref().is_none_or(|b| q > b.score) {
+                self.best_sample = Some(BestSample {
+                    score: q,
+                    subject: subject.clone(),
+                    art: art.render(),
+                });
+            }
+            qsum += q;
         }
         Evaluation {
             fitness: qsum / n,
@@ -648,6 +670,21 @@ mod tests {
         assert!((0.0..=1.0).contains(&ev.fitness));
         assert_eq!(ev.behavior.len(), 2); // [style, size] niche
         assert!(e.spent.local_microdollars >= 3); // charged per generation
+    }
+
+    #[test]
+    fn evaluator_retains_best_judged_drawing_for_the_dashboard() {
+        let mut e = AsciiEvaluator::new(
+            CannedGenerator,
+            StructuralJudge,
+            vec!["cat".into(), "house".into(), "tree".into()],
+        );
+        e.evaluate(&Genome::default());
+        let b = e
+            .best_sample
+            .as_ref()
+            .expect("a valid drawing should be retained");
+        assert!(b.score > 0.0 && !b.art.is_empty());
     }
 
     #[test]

@@ -33,6 +33,31 @@ mstone() {
   printf '%s  ' "$mark"
 }
 
+# Live ASCII-evolution panel: reads .yogi/ascii_evolve.tsv (per-generation) + .yogi/ascii_best.txt
+# (current best drawing), written by the `ascii_evolve` bin. Only shows when a run exists.
+ascii_panel() {
+  [ -f .yogi/ascii_evolve.tsv ] || return 0
+  sec "ascii evolution — qwen draws · Claude judges (QD best-quality, this run)"
+  local blocks=(▁ ▂ ▃ ▄ ▅ ▆ ▇ █) spark="" gen best rest b
+  while IFS=$'\t' read -r gen best rest; do
+    [ "$gen" = "gen" ] && continue
+    b=$(awk "BEGIN{v=$best; if(v<0)v=0; if(v>1)v=1; printf \"%d\", v*7}" 2>/dev/null)
+    spark="$spark${blocks[${b:-0}]}"
+  done < .yogi/ascii_evolve.tsv
+  local last bb mm nn used cap
+  last=$(tail -1 .yogi/ascii_evolve.tsv)
+  bb=$(echo "$last" | cut -f2); mm=$(echo "$last" | cut -f3)
+  nn=$(echo "$last" | cut -f5); used=$(echo "$last" | cut -f6); cap=$(echo "$last" | cut -f7)
+  printf "  quality ${GB}%s${R}  ${D}gen 0→now${R}\n" "$spark"
+  printf "  ${D}best${R} ${GB}%s${R}   ${D}mean${R} %s   ${D}niches${R} %s   ${D}salary${R} %s/%s ${D}claude calls${R}\n" \
+    "${bb:-?}" "${mm:-?}" "${nn:-?}" "${used:-?}" "${cap:-?}"
+  if [ -f .yogi/ascii_best.txt ]; then
+    printf "  ${D}best drawing so far:${R}\n"
+    sed 's/^/    /' .yogi/ascii_best.txt | head -16
+  fi
+  printf '\n'
+}
+
 render() {
   local crates commits tests build phase now why upd
   crates=$(ls crates 2>/dev/null | wc -l | tr -d ' ')
@@ -78,6 +103,8 @@ render() {
     printf "  ${D}(awaiting live cert results)${R}\n"
   fi
   printf '\n'
+
+  ascii_panel
 
   sec "recent commits"
   git log --oneline -6 2>/dev/null | while IFS= read -r l; do printf "  ${D}%s${R}\n" "$(fit "$l" $((W-2)))"; done

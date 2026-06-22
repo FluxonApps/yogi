@@ -1,23 +1,33 @@
 //! Foreground live ASCII evolution (loads qwen3:8b + spends `claude -p` judge calls). Run:
 //!   cargo run -p being-ascii --bin ascii_evolve --release
+//! Watch it live in another terminal: ./scripts/status.sh
 //!
 //! qwen3:8b draws (local), Claude judges quality (`claude -p`, the metered salary), and `illuminate`
-//! evolves the drawing genomes (prompt + exemplar skills) across a subject×style niche. The salary cap
-//! hard-bounds Claude spend: once exhausted, candidates can't afford judging (score 0) — the reaper
-//! pressure in microcosm.
-use being_ascii::{
-    AsciiArt, AsciiEvaluator, AsciiVariator, ClaudeCliRunner, ClaudeJudge, Generator,
-    OllamaGenerator,
-};
+//! evolves the drawing genomes one generation at a time. After each generation it streams progress to
+//! `.yogi/ascii_evolve.tsv` + the current best drawing to `.yogi/ascii_best.txt`, which the status card
+//! renders — so the quality evolution (or its plateau when salary runs out) is visible in real time.
+use being_ascii::{AsciiEvaluator, AsciiVariator, ClaudeCliRunner, ClaudeJudge, OllamaGenerator};
 use being_core_mutation::Genome;
 use being_lineage::{illuminate, Archive, BehaviorDescriptor, IlluminationConfig};
+use std::fs;
+use std::io::Write;
 
 fn main() {
     let subjects = vec!["cat".to_string(), "house".to_string()];
     let salary: u64 = 14; // hard cap on `claude -p` judge calls — bounds subscription spend
-    let iters = 6;
+    let gens = 6;
+
+    let tsv = ".yogi/ascii_evolve.tsv";
+    let best_txt = ".yogi/ascii_best.txt";
+    let _ = fs::create_dir_all(".yogi");
+    let _ = fs::write(
+        tsv,
+        "gen\tbest\tmean\tqd\tniches\tsalary_used\tsalary_cap\n",
+    );
+    let _ = fs::write(best_txt, "(no drawing yet)\n");
+
     eprintln!(
-        "live ASCII illumination: {iters} iters x {} subjects; salary cap {salary} Claude calls...",
+        "live ASCII illumination: {gens} generations x {} subjects; salary cap {salary} Claude calls...",
         subjects.len()
     );
 
@@ -29,40 +39,43 @@ fn main() {
     let mut variator = AsciiVariator::default();
     let descriptor = BehaviorDescriptor::bounded([(0.0, 1.0, 4), (0.0, 1.0, 4)]).unwrap();
     let mut archive = Archive::new();
-    let cfg = IlluminationConfig::new(iters, 7);
 
-    illuminate(
-        &mut archive,
-        &descriptor,
-        Genome::default(),
-        1,
-        &mut evaluator,
-        &mut variator,
-        &cfg,
-        None,
-    );
-
-    println!("\n=== result ===");
-    println!("niches filled: {}", archive.len());
-    println!(
-        "qd_score: {:.3}   mean_fitness: {:?}",
-        archive.qd_score(),
-        archive.mean_fitness()
-    );
-    println!(
-        "salary spent (Claude judge calls): {}/{}   frontier_microdollars: {}",
-        evaluator.judge.calls_made, salary, evaluator.judge.spent.frontier_microdollars
-    );
-
-    if let Some(best) = archive.best() {
-        println!(
-            "\nbest fitness {:.2}  prompt={:?}  skills={:?}",
-            best.fitness, best.genome.prompt, best.genome.installed_skills
+    for gen in 0..gens {
+        // One MAP-Elites step per generation (advancing seed so each generation samples differently).
+        let cfg = IlluminationConfig::new(1, 1000 + gen as u64);
+        illuminate(
+            &mut archive,
+            &descriptor,
+            Genome::default(),
+            1,
+            &mut evaluator,
+            &mut variator,
+            &cfg,
+            None,
         );
-        let mut g = OllamaGenerator::new();
-        for subj in &subjects {
-            let art = AsciiArt::parse(&g.generate(&best.genome, subj));
-            println!("\n--- best genome draws '{subj}' ---\n{}", art.render());
+
+        let best = archive.best().map(|e| e.fitness).unwrap_or(0.0);
+        let mean = archive.mean_fitness().unwrap_or(0.0);
+        if let Ok(mut f) = fs::OpenOptions::new().append(true).open(tsv) {
+            let _ = writeln!(
+                f,
+                "{gen}\t{best:.3}\t{mean:.3}\t{:.3}\t{}\t{}\t{salary}",
+                archive.qd_score(),
+                archive.len(),
+                evaluator.judge.calls_made
+            );
         }
+        if let Some(b) = &evaluator.best_sample {
+            let _ = fs::write(
+                best_txt,
+                format!("score={:.2} subject={}\n{}\n", b.score, b.subject, b.art),
+            );
+        }
+        println!(
+            "gen {gen}: best={best:.2} mean={mean:.2} niches={} salary={}/{salary}",
+            archive.len(),
+            evaluator.judge.calls_made
+        );
     }
+    println!("\nDone. Live dashboard: ./scripts/status.sh");
 }
