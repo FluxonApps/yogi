@@ -985,3 +985,28 @@ The agent — grounded in the verifier, not introspection — KNOWS it can't do 
 rule, so these are its ZPD/learnable-now frontier → practice them. That is the "awareness" in
 awareness+practice+loop, operating on the being itself. (Also: the 8B solves every held-out 9-pair WITH
 the rule — vs the 1.5B's 51/64 — so it has the capacity; the ratchet now tests internalization.)
+
+## 2026-06-22 — P1 ✓ THE DEMOCRATIZATION RATCHET WORKS ON THE REAL AGENT (qwen3:8b)
+
+The make-or-break result. op=3a+2b (novel rule), MLX qwen3-8b-4bit (THINK_OFF), self-generated verified
+traces, FREE verifier, zero frontier salary:
+- self-generated 64/64 verified traces (8B solves ⊕ WITH the rule in-context)
+- COLD held-out (no rule):       0/8   (can't do the novel rule alone)
+- DISTILLED held-out (no rule):  8/8   ← FLOOR ROSE 0 → 100% on UNSEEN operands (generalization)
+- general/forgetting:  3/3 → 3/3       (non-inferior — zero forgetting)
+- peak mem 7.4 GB (fits the 16 GB budget; no OOM)
+
+**This is the democratization thesis demonstrated**: a sub-frontier LOCAL model raised its OWN floor on
+a novel skill it could not do cold, by distilling its OWN self-generated, verifier-checked reasoning
+into its weights — generalizing to unseen inputs, without forgetting, at ZERO cloud cost. The full
+awareness+practice+loop closed end-to-end: metacog_assess flagged ⊕ as Frontier (cold 0%, taught 100%)
+→ self-gen practiced it → LoRA internalized it → cold held-out 0→8/8 = Frontier became Mastered.
+
+Capacity gates induction (confirms M3): the 8B GENERALIZED (8/8 unseen) where the 1.5B only MEMORIZED
+(0/8) across 3 runs — the operator's coherence catch ("you're using the wrong model") was decisive; the
+result only holds on the actual agent.
+
+Honest scope: this is a MECHANISM proof on a toy goal (a made-up operator), not yet a compelling
+application — exactly what P1 set out to prove (the engine works). Compelling goals + goal-as-data come
+at P2/P5. Note: metacog_assess runs on Ollama qwen3:8b while the ratchet trains an MLX qwen3-8b adapter —
+same base, different runtime; serving the adapter back to the assessment path is a P2 integration item.
