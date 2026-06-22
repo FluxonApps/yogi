@@ -1,5 +1,5 @@
 [package]
-name = "being-tautogram"
+name = "being-goals"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

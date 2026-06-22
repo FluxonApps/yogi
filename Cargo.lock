@@ -206,6 +206,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-goals"
+version = "0.0.0"
+
+[[package]]
 name = "being-lineage"
 version = "0.0.0"
 dependencies = [
@@ -275,10 +279,6 @@ dependencies = [
  "being-core-economy",
  "being-core-types",
 ]
-
-[[package]]
-name = "being-tautogram"
-version = "0.0.0"
 
 [[package]]
 name = "being-value"
