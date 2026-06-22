@@ -1,5 +1,7 @@
 # Democratization Roadmap — closing the ratchet, then generalizing
 
+> STATUS 2026-06-22: P0 (goal=data, Goal trait) ✓ · P1 (ratchet raises the floor) ✓ on the real agent (qwen3:8b 0→8/8) · goal-agnostic ✓ across 3 goals / 2 kinds, zero forgetting, zero salary · boundary = self-gen yield (application-reliability). NEXT: pure-STaR regime + agent-driven loop. See docs/research/democratizing-intelligence.md §7.
+
 Companion to [research/democratizing-intelligence.md](../research/democratizing-intelligence.md).
 Goal of this plan: **prove the claim of §6 of the research note** — a sub-frontier local model raises
 its own floor at a goal via verified-trace distillation, then show it is goal-agnostic — and do it in

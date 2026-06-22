@@ -182,3 +182,32 @@ in [evolution-and-safety.md](../evolution-and-safety.md).
 The plan exists to test this claim on one goal first, then to show it is **goal-agnostic**. If the
 floor does not rise after a closed ratchet on a goal that meets the four conditions, the thesis is
 wrong for that regime, and we report it.
+
+---
+
+## 7. Demonstrated (2026-06-22) — the claim of §6, met on the real agent
+
+The falsifiable claim of §6 is **confirmed for the rule-internalization regime** on the actual being
+(qwen3:8b, MLX, self-generated verified traces, FREE verifiers, **zero frontier salary**):
+
+| goal              | kind       | self-gen yield | cold → distilled (held-out, unseen inputs) | forgetting |
+|-------------------|------------|----------------|--------------------------------------------|------------|
+| 3a+2b             | arithmetic | 64/64          | **0 → 8/8**                                 | none (3/3) |
+| 2a+3b             | arithmetic | 64/64          | **0 → 8/8**                                 | none (3/3) |
+| dash-insert c-a-t | string     | 38/38          | **0 → 8/8**                                 | none (3/3) |
+| vowel-cycle       | string     | 9/38 (starved) | 0 → 1/8                                      | none |
+
+**What this establishes:** a sub-frontier LOCAL model raises its OWN held-out floor on a novel skill it
+can't do cold — by distilling its OWN verifier-checked reasoning into its weights — **generalizing to
+unseen inputs, without forgetting, at zero cloud cost**, and **goal-agnostically across kinds**
+(arithmetic + string, a `Goal` is data via the trait). The full **awareness → practice → loop** closes:
+metacog flags the goal as *Frontier* → self-gen practices → LoRA internalizes → *Mastered*.
+
+**Boundary condition (condition-3, located empirically):** internalization needs the model to *reliably
+apply* the rule in-context (high self-gen yield). The vowel-cycle didn't internalize because the 8B
+couldn't apply a 5-way cycle reliably (yield 9/38) — a *capability/application* floor, not a *kind* limit.
+
+**Honest scope:** all four are the *rule-internalization* regime (cold≈0 because the rule is withheld;
+taught≈high because given). Still open and more important: the **pure STaR regime** — improve at a task
+the model is *partially* capable at cold, with NO rule handed (bootstrap from its own partial competence)
+— and an **agent-driven** end-to-end loop (the agent runs assess→practice→distill→re-assess itself).
