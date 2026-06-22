@@ -852,3 +852,19 @@ concrete folds (the first explains a failure already observed):
    order-swapping to cancel position bias, instead of absolute 0-10.
 Status: the current naive-flywheel run is now a baseline; next iterations apply (1) diversity-preserving
 exemplars, (2) LLM-guided variation, (3) pairwise judging — each a paper-grounded upgrade, not brute force.
+
+## 2026-06-22 — diversity-preserving flywheel WORKS (quality); coverage still the open problem
+
+Three-run comparison (6 gen × 2 subj, salary 14), holding everything but the flywheel fixed:
+- no flywheel:               best 0.30, best drawing house 0.60, niches 1
+- naive top-K flywheel:      best 0.25, niches 1  (REGRESSED — entropy decay, exactly as B-STaR/ReST predict)
+- diversity (best-per-niche): best 0.40, best drawing house 0.70, niches 1
+The frontier call was right: few-shotting the global-best collapses (0.25); keeping the best-per-NICHE
+recovers and beats both baselines (0.40; best drawing 0.60→0.70 — a clearly better house). So the
+self-distillation flywheel genuinely lifts quality once diversity is preserved — the being draws better
+by learning from its own validated best work.
+**Open problem: coverage stuck at niches=1.** The diversity mechanism is moot when every drawing lands
+in one (style×aspect) cell — qwen's output distribution is too narrow for the descriptor to separate.
+The grounded next lever (EvoPrompt/OPRO/PromptBreeder): an LLM-GUIDED VARIATOR (mutate the drawing
+prompt via the model) to produce genuinely varied drawings, instead of 3 fixed style directives. Also
+queued: pairwise judging (candidate vs niche elite) for a more reliable fitness signal.
