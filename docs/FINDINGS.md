@@ -1157,3 +1157,11 @@ final integer → false 0/40. The earlier 8/8 used the 300-token default; the sp
 shrink eval max_tokens below the distilled model's CoT length). Re-evaluating saved adapters at
 EVAL_MAX=256 for the true F1 on the n=40 (operands 9-12) — which also answers the real open question:
 does it extrapolate to operands 10-12, or only to 9 (near)?
+
+## 2026-06-22 — F1 (credibility, corrected): operator ⊕ ratchet generalizes ROBUSTLY, 3 seeds, n=40
+
+Corrected re-eval (EVAL_MAX=256; the 64-token version falsely zeroed the distilled CoT) of the 3 saved
+adapters on the n=40 unseen-operand held-out (operands 9-12, far beyond train 1-8):
+  cold (no adapter): 0/40   →   distilled: 40/40, 40/40, 38/40  (mean 39.3/40 = 98%, std 0.9, n=3 seeds)
+So the self-distilled operator skill generalizes ROBUSTLY (98%, near-perfect) to operands well outside the
+training range (not near-only) — stronger than the original single-seed n=8 "8/8". F1 stands with error bars (std 0.9/40). The 0/40 scare was purely eval truncation, now fixed.

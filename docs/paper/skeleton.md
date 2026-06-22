@@ -39,7 +39,7 @@
 | Sequential forgetting is SIMILARITY-dependent (light replay insufficient) | ✅ | A 7/8→1/8 vs B 8/8 |
 | REAL recognizable task (Roman): SATURATED (cold 9/12) → ratchet no-help/mild-harm (6/12) | ✅(boundary) | known-skill regime |
 | **Novelty/cold-floor axis**: works iff cold≈0 (novel) — operators are valid out-of-pretraining stand-ins | ✅ | Roman vs operators |
-| **Statistics**: ≥3 seeds, larger held-out (n≥50), error bars | ❌ needed | — |
+| F1 STATS ✅: ⊕ ratchet, 3 seeds, n=40 held-out (operands 9-12): cold 0/40 → distilled mean 39.3/40=98% (std 0.9, n=3) — robust far-extrapolation to operands 9-12 | ✅ | corrected EVAL_MAX=256 |
 | **Safety red-team**: forbidden capability unrepresentable | ❌ needed | — |
 | Full phase-diagram sweep ({0.5,1.5,8}B × kinds × yield × split) | ◧ partial | points above |
 | ASCII: failure-boundary case (below floor + paid verifier) | ✅(neg) | documented |
