@@ -92,6 +92,11 @@ impl AsciiArt {
     pub fn size_axis(&self) -> f64 {
         ((self.width() * self.height()) as f64 / 800.0).clamp(0.0, 1.0)
     }
+
+    /// The drawing as text (rows joined by newlines).
+    pub fn render(&self) -> String {
+        self.lines.join("\n")
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -189,6 +194,110 @@ impl QualityJudge for StructuralJudge {
         let d = art.density();
         let mid = 1.0 - (d - 0.3).abs() / 0.3; // peaks near a "drawn" density, not blank/solid
         (0.5 * variety + 0.5 * mid.clamp(0.0, 1.0)).clamp(0.0, 1.0)
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Frontier judge: Claude (via `claude -p`) scores quality; calls are the being's metered "salary"
+// ---------------------------------------------------------------------------------------------
+
+/// Runs a frontier prompt and returns its text (or `None` on failure). The real impl shells out to
+/// `claude -p` (FOREGROUND ONLY — never in the green-gate); a stub keeps tests model-free.
+pub trait FrontierRunner {
+    fn run(&mut self, prompt: &str) -> Option<String>;
+}
+
+/// Real runner: invokes the local `claude` CLI in headless print mode. Each call spends real frontier
+/// budget (your Claude subscription) — that scarcity *is* the being's metabolic pressure.
+pub struct ClaudeCliRunner;
+
+impl FrontierRunner for ClaudeCliRunner {
+    fn run(&mut self, prompt: &str) -> Option<String> {
+        let out = std::process::Command::new("claude")
+            .arg("-p")
+            .arg(prompt)
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        Some(String::from_utf8_lossy(&out.stdout).into_owned())
+    }
+}
+
+/// Build the judging rubric. Asks for a single integer to keep parsing robust; the being never sees
+/// this prompt or the judge's reasoning (anti-Goodhart: it can't directly optimize the judge's words).
+pub fn rubric_prompt(subject: &str, art: &AsciiArt) -> String {
+    format!(
+        "Rate this ASCII art on how well it depicts: \"{subject}\".\n\n{}\n\n\
+         Consider recognizability first, then composition. Reply with ONLY one integer 0-10 \
+         (0 = unrecognizable or degenerate, 10 = clearly and well rendered). No other text.",
+        art.render()
+    )
+}
+
+/// Parse a 0–10 score from judge output → `[0,1]`. Takes the LAST integer in `0..=10` (models tend to
+/// end with the score, and this dodges echoes of the "0-10" in the prompt). No parseable score → 0.
+pub fn parse_score(out: &str) -> f64 {
+    let mut last: Option<u32> = None;
+    let mut digits = String::new();
+    let flush = |digits: &mut String, last: &mut Option<u32>| {
+        if let Ok(n) = digits.parse::<u32>() {
+            if n <= 10 {
+                *last = Some(n);
+            }
+        }
+        digits.clear();
+    };
+    for c in out.chars() {
+        if c.is_ascii_digit() {
+            digits.push(c);
+        } else {
+            flush(&mut digits, &mut last);
+        }
+    }
+    flush(&mut digits, &mut last);
+    last.map(|n| n as f64 / 10.0).unwrap_or(0.0)
+}
+
+/// The frontier quality judge. Each `score` call spends one unit of the being's frontier-call budget
+/// (its "salary"); when the budget is exhausted it can no longer afford to be judged (returns 0).
+pub struct ClaudeJudge<R: FrontierRunner> {
+    pub runner: R,
+    pub calls_made: u64,
+    pub max_calls: u64,
+    pub microdollars_per_call: i64,
+    pub spent: Cost,
+}
+
+impl<R: FrontierRunner> ClaudeJudge<R> {
+    /// `max_calls` is the hard salary cap — a safety bound so a runaway loop can't drain the account.
+    pub fn new(runner: R, max_calls: u64) -> Self {
+        Self {
+            runner,
+            calls_made: 0,
+            max_calls,
+            microdollars_per_call: 20_000, // ~2¢/call notional; the metered scarcity is what matters
+            spent: Cost::default(),
+        }
+    }
+
+    pub fn budget_exhausted(&self) -> bool {
+        self.calls_made >= self.max_calls
+    }
+}
+
+impl<R: FrontierRunner> QualityJudge for ClaudeJudge<R> {
+    fn score(&mut self, subject: &str, art: &AsciiArt) -> f64 {
+        if self.budget_exhausted() {
+            return 0.0; // out of salary — cannot afford a frontier judgment
+        }
+        self.calls_made += 1;
+        self.spent.frontier_microdollars += self.microdollars_per_call;
+        match self.runner.run(&rubric_prompt(subject, art)) {
+            Some(out) => parse_score(&out),
+            None => 0.0,
+        }
     }
 }
 
@@ -371,6 +480,43 @@ mod tests {
                 _ => "( ͡° ͜°)".into(), // the kaomoji shortcut — should score 0 (gate rejects)
             }
         }
+    }
+
+    // A stub frontier runner — returns canned judge output, so the ClaudeJudge logic is tested without
+    // ever calling `claude -p` (the green-gate stays model-free).
+    struct StubRunner(&'static str);
+    impl FrontierRunner for StubRunner {
+        fn run(&mut self, _prompt: &str) -> Option<String> {
+            Some(self.0.to_string())
+        }
+    }
+
+    #[test]
+    fn parse_score_takes_last_0_to_10_integer() {
+        assert_eq!(parse_score("7"), 0.7);
+        assert_eq!(parse_score("10"), 1.0);
+        // dodges the "0-10" echoed from the prompt; takes the final score (we instruct "only an integer")
+        assert_eq!(parse_score("On the 0-10 scale I rate this an 8"), 0.8);
+        assert_eq!(parse_score("no number here"), 0.0);
+    }
+
+    #[test]
+    fn rubric_includes_subject_and_art() {
+        let art = AsciiArt::parse(" /\\_/\\\n( o.o )\n > ^ <");
+        let p = rubric_prompt("cat", &art);
+        assert!(p.contains("cat") && p.contains("o.o"));
+    }
+
+    #[test]
+    fn claude_judge_spends_salary_and_reaps_at_cap() {
+        let art = AsciiArt::parse(" /\\_/\\\n( o.o )\n > ^ <");
+        let mut judge = ClaudeJudge::new(StubRunner("9"), 2); // salary = 2 calls
+        assert_eq!(judge.score("cat", &art), 0.9);
+        assert_eq!(judge.score("cat", &art), 0.9);
+        assert!(judge.budget_exhausted());
+        assert_eq!(judge.score("cat", &art), 0.0); // out of salary → can't afford a judgment
+        assert_eq!(judge.calls_made, 2); // exhausted call does not spend
+        assert_eq!(judge.spent.frontier_microdollars, 40_000);
     }
 
     #[test]
