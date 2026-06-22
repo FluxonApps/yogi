@@ -868,3 +868,22 @@ in one (style×aspect) cell — qwen's output distribution is too narrow for the
 The grounded next lever (EvoPrompt/OPRO/PromptBreeder): an LLM-GUIDED VARIATOR (mutate the drawing
 prompt via the model) to produce genuinely varied drawings, instead of 3 fixed style directives. Also
 queued: pairwise judging (candidate vs niche elite) for a more reliable fitness signal.
+
+## 2026-06-22 — in-context levers hit qwen's ceiling; the real lever is weight-SFT (STaR/ReST proper)
+
+Run: diversity-flywheel + LLM-guided variator (EvoPrompt/OPRO). Result: best 0.40 (same as
+diversity-only), best drawing house 0.60, archive niches=1 — BUT the flywheel learned 3 distinct
+niche-exemplars (up from 1). Two findings:
+1. **niches=1 is mostly a MEASUREMENT artifact.** The LLM variator genuinely diversified output (3
+   per-drawing niches in the flywheel), but the archive's genome-level behavior descriptor AVERAGES
+   over subjects (cat+house), collapsing per-drawing variety to one cell. Fix would be drawing-as-
+   individual (QDAIF-style) rather than genome-mean. (Coverage isn't really stuck; the metric is blind.)
+2. **Quality plateaued at 0.40 across two runs = qwen's in-context ceiling.** The CoT judge already
+   discriminates cleanly (0.10/0.40/0.70), so this is capability-limited, not signal-limited — meaning
+   PAIRWISE judging (queued) would NOT break it; it's the wrong lever now (de-prioritized to avoid
+   brute-forcing). The frontier-grounded lever: STaR/ReST/rejection-sampling-fine-tuning do **SFT —
+   weight updates — on validated samples**, not few-shot. Our flywheel did the in-context version; the
+   real mechanism is to **LoRA-fine-tune qwen on its own Claude-validated best drawings** (the flywheel's
+   learned set as training data). This repeats the project's M3 token-space→weight pattern: in-context
+   compounds to a ceiling, weight-distillation is the next lever. Next: build the ASCII weight-distill
+   step (validated drawings → LoRA → serve → re-eval), reusing scripts/distill_lora.sh.
