@@ -1,0 +1,13 @@
+[package]
+name = "being-ascii"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# The NLP->ASCII domain: the survival-wired goal Yogi evolves toward. Structural (anti-Goodhart) grader,
+# subject x style niche (QDAIF-style), pluggable Generator/QualityJudge (model + LLM-judge plug in
+# foreground; structural stand-ins keep this crate pure + loop-safe), and an Evaluator wired to
+# being-lineage::illuminate. No model, no cloud in this crate.
+[dependencies]
+being-core-mutation = { path = "../being-core-mutation" }
+being-lineage = { path = "../being-lineage" }

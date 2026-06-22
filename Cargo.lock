@@ -86,6 +86,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
+name = "being-ascii"
+version = "0.0.0"
+dependencies = [
+ "being-core-mutation",
+ "being-lineage",
+]
+
+[[package]]
 name = "being-bench"
 version = "0.0.0"
 dependencies = [

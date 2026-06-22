@@ -23,6 +23,7 @@ members = [
     "crates/being-colony",
     "crates/being-core-policy",
     "crates/being-bin",
+    "crates/being-ascii",
 ]
 
 [workspace.package]
