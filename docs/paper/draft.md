@@ -6,14 +6,13 @@
 Verified-trace self-distillation — generate, filter by a verifier, fine-tune on the successes — is an
 established recipe (context distillation, RFT, STaR). We do not propose a new method. Instead we ask the
 questions the capability-focused literature leaves open for the *local, autonomous* setting: **(1) can a
-self-improving agent be confined so it provably cannot acquire forbidden capabilities? (2) when does
+self-improving agent be confined so that forbidden capabilities are unrepresentable in its action space (a structural, compile-time property)? (2) when does
 local self-distillation actually internalize a novel skill — and when does it fail? (3) what does it
 cost?** On a single consumer machine with a sub-frontier model (Qwen3-8B-4bit) and free deterministic
 verifiers, we show: a closed, typed action space makes forbidden capabilities **unrepresentable by
 construction** (a compile-time guarantee, not a runtime monitor); the model internalizes a novel rule
 from its own verified traces, generalizing from training operands 1–8 to held-out 9–12 at **98% (39.3/40,
-3 seeds)** from a **0/40** cold floor, goal-agnostically across arithmetic and string skills, at **zero
-frontier cost**; and we map a clean **failure boundary** governed by four conditions (novelty, application
+3 seeds)** from a **0/40** cold floor, goal-agnostically across arithmetic and string skills, at **zero frontier cost (free-verifier goals)**; and we map a clean **failure boundary** governed by four conditions (novelty, application
 yield, capacity, compounding protection). We further show a similarity-dependent catastrophic-forgetting
 failure in sequential learning and a targeted fix (similarity-aware replay) that the obvious uniform
 replay misses. The contribution is the **safety guarantee + the when-it-works map + the cost**, on
@@ -51,6 +50,10 @@ wildcard. Adding a forbidden power is a *compile error*, not a runtime check.
 ## 3. Results
 All on Qwen3-8B-4bit unless noted; free verifiers; zero frontier cost.
 
+*Statistical scope (stated up front): only F1 carries multi-seed, large-n statistics (3 seeds, n=40).
+The goal-agnostic 0→8/8, the boundary points, and F3 are single-run, n=8 — indicative, not
+error-barred; we report them as such and do not over-read small-n results.*
+
 **F1 — the ratchet generalizes robustly.** Novel operator ⊕(a,b)=3a+2b, trained on operands 1–8,
 evaluated on a held-out set of operands 9–12 (n=40, far extrapolation), 3 seeds:
 **cold 0/40 → distilled 39.3/40 = 98% (std 0.9).** Goal-agnostic across kinds: a second operator
@@ -80,7 +83,7 @@ but not for self-distilled symbolic-rule confusion; this is a targeted fix to th
 
 ## 4. Safety: bounded self-modification (C1)
 Threat model: an adversary controlling the entire self-improvement loop tries to acquire a forbidden
-power; the only channel to heritable change is `apply`. The six forbidden powers (capability grant, trust
+power; the only channel to heritable change is `apply` (an assumption true in this build and test-pinned, but stated). The six forbidden powers (capability grant, trust
 policy, signature boundary, kernel, budget rules, reaper) are **absent by type** — unrepresentable, so an
 attempt does not type-check. An adversarial test throws forbidden-power payloads at every mutation variant
 and confirms they persist only as *inert data*. Independent structural backstops: provenance cannot be
