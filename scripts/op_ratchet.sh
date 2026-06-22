@@ -25,30 +25,41 @@ import json, sys, re, random, os
 from mlx_lm import load, generate
 d, mp = sys.argv[1], sys.argv[2]
 NT = " /no_think" if os.environ.get("THINK_OFF") else ""   # qwen3 etc. are thinking models — disable <think>
-EXPR = os.environ.get("OP_EXPR", "3*a+2*b")  # the (novel) rule — parameterized to prove goal-agnostic
-RULE = os.environ.get("RULE", "3*a + 2*b")   # human-readable form shown in the taught prompt
-op   = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})  # easy arithmetic, novel mapping
-# A single COLD prompt (NO rule) used for train + eval; it invites reasoning so the model learns the
-# PROCEDURE, not a lookup → generalizes to unseen operands. /no_think suffix is baked in consistently.
-cold = lambda a,b: f"What is {a} ⊕ {b}? Show your working step by step, then give the integer.{NT}"
-# self-gen uses the rule IN-CONTEXT to produce a correct REASONING trace; we distill that trace.
-taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = {RULE}. {cold(a,b)}"
+KIND = os.environ.get("GOAL_KIND", "numeric")              # numeric (operator ⊕) | string (cipher ⊙)
 strip_think = lambda t: t.split('</think>')[-1]            # ignore any <think> block before parsing
-parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', strip_think(t)))
 model, tok = load(mp)
-def ask(p, mx=24):
+def ask(p, mx=200):
     text = tok.apply_chat_template([{"role":"user","content":p}], add_generation_prompt=True, tokenize=False)
     return generate(model, tok, prompt=text, max_tokens=mx, verbose=False)
-train = [(a,b) for a in range(1,9) for b in range(1,9)]      # 1..8 (disjoint from the 9-containing test)
-test  = [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)]
+# Unified goal interface: instances + cold/taught prompts + truth string + a free verifier `ok`.
+if KIND == "string":                                       # vowel-shift cipher ⊙ (mirrors being-goals::cipher)
+    vt = {'a':'e','e':'i','i':'o','o':'u','u':'a'}
+    tr = lambda w: ''.join(vt.get(c, c) for c in w.lower())
+    train_i = ["cat","dog","sun","map","red","big","top","cup","hat","pen","log","bus","fan","net","pig",
+               "rug","box","jam","kid","mud","nap","owl","rat","tub","van","web","yak","zip","arm","ear",
+               "ice","oak","elf","ink","egg","ant","urn","ash"]
+    test_i  = ["fox","bug","gem","hop","jet","lip","nut","pit"]
+    cold   = lambda w: f'Apply the ⊙ transform to the word "{w}". Output only the resulting word.{NT}'
+    taught = lambda w: f'The ⊙ transform replaces each vowel with the NEXT vowel cyclically (a->e->i->o->u->a); consonants unchanged. {cold(w)}'
+    truth_str = lambda w: tr(w)
+    ok = lambda resp, w: tr(w) in strip_think(resp).lower()
+else:                                                      # operator ⊕ = OP_EXPR (novel arithmetic rule)
+    EXPR = os.environ.get("OP_EXPR", "3*a+2*b"); RULE = os.environ.get("RULE", "3*a + 2*b")
+    op = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})
+    train_i = [(a,b) for a in range(1,9) for b in range(1,9)]   # disjoint from the 9-containing test
+    test_i  = [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)]
+    cold   = lambda i: f"What is {i[0]} ⊕ {i[1]}? Show your working step by step, then give the integer.{NT}"
+    taught = lambda i: f"The operator ⊕ is defined by a ⊕ b = {RULE}. {cold(i)}"
+    parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', strip_think(t)))
+    truth_str = lambda i: str(op(*i))
+    ok = lambda resp, i: parse(resp) == op(*i)
 rows, gen_ok = [], 0
-for a,b in train:                                            # self-generate the REASONING (rule in-context)
-    resp = ask(taught(a,b), mx=200)
-    if parse(resp) == op(a,b):                               # free verifier keeps only correct traces
+for i in train_i:                                          # self-generate WITH the rule in-context
+    resp = ask(taught(i), mx=200)
+    if ok(resp, i):                                        # free verifier keeps only correct traces
         gen_ok += 1
-        # distill the model's OWN reasoning under the COLD prompt → it learns to apply 3a+2b itself.
-        rows.append({"prompt": cold(a,b), "completion": " " + resp.strip()})
-# balanced replay (M3 lesson: preserve adjacent skills so non-inferiority holds) — broadened.
+        rows.append({"prompt": cold(i), "completion": " " + resp.strip()})  # distill the model's OWN solution
+# balanced replay (M3 lesson: preserve adjacent skills so non-inferiority holds).
 replay = [{"prompt":"What is 3 + 5? Reply with only the number.","completion":" 8"},
           {"prompt":"What is 12 - 7? Reply with only the number.","completion":" 5"},
           {"prompt":"What is 6 times 4? Reply with only the number.","completion":" 24"},
@@ -60,12 +71,12 @@ replay = [{"prompt":"What is 3 + 5? Reply with only the number.","completion":" 
 trainset = rows + replay; random.seed(7); random.shuffle(trainset)
 open(f"{d}/train.jsonl","w").write("\n".join(json.dumps(r) for r in trainset)+"\n")
 open(f"{d}/valid.jsonl","w").write("\n".join(json.dumps(r) for r in (rows[:8] or replay))+"\n")
-open(f"{d}/test.jsonl","w").write("\n".join(json.dumps({"prompt":cold(a,b),"completion":f" {op(a,b)}"}) for a,b in test)+"\n")
+open(f"{d}/test.jsonl","w").write("\n".join(json.dumps({"prompt":cold(i),"completion":" "+truth_str(i)}) for i in test_i)+"\n")
 open(f"{d}/general.jsonl","w").write("\n".join(json.dumps(x) for x in [
   {"prompt":"What is 2 + 2? Reply with only the number.","completion":" 4"},
   {"prompt":"What is the capital of France? One word.","completion":" Paris"},
   {"prompt":"How many days are in a week? Reply with only the number.","completion":" 7"}])+"\n")
-print(f"SELF-GENERATED: {gen_ok}/{len(train)} train pairs solved with rule in-context -> {len(rows)} verified traces")
+print(f"SELF-GENERATED: {gen_ok}/{len(train_i)} instances solved with rule in-context -> {len(rows)} verified traces")
 PY
 
 # 2. eval helper (cold = no adapter; distilled = with adapter), substring match.

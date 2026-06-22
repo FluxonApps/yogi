@@ -12,5 +12,6 @@
 //!   (mean ≈ 0.95) — a recorded finding: a strong small model has little headroom on simple constraint
 //!   goals, so headroom lives on *novel* skills.
 
+pub mod cipher;
 pub mod op;
 pub mod tautogram;
