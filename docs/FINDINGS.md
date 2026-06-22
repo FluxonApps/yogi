@@ -900,3 +900,28 @@ extract_art strips its code fences, the structural gate filters, and corpus_line
 {prompt, completion} JSONL (mlx_lm.lora format). Next: LoRA-tune qwen on this corpus, then eval by
 GENERATING held-out subjects + judging (not substring match — ASCII can't be exact-matched). Honest
 risk remains: ASCII spatial structure may be hard for an 8B to learn even from a good teacher (valid null).
+
+## 2026-06-22 — ASCII arc: HARNESS works, the 8B base CAN'T (research-confirmed null) — LoRA NOT built
+
+Decisive negative, grounded in both experiment and literature:
+- **In-context teacher-distillation probe:** showing qwen Claude's good drawings did NOT help it draw
+  new subjects (rabbit 0.0/0.0 [empty, thinking-truncation], fish 0.1→0.2 — both qwen's same "tower").
+  qwen3:8b produces the same tower regardless of subject or exemplars.
+- **Literature clincher** (ASCIIEval 2410.01733; ASCIIBench 2512.04125): text-only LLMs lag badly at
+  ASCII; only vision / large-proprietary models do well (GPT-4o ~82%). And **"fine-tuning on ASCII
+  input-output pairs FAILS to improve"** — exactly the naive teacher-distillation LoRA I was about to
+  run. Only *rationale-assisted* FT helped, and only for *perception*, not generation.
+**Decision: did NOT build the LoRA** — it is a documented dead-end at this scale; running it would be
+brute-forcing a known failure (and waste GPU/salary). 
+
+**The honest split (anti-theater working):**
+- The HARNESS is real and validated end-to-end: QD illumination + structural-gate + Claude-judge
+  (CoT/criteria, discriminates 0.1/0.4/0.7) + diversity-preserving self-distillation flywheel (beat the
+  naive flywheel's entropy-decay collapse) + LLM-guided variator + teacher-corpus pipeline + live
+  dashboard. It found+fixed real bugs and every mechanism is frontier-grounded+cited.
+- The BASE MODEL can't: qwen3:8b (text-only, 8B) is near-incapable at ASCII *generation*; in-context
+  AND (per literature) weight distillation don't cross that ceiling. ASCII had *headroom* but, for this
+  base, not *learnability* — the "bad-but-learnable" bet was half-right (bad, not learnable at 8B).
+**Path forward = a base with ASCII capability (vision or large-proprietary) — out of the local 16GB/8B
+budget.** Within the local constraint, the harness is the transferable deliverable; the honest result
+is that the chosen domain exposed a hard base-capability ceiling distillation cannot cross at this scale.
