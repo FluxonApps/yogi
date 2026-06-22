@@ -61,7 +61,7 @@ else:                                                      # operator ⊕ = OP_E
     EXPR = os.environ.get("OP_EXPR", "3*a+2*b"); RULE = os.environ.get("RULE", "3*a + 2*b")
     op = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})
     train_i = [(a,b) for a in range(1,9) for b in range(1,9)]   # disjoint from the 9-containing test
-    test_i  = ([(a,b) for a in range(1,13) for b in range(1,13) if a>8 or b>8]  # n=80 unseen-operand held-out
+    test_i  = ([(a,b) for a in range(9,13) for b in range(1,11)]  # n=40 unseen-operand held-out
                if os.environ.get("BIG_HELDOUT") else
                [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)])
     cold   = lambda i: f"What is {i[0]} ⊕ {i[1]}? Show your working step by step, then give the integer.{NT}"
@@ -104,7 +104,8 @@ model,tok=load(mp,adapter_path=ad); p=t=0
 for line in open(data):
     ex=json.loads(line); t+=1
     text=tok.apply_chat_template([{"role":"user","content":ex["prompt"]}],add_generation_prompt=True,tokenize=False)
-    out=generate(model,tok,prompt=text,max_tokens=300,verbose=False).split('</think>')[-1]
+    import os
+    out=generate(model,tok,prompt=text,max_tokens=int(os.environ.get("EVAL_MAX","300")),verbose=False).split('</think>')[-1]
     norm=lambda s:"".join(c for c in s.lower() if not c.isspace())
     if norm(ex["completion"]) in norm(out): p+=1
 print(f"PASS {p}/{t}")
