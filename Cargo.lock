@@ -277,6 +277,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "being-tautogram"
+version = "0.0.0"
+
+[[package]]
 name = "being-value"
 version = "0.0.0"
 dependencies = [

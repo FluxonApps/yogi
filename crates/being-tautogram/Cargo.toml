@@ -1,0 +1,11 @@
+[package]
+name = "being-tautogram"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# A FREE-verifier goal for the democratization ratchet (docs/plan P1): write a K-word sentence where
+# every word starts with a given letter. The verifier is pure + deterministic + Goodhart-resistant —
+# no frontier judge, no salary — so the self-distillation ratchet can be tested with zero cloud cost.
+# The lib is model-free (green-gate safe); the model runs live only in foreground bins.
+[dependencies]

@@ -24,6 +24,7 @@ members = [
     "crates/being-core-policy",
     "crates/being-bin",
     "crates/being-ascii",
+    "crates/being-tautogram",
 ]
 
 [workspace.package]
