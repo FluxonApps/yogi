@@ -61,7 +61,9 @@ else:                                                      # operator ⊕ = OP_E
     EXPR = os.environ.get("OP_EXPR", "3*a+2*b"); RULE = os.environ.get("RULE", "3*a + 2*b")
     op = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})
     train_i = [(a,b) for a in range(1,9) for b in range(1,9)]   # disjoint from the 9-containing test
-    test_i  = [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)]
+    test_i  = ([(a,b) for a in range(1,13) for b in range(1,13) if a>8 or b>8]  # n=80 unseen-operand held-out
+               if os.environ.get("BIG_HELDOUT") else
+               [(9,3),(7,9),(9,9),(2,9),(9,6),(4,9),(9,1),(8,9)])
     cold   = lambda i: f"What is {i[0]} ⊕ {i[1]}? Show your working step by step, then give the integer.{NT}"
     taught = lambda i: f"The operator ⊕ is defined by a ⊕ b = {RULE}. {cold(i)}"
     parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', strip_think(t)))
@@ -113,7 +115,7 @@ echo -n "  cold: "; "$PY" "$WORK/eval.py" "$STUDENT" - "$DATA/test.jsonl"
 echo "=== LoRA on the model's OWN self-generated verified traces ($STUDENT, layers=$LAYERS iters=$ITERS) ==="
 "$PY" -m mlx_lm.lora --model "$STUDENT" --train --data "$DATA" \
   --batch-size "$BATCH" --num-layers "$LAYERS" --iters "$ITERS" --learning-rate "$LR" \
-  --adapter-path "$ADAPTER" 2>&1 | tail -3
+  --seed "${SEED:-0}" --adapter-path "$ADAPTER" 2>&1 | tail -3
 echo "=== HELD-OUT floor (cold prompt, no rule) — did the floor RISE? ==="
 echo -n "  cold     : "; "$PY" "$WORK/eval.py" "$STUDENT" - "$DATA/test.jsonl"
 echo -n "  distilled: "; "$PY" "$WORK/eval.py" "$STUDENT" "$ADAPTER" "$DATA/test.jsonl"
