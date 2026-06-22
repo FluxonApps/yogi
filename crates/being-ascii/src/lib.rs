@@ -502,6 +502,69 @@ impl Variator for AsciiVariator {
     }
 }
 
+/// Build the prompt-mutation instruction (pure, testable). EvoPrompt/OPRO-style: ask the model to
+/// rewrite the current drawing instruction into a clearly *different* one, to push output diversity
+/// (the lever for the stuck `niches=1` coverage).
+pub fn mutation_prompt(parent_prompt: &str) -> String {
+    let cur = if parent_prompt.trim().is_empty() {
+        "Draw clean, recognizable ASCII art."
+    } else {
+        parent_prompt
+    };
+    format!(
+        "You mutate instructions for an ASCII-art drawing model. Current instruction:\n\"{cur}\"\n\n\
+         Write ONE different, short instruction that would lead to a clearly DIFFERENT drawing — vary \
+         the density, orientation, character set, framing, or level of detail. Output ONLY the new \
+         instruction on a single line, no quotes or commentary."
+    )
+}
+
+/// **LLM-guided variator** (EvoPrompt/OPRO/PromptBreeder): mutates the genome's drawing prompt via the
+/// model itself, instead of a fixed list of directives — richer variation → more varied drawings →
+/// QD coverage can spread. The mutation is a model call, so `vary` is **foreground-only** (tests use
+/// `AsciiVariator`, keeping the green-gate model-free).
+pub struct LlmVariator {
+    proposer: OpenAiChatProposer,
+}
+
+impl LlmVariator {
+    pub fn new() -> Self {
+        Self {
+            proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3_thinking()),
+        }
+    }
+}
+
+impl Default for LlmVariator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Variator for LlmVariator {
+    fn vary(&mut self, _rng: &mut Rng, parent: &Genome) -> Vec<MutationKind> {
+        let raw = self
+            .proposer
+            .try_propose(&ContextPack {
+                input: mutation_prompt(&parent.prompt),
+                retrieved: Vec::new(),
+            })
+            .unwrap_or_default();
+        // Strip <think>/fences, take the first non-empty line as the new instruction.
+        let new = extract_art(&raw)
+            .lines()
+            .map(str::trim)
+            .find(|l| !l.is_empty())
+            .unwrap_or("")
+            .to_string();
+        if new.is_empty() {
+            vec![] // model produced nothing usable → no variation this step
+        } else {
+            vec![MutationKind::Prompt(new)]
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Local ASCII drawer (qwen3:8b via Ollama) — the being's generator. Generation is FOREGROUND-only.
 // ---------------------------------------------------------------------------------------------
@@ -898,6 +961,14 @@ mod tests {
             store.borrow().learned_count() >= 1,
             "validated drawings should enter the flywheel"
         );
+    }
+
+    #[test]
+    fn mutation_prompt_references_the_current_instruction() {
+        let p = mutation_prompt("Draw blocky art.");
+        assert!(p.contains("Draw blocky art.") && p.to_lowercase().contains("different"));
+        // empty parent → falls back to a base instruction, still asks for a different one
+        assert!(mutation_prompt("").to_lowercase().contains("different"));
     }
 
     #[test]

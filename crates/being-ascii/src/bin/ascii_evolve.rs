@@ -6,7 +6,7 @@
 //! evolves the drawing genomes one generation at a time. After each generation it streams progress to
 //! `.yogi/ascii_evolve.tsv` + the current best drawing to `.yogi/ascii_best.txt`, which the status card
 //! renders — so the quality evolution (or its plateau when salary runs out) is visible in real time.
-use being_ascii::{AsciiEvaluator, AsciiVariator, ClaudeCliRunner, ClaudeJudge, OllamaGenerator};
+use being_ascii::{AsciiEvaluator, ClaudeCliRunner, ClaudeJudge, LlmVariator, OllamaGenerator};
 use being_core_mutation::Genome;
 use being_lineage::{illuminate, Archive, BehaviorDescriptor, IlluminationConfig};
 use std::fs;
@@ -41,7 +41,7 @@ fn main() {
         subjects.clone(),
         store.clone(),
     );
-    let mut variator = AsciiVariator::default();
+    let mut variator = LlmVariator::new();
     let descriptor = BehaviorDescriptor::bounded([(0.0, 1.0, 4), (0.0, 1.0, 4)]).unwrap();
     let mut archive = Archive::new();
 
