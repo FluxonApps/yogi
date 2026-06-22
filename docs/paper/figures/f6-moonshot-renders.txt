@@ -1,0 +1,15 @@
+ASCII MOONSHOT — distilled qwen3-8b emits shape-programs that render recognizable art on HELD-OUT subjects
+(cold qwen emitted empty/garbage; the model could not draw ASCII directly).
+
+house (training subject):          rocket (HELD-OUT):              umbrella (HELD-OUT):
+        RR                                 o                              #
+      R    R                         ############
+    R        R                       #O  O                          ##########
+  RRRRRRRRRRRRRR                     #----                          # ###    #
+   ############                      ############                   \    /   #
+   # WW    WW #                     ###########                     ##########
+   # WW    WW #                === #  +     ===
+   #   DDDD   #                     #  +      #
+   #   D oD   #                     ###########
+   #   D  D   #                      |    |
+   ####DDDD####                 ___  |    |  ___

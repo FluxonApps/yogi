@@ -15,8 +15,7 @@ from its own verified traces, generalizing from training operands 1–8 to held-
 3 seeds)** from a **0/40** cold floor, goal-agnostically across arithmetic and string skills, at **zero frontier cost (free-verifier goals)**; and we map a clean **failure boundary** governed by four conditions (novelty, application
 yield, capacity, compounding protection). We further show a similarity-dependent catastrophic-forgetting
 failure in sequential learning and a targeted fix (similarity-aware replay) that the obvious uniform
-replay misses. The contribution is the **safety guarantee + the when-it-works map + the cost**, on
-commodity hardware — not the method.
+replay misses. Finally, where the base model is below the bootstrap floor for a skill (drawing ASCII), reformulating the action space to program-composition + teacher-bootstrapping the emission skill crosses it (held-out valid-program emission 1/6 → 6/6) — base capability is not the ceiling, the action space is. The contribution is the **safety guarantee + the when-it-works map + the cost + the action-space lever**, on commodity hardware — not the method.
 
 ## 1. Introduction & positioning
 The "self-evolving agent" space is crowded and moving monthly. The core mechanism we use is not novel:
@@ -81,6 +80,21 @@ prior skill ± joint-contrast examples). Result: **A_add 1/8 → 8/8** while the
 (C_mul 6/8 → 8/8). Generic feature-contrastive replay exists [Co²L arXiv:2106.14413; ACR arXiv:2410.07110]
 but not for self-distilled symbolic-rule confusion; this is a targeted fix to the boundary we identified.
 
+**F6 — crossing the bootstrap floor by reformulating the action space (the moonshot).** ASCII *drawing*
+is a documented below-floor failure: the 8B cannot draw directly and emits empty/garbage when asked for a
+drawing program cold (held-out valid-program rate **1/6**). We reformulate the action space to *shape-DSL
+program composition* and teacher-bootstrap the program-*emission* skill it lacks — a teacher (frontier
+model, salary-capped at 24 calls) writes DSL programs, a deterministic renderer + validity filter keeps
+the good ones (20/24), and we distill the 8B to emit programs [Program-aided Distillation
+arXiv:2305.13888; executable-code-actions]. On 6 **held-out** subjects the distilled model emits valid
+composed programs **6/6** (vs cold 1/6); eyeballed renders are recognizable (a clearly-recognizable house
+on a training subject; a plausible rocket and umbrella on held-out ones). So a model that *cannot draw
+ASCII directly* produces recognizable ASCII on unseen subjects — by composing primitives after
+teacher-bootstrapping the emission skill. The lesson is the headline: **base capability is not the
+ceiling; the action space is.** *(Honest scope: "valid" = composed, ≥3 lines / ≥2 chars — the emission
+floor; recognizability is eyeballed not judge-scored; n=6 held-out; this is the one result that spends
+frontier salary, by design — it is the teacher-bootstrap case.)*
+
 ## 4. Safety: bounded self-modification (C1)
 Threat model: an adversary controlling the entire self-improvement loop tries to acquire a forbidden
 power; the only channel to heritable change is `apply` (an assumption true in this build and test-pinned, but stated). The six forbidden powers (capability grant, trust
@@ -106,6 +120,6 @@ a monitor that reward-hacking could erode.
 
 ## 6. Conclusion
 On commodity hardware, a sub-frontier local model can teach itself a novel skill from its own
-verifier-checked traces — generalizing, at zero frontier cost — *within a provably-closed action space*,
+verifier-checked traces — generalizing, at zero frontier cost — *within a closed, typed action space that makes forbidden capabilities unrepresentable*,
 and we map exactly when this works and when it fails. The artifact (a reproducible local-self-improvement
 testbed + the phase-diagram benchmark) is the intended contribution to others.

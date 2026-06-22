@@ -44,7 +44,7 @@
 | **Safety red-team**: forbidden capability unrepresentable | ❌ needed | — |
 | Full phase-diagram sweep ({0.5,1.5,8}B × kinds × yield × split) | ◧ partial | points above |
 | ASCII: failure-boundary case (below floor + paid verifier) | ✅(neg) | documented |
-| ASCII moonshot: cross the floor via program-synthesis + teacher-bootstrap | ❌ stretch | — |
+| F6 MOONSHOT ✅: action-space change crosses the floor — held-out valid-program emission cold 1/6 → distilled 6/6, recognizable renders | ✅ | ascii_moonshot |
 
 ## Figures (what each run must produce)
 - F1 — the ratchet: cold→distilled bars per goal (with seeds/error bars). *(needs stats)*

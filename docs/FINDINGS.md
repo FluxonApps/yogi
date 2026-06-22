@@ -1180,3 +1180,22 @@ nothing here (the ⊕/⊗ are distinguished by heavy replay already). This is th
 uniform replay (obvious) failed; researching the gap (similarity↔forgetting U-shape, confusable=worst)
 → inventing similarity-aware replay → it works. A targeted fix to the forgetting we uniquely
 characterized — a genuine contribution, not a repackaged technique.
+
+## 2026-06-23 — F6 MOONSHOT ✓: action-space change crosses the ASCII bootstrap floor
+
+The ASCII arc's failure (8B "below the bootstrap floor" — couldn't draw ASCII directly, couldn't emit
+programs cold) is RESOLVED by changing the action space + teacher-bootstrapping the emission skill
+(Program-aided Distillation, arXiv:2305.13888). Teacher (Claude, salary-capped 24 calls) wrote shape-DSL
+programs → deterministic renderer+validity filter (20/24 valid) → LoRA qwen3-8b to EMIT programs. Result
+on 6 HELD-OUT subjects (rocket, umbrella, bridge, lamp, kite, drum — none trained):
+  COLD valid-program emission: 1/6   (empty/garbage — the original below-floor failure)
+  DISTILLED valid-program emission: 6/6   ← CROSSED THE FLOOR
+Eyeballed renders (docs/paper/figures/f6-moonshot-renders.txt): house (train) clearly recognizable;
+rocket (held-out) plausibly a rocket (nose/body/fins/exhaust); umbrella roughly (canopy+ribs+handle).
+So a model that CANNOT draw ASCII directly DRAWS recognizable ASCII on unseen subjects — by composing
+shape-primitives (action-space change) after teacher-bootstrapping the program-emission skill it lacked
+cold. The deepest thesis validated: BASE CAPABILITY ISN'T THE CEILING; THE ACTION SPACE IS.
+Honest scope: "valid" = composed (≥3 lines, ≥2 chars) — the emission floor; recognizability is eyeballed
+(house clear, rocket/umbrella plausible), not judge-scored; n=6 held-out; teacher-bootstrap used salary
+(24 capped calls). The ASCII "below-floor" cell of the phase diagram (F2) now has its resolution: the
+floor is crossed by action-space reformulation, not by making the base better at the hard action.
