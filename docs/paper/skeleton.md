@@ -79,3 +79,18 @@
 4. **Safety red-team** → F5 (the novelty, C1).
 5. **Frontier-dependence decay** → F4 (C3).
 6. **(stretch) ASCII moonshot** → F6.
+
+## Novel approaches at gaps (the discipline: research → invent-if-uncovered → test)
+At every gap: research the frontier; if its approaches are inadequate or don't cover our setting, INVENT
+and test a novel one (not just the obvious fix). The gaps and their candidate novel approaches:
+- **Forgetting (similarity-dependent; U-shape confirmed — confusable rules are the worst case).** Uniform
+  replay = naive (it failed: A 7/8→1/8). Frontier has generic feature-contrastive replay (Co²L 2106.14413,
+  ACR 2410.07110) but NOT for self-distilled *symbolic-rule* confusion. NOVEL = **disambiguation /
+  similarity-aware replay**: heavy-replay the *confusable* prior skill + joint-contrast examples (⊕ vs ⊗
+  distinction). Test: does it prevent the collapse uniform replay missed? → scripts/disambig_test.sh.
+- **Application floor (model can't apply the rule → ratchet starves: ASCII, vowel-cycle).** Standard =
+  bigger model / teacher-bootstrap. NOVEL (richest, boldest) = **action-space change** — give the model an
+  action it CAN do (compose primitives / emit a program) + a deterministic executor for the hard part.
+  "Base capability isn't the ceiling; the action space is." (the ASCII moonshot, F6).
+- **Verifier-must-exist.** Standard = self-consistency (crowded). NOVEL = **structural verifiers**
+  (decompose into checkable sub-steps) / distilled local verifier from frontier-judge labels.
