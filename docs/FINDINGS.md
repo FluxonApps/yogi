@@ -1033,3 +1033,22 @@ Bounds the goal-agnostic claim cleanly: the ratchet internalizes a rule the mode
 floor) that starved the 1.5B on multiplication. To isolate KIND from difficulty, switching to an
 easy-to-apply string transform (dash-insertion cat→c-a-t) — high yield — to test whether a NON-arithmetic
 skill then internalizes.
+
+## 2026-06-22 — GOAL-AGNOSTIC ACROSS KINDS ✓ + the boundary condition identified
+
+Dash-insertion cipher (cat→c-a-t, a NON-arithmetic skill, easy to apply) on the REAL qwen3:8b: self-gen
+38/38 → cold held-out 0/8 → distilled 8/8 (floor rose 0→100% on unseen words) → general 3/3→3/3 (no
+forgetting). So a string skill internalizes exactly like the arithmetic rules did.
+
+Summary of the demonstrated democratization ratchet on the real agent (qwen3:8b, MLX, zero salary):
+| goal              | kind       | self-gen yield | cold→distilled |
+| 3a+2b             | arithmetic | 64/64          | 0 → 8/8        |
+| 2a+3b             | arithmetic | 64/64          | 0 → 8/8        |
+| dash-insert c-a-t | string     | 38/38          | 0 → 8/8        |
+| vowel-cycle       | string     | 9/38 (starved) | 0 → 1/8        |
+
+CONCLUSION: the ratchet is GOAL-AGNOSTIC (arithmetic + string), with a clean BOUNDARY CONDITION — it
+internalizes a rule the model can RELIABLY APPLY (high self-gen yield); the vowel-cycle didn't because
+the 8B couldn't apply a 5-way cycle reliably (yield starved 9/38), NOT because it's a string task.
+Three goals 0→8/8, zero forgetting, zero frontier salary, on a sub-frontier local model. P1+P2 done.
+The boundary condition = condition-3 (application floor) of the research note, now empirically located.
