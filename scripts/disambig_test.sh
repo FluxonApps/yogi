@@ -8,6 +8,7 @@
 #   disambig: C + ALL A + 10 B + joint-contrast (⊕ vs ⊗) examples   (the novel mechanism)
 # Eval A_add (retention) + C_mul (still learned) after each. Real qwen3:8b, zero salary. Foreground only.
 set -uo pipefail; cd "$(dirname "$0")/.." || exit 1
+export HF_HUB_DISABLE_PROGRESS_BARS=1
 PY=.venv-mlx/bin/python; STUDENT=mlx-community/Qwen3-8B-4bit; SEQ=/tmp/yogi_seq; W=/tmp/yogi_disambig
 [ -f "$SEQ/ad2/adapters.safetensors" ] || { echo "need /tmp/yogi_seq/ad2 — run scripts/sequential_rounds.sh first"; exit 1; }
 mkdir -p "$W"; cp "$SEQ/eval.py" "$W/eval.py"

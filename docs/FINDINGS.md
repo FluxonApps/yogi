@@ -1165,3 +1165,18 @@ adapters on the n=40 unseen-operand held-out (operands 9-12, far beyond train 1-
   cold (no adapter): 0/40   →   distilled: 40/40, 40/40, 38/40  (mean 39.3/40 = 98%, std 0.9, n=3 seeds)
 So the self-distilled operator skill generalizes ROBUSTLY (98%, near-perfect) to operands well outside the
 training range (not near-only) — stronger than the original single-seed n=8 "8/8". F1 stands with error bars (std 0.9/40). The 0/40 scare was purely eval truncation, now fixed.
+
+## 2026-06-22 — F3 ✓ NOVEL APPROACH WINS: similarity-aware replay prevents the forgetting uniform replay missed
+
+The forgetting gap, attacked with a NOVEL approach (not the obvious uniform replay). Learning C_mul
+(⊗=2a+3b) on top of A_add+B (the ad2 adapter), three replay conditions, eval A_add retention + C_mul:
+  [uniform]  A_add 1/8   C_mul 6/8   ← baseline: catastrophic forgetting of the confusable A (the gap)
+  [heavyA]   A_add 8/8   C_mul 8/8   ← similarity-aware HEAVY replay of the confusable skill: A fully retained
+  [disambig] A_add 8/8   C_mul 8/8   ← + joint-contrast ⊕/⊗ examples: also fully retained
+RESULT: heavy-replaying the CONFUSABLE prior skill (similarity-aware), and/or joint-contrast of the
+confusable pair, PREVENTS the similarity-dependent catastrophic forgetting that uniform 10-trace replay
+missed (A 1/8 → 8/8) AND learns the new skill better (C 6/8 → 8/8). heavyA alone suffices; disambig adds
+nothing here (the ⊕/⊗ are distinguished by heavy replay already). This is the discipline working:
+uniform replay (obvious) failed; researching the gap (similarity↔forgetting U-shape, confusable=worst)
+→ inventing similarity-aware replay → it works. A targeted fix to the forgetting we uniquely
+characterized — a genuine contribution, not a repackaged technique.

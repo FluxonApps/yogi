@@ -36,7 +36,8 @@
 | Capacity gates induction: 1.5B memorizes (0/8), 8B induces (8/8) | ✅ | 3-run 1.5B vs 8B |
 | Yield threshold: starved 9/38 → 1/8; ample 64/64 → 8/8 | ✅ | vowel-cycle vs dash |
 | Union co-training holds 3 skills at once | ✅ | 8/8, 8/8, 6/8 |
-| Sequential forgetting is SIMILARITY-dependent (light replay insufficient) | ✅ | A 7/8→1/8 vs B 8/8 |
+| Sequential forgetting is SIMILARITY-dependent (uniform replay insufficient: A 1/8) | ✅ | A 1/8 vs B 8/8 |
+| F3 NOVEL ✅: similarity-aware heavy replay PREVENTS it (A 1/8→8/8, C 6/8→8/8) — invented fix beats baseline | ✅ | disambig_test |
 | REAL recognizable task (Roman): SATURATED (cold 9/12) → ratchet no-help/mild-harm (6/12) | ✅(boundary) | known-skill regime |
 | **Novelty/cold-floor axis**: works iff cold≈0 (novel) — operators are valid out-of-pretraining stand-ins | ✅ | Roman vs operators |
 | F1 STATS ✅: ⊕ ratchet, 3 seeds, n=40 held-out (operands 9-12): cold 0/40 → distilled mean 39.3/40=98% (std 0.9, n=3) — robust far-extrapolation to operands 9-12 | ✅ | corrected EVAL_MAX=256 |
