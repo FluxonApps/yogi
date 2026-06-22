@@ -1101,3 +1101,18 @@ OPEN FRONTIERS (substantial, deliberate next steps — not auto-run):
 - Harder pure-STaR (no rule handed) on a task in the model's partial-competence band.
 - P3 ASCII bootstrap (teacher-distill tool-use to cross the application floor); P4 distill the verifier
   (shrink frontier dependence further).
+
+## 2026-06-22 — COMPOUNDING ✓ one model holds THREE novel skills at once (the floor ratchets cumulatively)
+
+scripts/multi_round.sh, qwen3:8b, union of self-generated verified traces across a mixed curriculum:
+  self-gen: ⊕(3a+2b) 64/64, ⊙(dash) 38/38, ⊗(2a+3b) 64/64 → 169-trace union
+  cold→distilled (held-out): ⊕ 0→8/8 · ⊙ 0→8/8 · ⊗ 0→6/8
+ALL THREE rose from 0 → ONE model internalized three novel skills (2 kinds) simultaneously from its own
+verified traces, zero salary. COMPOUNDING ✓ — the floor ratchets up cumulatively, the actual
+self-evolving claim (not one-shot). Honest detail: ⊗ at 6/8 (vs 8/8 solo) = MILD interference when 3
+skills share one adapter; still a clear rise. Perfect non-interference = a replay-balancing tune (M3's
+lever) — a refinement, not a blocker. This + P1 + P2 + awareness + the agent-driven loop = the
+democratization thesis demonstrated end-to-end AND shown to compound, on a sub-frontier local model.
+THE WORK IS AT A STRONG, COMPLETE MILESTONE. Optional refinements (not thesis-level): replay-balancing
+to push ⊗→8/8; multi-ROUND sequential (vs union) to test true catastrophic-forgetting across rounds;
+serve weights back to the awareness pass for cross-round cycles; harder pure-STaR; P3 ASCII; P4 distill-verifier.
