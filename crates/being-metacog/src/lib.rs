@@ -17,6 +17,25 @@
 //!
 //! Pure + model-free (green-gate safe). The cold/taught probing happens in foreground bins.
 
+/// A **goal as data**: instances + cold/taught prompts + a FREE verifier. Implement this (a small
+/// struct + a verifier) to add a new goal — the awareness layer and the ratchet are generic over it,
+/// so adding a goal needs no engine change. The cold/taught split is what makes the ZPD measurable:
+/// `cold` (no help) is what the floor is measured on; `taught` (rule/scaffold in context) is how the
+/// agent self-generates verified traces to practice.
+pub trait Goal {
+    type Instance: Clone;
+    fn name(&self) -> &str;
+    fn train(&self) -> Vec<Self::Instance>;
+    /// Held-out instances — a floor-rise here is generalization, not memorization.
+    fn test(&self) -> Vec<Self::Instance>;
+    /// Prompt with NO help — what the cold floor is measured on.
+    fn cold_prompt(&self, instance: &Self::Instance) -> String;
+    /// Prompt with the rule/scaffold in context — used to self-generate verified traces.
+    fn taught_prompt(&self, instance: &Self::Instance) -> String;
+    /// FREE deterministic verifier: is `output` correct for this instance?
+    fn verify(&self, instance: &Self::Instance, output: &str) -> bool;
+}
+
 /// Where an item sits relative to the agent's ability — measured by the verifier, not introspection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mastery {

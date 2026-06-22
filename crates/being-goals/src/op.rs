@@ -54,9 +54,36 @@ pub fn test_pairs() -> Vec<(i64, i64)> {
     vec![(9, 3), (7, 9), (9, 9), (2, 9), (9, 6), (4, 9), (9, 1), (8, 9)]
 }
 
+/// The operator goal as a [`Goal`] instance — proves the engine is goal-agnostic (adding a goal is just
+/// implementing this trait; no change to the awareness layer or the ratchet).
+pub struct OpGoal;
+
+impl being_metacog::Goal for OpGoal {
+    type Instance = (i64, i64);
+    fn name(&self) -> &str {
+        "operator (3a+2b)"
+    }
+    fn train(&self) -> Vec<(i64, i64)> {
+        train_pairs()
+    }
+    fn test(&self) -> Vec<(i64, i64)> {
+        test_pairs()
+    }
+    fn cold_prompt(&self, i: &(i64, i64)) -> String {
+        cold_prompt(i.0, i.1)
+    }
+    fn taught_prompt(&self, i: &(i64, i64)) -> String {
+        taught_prompt(i.0, i.1)
+    }
+    fn verify(&self, i: &(i64, i64), output: &str) -> bool {
+        verify(i.0, i.1, output)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use being_metacog::Goal;
 
     #[test]
     fn operator_rule() {
@@ -78,6 +105,17 @@ mod tests {
         assert!(verify(3, 4, "17"));
         assert!(verify(3, 4, "the result is 17"));
         assert!(!verify(3, 4, "7")); // a+b — the cold-model guess
+    }
+
+    #[test]
+    fn op_goal_implements_the_generic_goal_trait() {
+        let g = OpGoal;
+        assert!(!g.train().is_empty() && !g.test().is_empty());
+        let i = g.test()[0];
+        assert!(g.cold_prompt(&i).contains('\u{2295}'));
+        assert!(g.taught_prompt(&i).contains("3*a"));
+        assert!(g.verify(&i, &format!("{}", op(i.0, i.1))));
+        assert!(!g.verify(&i, "0"));
     }
 
     #[test]

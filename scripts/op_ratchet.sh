@@ -25,12 +25,14 @@ import json, sys, re, random, os
 from mlx_lm import load, generate
 d, mp = sys.argv[1], sys.argv[2]
 NT = " /no_think" if os.environ.get("THINK_OFF") else ""   # qwen3 etc. are thinking models — disable <think>
-op   = lambda a,b: 3*a + 2*b      # easy arithmetic — isolates rule-internalization from arithmetic
+EXPR = os.environ.get("OP_EXPR", "3*a+2*b")  # the (novel) rule — parameterized to prove goal-agnostic
+RULE = os.environ.get("RULE", "3*a + 2*b")   # human-readable form shown in the taught prompt
+op   = lambda a,b: eval(EXPR, {"__builtins__": {}}, {"a": a, "b": b})  # easy arithmetic, novel mapping
 # A single COLD prompt (NO rule) used for train + eval; it invites reasoning so the model learns the
 # PROCEDURE, not a lookup → generalizes to unseen operands. /no_think suffix is baked in consistently.
 cold = lambda a,b: f"What is {a} ⊕ {b}? Show your working step by step, then give the integer.{NT}"
 # self-gen uses the rule IN-CONTEXT to produce a correct REASONING trace; we distill that trace.
-taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = 3*a + 2*b. {cold(a,b)}"
+taught = lambda a,b: f"The operator ⊕ is defined by a ⊕ b = {RULE}. {cold(a,b)}"
 strip_think = lambda t: t.split('</think>')[-1]            # ignore any <think> block before parsing
 parse = lambda t: (lambda xs: int(xs[-1]) if xs else None)(re.findall(r'-?\d+', strip_think(t)))
 model, tok = load(mp)
