@@ -1016,14 +1016,26 @@ pub struct ToolspaceGenerator {
     proposer: OpenAiChatProposer,
     pub w: usize,
     pub h: usize,
+    /// HARD CAP on `claude -p` critique calls (CLAUDE.md: a runaway loop must never drain the
+    /// subscription). The Refine tool's critiques are metered separately from the judge's salary; when
+    /// this is exhausted, Refine degrades to a plain draw (no critique). `0` disables critiques.
+    critique_budget: u64,
+    pub critiques_made: u64,
 }
 
 impl ToolspaceGenerator {
+    /// Default critique budget of 12 (bounds Refine's frontier spend alongside the judge salary).
     pub fn new(w: usize, h: usize) -> Self {
+        Self::with_critique_budget(w, h, 12)
+    }
+
+    pub fn with_critique_budget(w: usize, h: usize, critique_budget: u64) -> Self {
         Self {
             proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3_thinking()),
             w,
             h,
+            critique_budget,
+            critiques_made: 0,
         }
     }
 
@@ -1048,9 +1060,11 @@ impl ToolspaceGenerator {
 
     fn refine(&mut self, genome: &Genome, subject: &str) -> String {
         let first = self.direct(genome, subject);
-        if first.trim().is_empty() {
+        // Salary cap on critiques: exhausted budget (or empty draw) → no critique, return the draw.
+        if first.trim().is_empty() || self.critiques_made >= self.critique_budget {
             return first;
         }
+        self.critiques_made += 1;
         let crit = claude_critique(subject, &first);
         if crit.trim().is_empty() {
             return first;
