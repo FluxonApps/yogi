@@ -208,6 +208,11 @@ dependencies = [
 [[package]]
 name = "being-goals"
 version = "0.0.0"
+dependencies = [
+ "being-metacog",
+ "being-proposer-openai",
+ "being-runtime",
+]
 
 [[package]]
 name = "being-lineage"

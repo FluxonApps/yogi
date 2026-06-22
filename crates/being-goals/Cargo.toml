@@ -9,3 +9,13 @@ license.workspace = true
 # no frontier judge, no salary — so the self-distillation ratchet can be tested with zero cloud cost.
 # The lib is model-free (green-gate safe); the model runs live only in foreground bins.
 [dependencies]
+
+# Dependencies for the foreground awareness/ratchet bins (model + metacog wiring). Lib stays pure.
+being-metacog = { path = "../being-metacog" }
+being-proposer-openai = { path = "../being-proposer-openai" }
+being-runtime = { path = "../being-runtime" }
+
+# AWARENESS: probe the real agent's capability frontier (verifier-grounded) → what to practice.
+[[bin]]
+name = "metacog_assess"
+path = "src/bin/metacog_assess.rs"
