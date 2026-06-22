@@ -410,7 +410,7 @@ mod tests {
             None,
         );
         assert!(
-            archive.len() >= 1,
+            !archive.is_empty(),
             "illumination filled at least one ASCII niche"
         );
     }
