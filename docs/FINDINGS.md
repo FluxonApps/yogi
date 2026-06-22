@@ -1064,3 +1064,40 @@ cold≈0 / taught≈high headroom. Honest conclusion: pure same-mode STaR isn't 
 model; the higher-value step is the AGENT-DRIVEN loop — consolidate the proven pieces (metacog awareness
 + ratchet) into ONE autonomous self-improvement cycle (assess→decide→practice→re-assess), the operator's
 "awareness+practice+loop, nothing human" vision realized.
+
+## 2026-06-22 — CAPSTONE ✓ agent-driven self-improvement loop closes end-to-end
+
+scripts/self_improve.sh ran the full cycle with NO human in the decision:
+  1. ASSESS   — metacog (verifier-grounded): capability map mastered=0 frontier=8 beyond=0, floor=0%
+  2. DECIDE   — "8 items at the frontier (ZPD) → practice them" (from the agent's own map)
+  3. PRACTICE — ratchet: self-gen 64/64 → cold 0/8 → distilled 8/8
+  4. RE-ASSESS— frontier→Mastered: floor 0→8/8, general 3/3→3/3 (no forgetting)
+Awareness + practice + loop, agent-driven, on the real qwen3:8b, zero frontier salary. The session's
+thesis demonstrated not as separate experiments but as one self-directed cycle.
+
+## 2026-06-22 — SESSION SUMMARY: democratization of intelligence, demonstrated
+
+Question (operator): given a goal, can a sub-frontier LOCAL agent get better at it, regardless of
+starting capability? Answer: YES, for the rule-internalization regime, demonstrated on qwen3:8b.
+
+PROVEN (real agent, MLX, free verifiers, ZERO frontier salary, ZERO forgetting):
+- P1 — the ratchet raises the floor: distilling the model's OWN self-generated, verifier-checked
+  reasoning into its weights took a novel rule from 0/8 → 8/8 on HELD-OUT (unseen) inputs.
+- P2 / goal-agnostic across KINDS — three goals all 0→8/8: 3a+2b, 2a+3b (arithmetic) + dash-insertion
+  c-a-t (string). A goal is DATA (being_metacog::Goal trait); no engine change to add one.
+- AWARENESS layer (being-metacog) — verifier-grounded capability map (Mastered/Frontier/Beyond),
+  works on the real agent (classified ⊕ as Frontier → practice).
+- CAPSTONE — the agent-driven assess→decide→practice→re-assess loop closes end-to-end (above).
+- BOUNDARY CONDITION (honest) — internalization needs the model to RELIABLY APPLY the rule (high
+  self-gen yield). The vowel-cycle starved at 9/38 → 0→1/8; the 1.5B memorized-not-induced across 3
+  runs → use the 8B. Pure same-mode STaR has a narrow band on a strong reasoner (recorded).
+ENGINE: goal + free verifier + self-gen + verify + distill-to-weights, on a weak local model.
+Architecture/safety thesis written up (docs/research/democratizing-intelligence.md §7;
+docs/evolution-and-safety.md): bound the ACTION SPACE, evolve freely inside; safety = the boundary,
+not a human; the fence rises on earned trust.
+
+OPEN FRONTIERS (substantial, deliberate next steps — not auto-run):
+- Multi-round: serve the improved weights back into the awareness pass so cycles compound across rounds.
+- Harder pure-STaR (no rule handed) on a task in the model's partial-competence band.
+- P3 ASCII bootstrap (teacher-distill tool-use to cross the application floor); P4 distill the verifier
+  (shrink frontier dependence further).
