@@ -521,8 +521,35 @@ pub fn draw_prompt(
     (input, retrieved)
 }
 
-/// The local ASCII drawer: qwen3:8b via the Ollama client. `generate` performs a model call and is
-/// therefore **foreground-only** (never exercised by the green-gate — tests use a stub generator).
+/// Extract the ASCII art from a raw model response: drop a `<think>…</think>` block (qwen3 thinking
+/// mode — keep only what follows the last `</think>`; an unclosed/truncated think yields no art) and
+/// unwrap a fenced code block if present. Pure + testable. *Found empirically: `/no_think` returns an
+/// empty string for drawing prompts, so the generator runs in thinking mode and relies on this.*
+pub fn extract_art(raw: &str) -> String {
+    let body = if let Some(pos) = raw.rfind("</think>") {
+        &raw[pos + "</think>".len()..]
+    } else if raw.contains("<think>") {
+        "" // think opened but never closed (truncated) → no usable art
+    } else {
+        raw
+    };
+    // Unwrap a fenced block (the art is often inside ``` … ```).
+    let body = if let Some(start) = body.find("```") {
+        let after = &body[start + 3..];
+        let after = after.split_once('\n').map(|(_, r)| r).unwrap_or(after); // drop the ```lang line
+        match after.find("```") {
+            Some(end) => &after[..end],
+            None => after,
+        }
+    } else {
+        body
+    };
+    body.trim_matches('\n').to_string()
+}
+
+/// The local ASCII drawer: qwen3:8b via the Ollama client, in **thinking mode** (no_think returns empty
+/// for drawing prompts). `generate` performs a model call and is therefore **foreground-only** (never
+/// exercised by the green-gate — tests use a stub generator).
 pub struct OllamaGenerator {
     proposer: OpenAiChatProposer,
     pub library: BTreeMap<String, String>,
@@ -531,7 +558,7 @@ pub struct OllamaGenerator {
 impl OllamaGenerator {
     pub fn new() -> Self {
         Self {
-            proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3()),
+            proposer: OpenAiChatProposer::new(OpenAiChatConfig::ollama_qwen3_thinking()),
             library: default_exemplar_library(),
         }
     }
@@ -546,9 +573,11 @@ impl Default for OllamaGenerator {
 impl Generator for OllamaGenerator {
     fn generate(&mut self, genome: &Genome, subject: &str) -> String {
         let (input, retrieved) = draw_prompt(genome, subject, &self.library);
-        self.proposer
+        let raw = self
+            .proposer
             .try_propose(&ContextPack { input, retrieved })
-            .unwrap_or_default()
+            .unwrap_or_default();
+        extract_art(&raw)
     }
 }
 
@@ -627,6 +656,21 @@ mod tests {
         assert_eq!(parse_score("On the 0-10 scale I rate this an 8"), 0.8);
         assert_eq!(parse_score("7"), 0.7);
         assert_eq!(parse_score("no number here"), 0.0);
+    }
+
+    #[test]
+    fn extract_art_strips_think_and_fences() {
+        // thinking mode: keep only what follows </think>
+        assert_eq!(
+            extract_art("<think>plan the cat</think>\n /\\_/\\\n(o.o)\n >^<"),
+            " /\\_/\\\n(o.o)\n >^<"
+        );
+        // fenced block is unwrapped
+        assert_eq!(extract_art("```\n /\\_/\\\n(o.o)\n```"), " /\\_/\\\n(o.o)");
+        // truncated think (no close) → no art
+        assert_eq!(extract_art("<think>still reasoning and cut off"), "");
+        // plain art passes through
+        assert_eq!(extract_art(" /\\\n(o.o)"), " /\\\n(o.o)");
     }
 
     #[test]
