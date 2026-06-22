@@ -1010,3 +1010,13 @@ Honest scope: this is a MECHANISM proof on a toy goal (a made-up operator), not 
 application — exactly what P1 set out to prove (the engine works). Compelling goals + goal-as-data come
 at P2/P5. Note: metacog_assess runs on Ollama qwen3:8b while the ratchet trains an MLX qwen3-8b adapter —
 same base, different runtime; serving the adapter back to the assessment path is a P2 integration item.
+
+## 2026-06-22 — GOAL-AGNOSTIC confirmed: a 2nd novel rule, same engine, qwen3:8b 0→8/8 again
+
+Second goal (op=2a+3b, distinct from goal-1's 3a+2b), run through the IDENTICAL pipeline with NO engine
+change (only OP_EXPR/RULE env): self-gen 64/64 → cold held-out 0/8 → distilled 8/8 (floor rose 0→100%
+on unseen operands) → general 3/3→3/3 (no forgetting). Two-for-two on the real agent ⇒ the democratization
+ratchet is goal-agnostic for in-context-learnable rules: it reliably internalizes a novel rule into the
+weights, generalizing, zero forgetting, zero salary. (Both goals are the "rule-internalization" regime:
+cold≈0 because the rule is withheld; taught≈100% because given. The PURE STaR regime — improve at a task
+the model is partially capable at cold, with NO rule handed — is the next, deeper test.)
