@@ -976,3 +976,12 @@ operator correctly flagged the 1.5B is the WRONG model — the being's agent is 
 is the COHERENCE FIX: the ratchet on the REAL 8B agent (M3 lesson: capacity gates generalization —
 0.5B can't learn ⊕, 1.5B can; the 8B has far more capacity to induce, not memorize). Also consider an
 interpolation split (operands seen, held-out pairs) as a fairer generalization test.
+
+## 2026-06-22 — AWARENESS demonstrated on the REAL agent (qwen3:8b)
+
+metacog_assess (being-metacog + the free verifier) on qwen3:8b, ⊕ held-out: all 8 items cold=false /
+taught=true → capability map mastered=0, frontier=8, beyond=0, floor=0%, next_action=PracticeFrontier(8).
+The agent — grounded in the verifier, not introspection — KNOWS it can't do ⊕ alone but can with the
+rule, so these are its ZPD/learnable-now frontier → practice them. That is the "awareness" in
+awareness+practice+loop, operating on the being itself. (Also: the 8B solves every held-out 9-pair WITH
+the rule — vs the 1.5B's 51/64 — so it has the capacity; the ratchet now tests internalization.)
