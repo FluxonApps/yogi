@@ -1282,3 +1282,14 @@ in the executor — tool-USE is internalized, not the skill; consistent with F6/
 RAG-internalization thesis (arXiv:2510.01375: internalize the scaffold, drop the runtime dependency)
 realized as MODEL-SELECTED, weight-internalized tool-reaching across a task suite. F7 is now n=3 genuine
 floors (+1 honest non-floor), not n=1. Caveat: 'sort' wasn't below-floor (recorded straight).
+
+## 2026-06-23 — Phase 2a (invention): reasoning-induction FAILS at 8B — but that's a FLOOR to cross, not a ceiling
+
+The being was asked to DISCOVER a novel rule (⊞ = 5a+3b+7) from 8 examples by reasoning (propose candidate
+formulas). It proposed only narrow forms (a*10-b, a*9+b, a*8+12, ...) — never the 2-coefficient+constant
+shape — and discovered NONE. Honest boundary: the 8B can internalize a GIVEN rule (F1) but cannot induce a
+2-variable linear rule from examples by in-context reasoning. PER THE DIRECTIVE (external limits are not
+ceilings): this is the being being BELOW-FLOOR on induction itself → cross it with the same action-space
+lever (F6/F7): reformulate induction as PROGRAM-SEARCH (the model writes code that fits the examples),
+cross the induction floor, THEN internalize the discovered rule. Recursive application of the thesis:
+the action space is the ceiling, even for invention. Next: scripts/invent_v2.sh.
