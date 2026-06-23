@@ -1,0 +1,11 @@
+py ok
+f451be0 scripts/sql_real2.sh: faster + stronger-scaffold BIRD retry (compact schema + sample-N + max-seq-length)
+=== GPU free? ===
+0
+=== launch sql_real2 PROBE (faster; ~10min) ===
+DBs=['toxicology', 'california_schools', 'debit_card_specializing', 'student_club', 'superhero', 'financial']  train=36 held-out=18  sample-N=6  (compact schema)
+gold exec check: 1/54 errored
+=== PROBE v2 (sample-6): one-shot floor vs scaffold-cross (train n=36) ===
+  one-shot FLOOR 13/36   sample-6 scaffold-cross 15/36  -> 15 traces (was 14 naive)
+  HELD-OUT one-shot before: 9/18
+PROBE v2 done. if scaffold-cross >> 14 -> PHASE=full.

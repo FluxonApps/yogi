@@ -155,3 +155,16 @@ verifier-must-exist limitation — the next open bet); (3) *invention the weak m
 the frontier proposes, the local model verifies (free) and internalizes. The anti-pattern is salary that
 creates permanent per-call dependency (RAG/judge-every-inference): renting capability, not acquiring it.
 The test: does next iteration need *less* salary than this one?
+
+## 9. Real-task usability boundary (BIRD) — where the ratchet helps, and where it can't
+We tested usability on BIRD mini-dev (the popular realistic text-to-SQL benchmark; free execution
+verifier; qwen3-8B; small-schema subset; compact-schema harness, 1.47x). Result, honest: clean SQL is
+*above* floor (8B ~88% one-shot — no gap). Hard BIRD is genuinely *below* floor (one-shot ~33%), but the
+hard questions are **beyond the base's reach**: a free execution-repair scaffold lifts yield only +2/36,
+and sample-6 (six verifier-gated attempts/question) only +2 — so distilling the ~15 (easy) verified traces
+does not raise held-out one-shot (7/18→7/18). The bottleneck is **base capability, not scaffold/yield**:
+self-distillation amplifies what the model can sometimes do, it cannot manufacture capability the base
+lacks. This bounds the contribution precisely: the ratchet democratizes the **reachable-floor** regime
+(below-floor but solvable-with-help — operators, induction, tool-use, §3/§7), not tasks beyond the base
+(hard enterprise SQL on an 8B needs a stronger base). It is the F2 phase diagram's yield-threshold, drawn
+on a real benchmark — an honest map of applicability, not a universal claim.

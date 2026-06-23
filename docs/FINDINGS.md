@@ -1448,3 +1448,22 @@ ADOPT: compact schema (validated 1.47x eval speedup AND ~5x shorter training seq
 the 37-min BIRD LoRA was long-DDL-in-context). Prefix-cache needs a template-aware prefix split to measure
 honestly — deferred, not claimed. Also adopting LoRA --max-seq-length to cap any remaining long sequences.
 Lesson: measure speedups before adopting (the "obvious" prefix-cache wasn't a win as I implemented it).
+
+## 2026-06-23 — BIRD usability v2 (stronger scaffold + faster harness): DEEPER BOUNDARY confirmed — the floor's depth
+
+sql_real2 (compact schema, sample-6, max-seq-length): one-shot FLOOR 13/36, sample-6 scaffold-cross 15/36
+(+2 over greedy; the sampler works — it found 2 beyond greedy), held-out before 9/18. Sample-N barely
+beat the naive repair scaffold (15 vs 14). Did NOT run PHASE=full (15≈14 → would re-flatten).
+CONCLUSION (the precise real-task floor map, honest + important):
+- clean SQL  → ABOVE floor (8B ~88% one-shot) — saturated, no gap (SQL analog of Roman).
+- hard BIRD  → BELOW floor (33%) BUT BEYOND REACH — neither a repair scaffold (+2) nor sample-6 (+2) crosses
+  the hard ~21/36 questions; the 8B cannot produce correct hard-SQL even with 6 verifier-gated attempts.
+So the bottleneck on hard real SQL is BASE CAPABILITY, not the scaffold, harness, or yield. The
+self-distillation ratchet AMPLIFIES what the model can sometimes do; it cannot MANUFACTURE capability the
+base lacks entirely. The democratization ratchet's real-task usability is therefore BOUNDED to the
+GOLDILOCKS regime: below-floor BUT reachable-with-help (operators F1, induction F8, tool-use F7/F9). Tasks
+beyond the base's reach (hard enterprise SQL on an 8B) need a stronger BASE, not more self-distillation —
+this completes the phase diagram (F2) on a real, popular benchmark and is the honest answer to "does this
+democratize ANY task": no — it democratizes the large, useful class of reachable-floor tasks.
+This is a clean negative that SHARPENS the thesis rather than weakening it (we now know exactly where the
+approach helps on real tasks). novelty = the SYSTEM + the map; BIRD = the use that drew the real boundary.
