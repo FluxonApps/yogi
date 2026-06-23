@@ -42,6 +42,7 @@
 | **Novelty/cold-floor axis**: works iff cold≈0 (novel) — operators are valid out-of-pretraining stand-ins | ✅ | Roman vs operators |
 | F1 STATS ✅: ⊕ ratchet, 3 seeds, n=40 held-out (operands 9-12): cold 0/40 → distilled mean 39.3/40=98% (std 0.9, n=3) — robust far-extrapolation to operands 9-12 | ✅ | corrected EVAL_MAX=256 |
 | **Safety red-team**: forbidden capability unrepresentable | ❌ needed | — |
+| C3/F4 graduation curve: naive sequential compounding LIMIT (cheap ~3 skills then plasticity collapses: yield 100→25%, learned 0/8; priors ~3/8) | ✅(neg) | graduation_curve |
 | Full phase-diagram sweep ({0.5,1.5,8}B × kinds × yield × split) | ◧ partial | points above |
 | ASCII: failure-boundary case (below floor + paid verifier) | ✅(neg) | documented |
 | F6 MOONSHOT ✅: action-space change crosses the floor — held-out valid-program emission cold 1/6 → distilled 6/6, recognizable renders | ✅ | ascii_moonshot |

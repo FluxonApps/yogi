@@ -1199,3 +1199,25 @@ Honest scope: "valid" = composed (≥3 lines, ≥2 chars) — the emission floor
 (house clear, rocket/umbrella plausible), not judge-scored; n=6 held-out; teacher-bootstrap used salary
 (24 capped calls). The ASCII "below-floor" cell of the phase diagram (F2) now has its resolution: the
 floor is crossed by action-space reformulation, not by making the base better at the hard action.
+
+## 2026-06-23 — C3/F4 graduation curve: naive sequential self-distillation has a COMPOUNDING LIMIT (honest negative)
+
+4 distinct novel linear operators (⊕,⊗,⊙,⊚) learned SEQUENTIALLY (cumulative adapter + light replay,
+fixed 24-trace budget, 8B). Per-skill yield (self-gen WITH rule in-context) / learned (held-out cold) /
+prior-retention:
+  skill 1 [⊕]: yield 100%  learned 8/8  retention n/a
+  skill 2 [⊗]: yield 100%  learned 8/8  retention 3.0/8
+  skill 3 [⊙]: yield 100%  learned 8/8  retention 3.0/8
+  skill 4 [⊚]: yield  25%  learned 0/8  retention 2.7/8   ← the collapse
+FINDING (honest, refutes "free unlimited compounding"): acquisition is cheap+reliable for the first ~3
+skills (flat 100% yield, 8/8 learned at fixed budget), BUT naive sequential accumulation degrades TWICE:
+(a) confusable priors erode to ~3/8 under light replay (the F3 gap), and (b) by skill 4 the cumulative
+adapter loses PLASTICITY — self-gen yield crashes 100%→25%, so the 4th skill fails to internalize (0/8).
+The well gets poisoned: the model can no longer cleanly apply a FRESH in-context rule after 3 rounds of
+confusable-operator LoRA. So local compounding via *naive* sequential self-distillation does NOT graduate
+— it saturates then collapses. Democratization economics is therefore conditional: cheap per-skill, but
+needs ACCUMULATION MANAGEMENT (F3 similarity-aware replay for retention + likely separate adapters / MoE /
+consolidation for plasticity — cf. "models need sleep" 2606.03979, MoRAL 2402.11260, sparse-memory
+finetuning 2510.15103). Caveat: single run; the skill-4 yield collapse could be partly ⊚-specific —
+worth a confirming re-run with a different 4th operator + with the F3 fix applied. This is the honest
+boundary of C3 and a strong motivation for the structured-accumulation follow-up.
