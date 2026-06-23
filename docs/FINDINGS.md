@@ -1360,3 +1360,15 @@ ACQUISITION by the action-space lever (the model can't compute the composition m
 RETENTION by F3 heavy/similarity-aware replay (the universal bottleneck across C3/graduation/F9). Together,
 a being can invent/discover (F8), cross its computation floor at every level via the lever (F7/F8/F9), and
 accumulate skills without collapse (F3 fix) — bounded by the closed-surface safety theorem (bet A).
+
+## 2026-06-23 — Text-to-SQL probe: clean SQL is NOT a floor for the 8B (saturated regime — no usability gap to prove here)
+
+Probe (qwen3-8B, self-contained shop DB, free execution verifier): one-shot 14/16 (88%), scaffold-cross
+16/16, HELD-OUT one-shot 7/8 (88%). The 8B is ALREADY usable at clean text-to-SQL one-shot → no floor to
+cross → running the ratchet would prove nothing (did NOT run PHASE=full — honest). My synthetic benchmark
+is too easy: the literature's 4-12% (7B SLMs) is on BIRD, whose hardness is LARGE MESSY REAL schemas
+(cryptic columns, world-knowledge values, deep nesting), not a clean 4-table DB. This is the SQL analog of
+the Roman-numeral saturation (F2): where the model is already capable, the ratchet adds nothing. To make a
+real usability proof, the task must sit in the genuine below-floor regime — either real BIRD/Spider
+(credible, needs the ~1GB DB download) or a much larger/messier self-contained schema (zero-friction but
+risks a 'manufactured floor'). Decision point surfaced to the operator (credibility fork).
