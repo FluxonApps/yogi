@@ -48,7 +48,7 @@ def cot(q):
     return (f"SQLite schema:\n{compact_schema(q['db_id'])}\n-- Hint: {q['evidence']}\nQuestion: {q['question']}\n"
             f"Reason step by step: (1) tables & columns needed, (2) joins, (3) filters/grouping/aggregation. "
             f"Then give the final query as ```sql ... ```. /no_think")
-def gen(model,tok,p,mx=420,sample=False):
+def gen(model,tok,p,mx=300,sample=False):
     kw={"sampler":SAMP} if (sample and HAVE) else {}
     return generate(model,tok,prompt=tok.apply_chat_template([{"role":"user","content":p}],add_generation_prompt=True,tokenize=False),max_tokens=mx,verbose=False,**kw)
 model,tok=load(STU,adapter_path=None)
@@ -74,7 +74,7 @@ open(f"{d}/valid.jsonl","w").write("\n".join(json.dumps(r) for r in rows[:max(3,
 del model,tok; ad=f"{W}/adapter"; os.makedirs(ad,exist_ok=True)
 print("=== LoRA on verified CoT traces (max-seq-length 1536) ===",flush=True)
 subprocess.run([sys.executable,"-m","mlx_lm.lora","--model",STU,"--train","--data",d,"--batch-size","2",
-  "--num-layers","16","--iters","300","--learning-rate","1e-4","--max-seq-length","1536","--adapter-path",ad],capture_output=True,text=True)
+  "--num-layers","16","--iters","200","--learning-rate","1e-4","--max-seq-length","1536","--adapter-path",ad],capture_output=True,text=True)
 m1,t1=load(STU,adapter_path=ad)
 ta=sum(correct(q['db_id'],extract(gen(m1,t1,cot(q))),q['SQL']) for q in test)
 print(f"\n=== BIRD v4 RESULT (reasoning-distillation at scale, held-out n={len(test)}) ===",flush=True)
