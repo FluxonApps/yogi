@@ -1436,3 +1436,15 @@ cross + internalize? Plus a faster harness (compact schema + prompt-prefix cache
 to make the attempt feasible (this run's LoRA was ~37min due to long schema-in-context sequences).
 Framing: the SYSTEM (bounded floor-crossing self-distillation) is the contribution; BIRD is the use, and
 it honestly maps where the approach needs a richer scaffold on hard real tasks.
+
+## 2026-06-23 — harness speedup benchmark (measured, not assumed)
+
+scripts/mlx_fast.py on 6 real BIRD questions (shared schema), qwen3-8B:
+  A naive-DDL      30.9s  5.8 tok/s   (schema = full CREATE DDL, 2255 chars)
+  B compact        21.0s  8.4 tok/s   → 1.47x (schema = table(cols), 407 chars; same output quality)
+  C prefix-cache   34.9s  (522 tok vs 178 — INVALID comparison: my non-chat-templated suffix broke clean
+                    stopping → 3x over-generation; technique unverified, NOT adopting on this measurement)
+ADOPT: compact schema (validated 1.47x eval speedup AND ~5x shorter training sequences → much faster LoRA;
+the 37-min BIRD LoRA was long-DDL-in-context). Prefix-cache needs a template-aware prefix split to measure
+honestly — deferred, not claimed. Also adopting LoRA --max-seq-length to cap any remaining long sequences.
+Lesson: measure speedups before adopting (the "obvious" prefix-cache wasn't a win as I implemented it).

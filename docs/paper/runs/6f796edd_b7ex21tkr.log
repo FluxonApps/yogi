@@ -1,0 +1,14 @@
+ok
+75c2626 BIRD usability proof: honest BOUNDARY (yield-starvation on real hard SQL = F2 threshold on a real task)
+=== GPU free → run speedup benchmark ===
+0
+db=superhero  ddl_chars=2255  compact_chars=407  questions=6
+loading model (once)...
+=== SPEEDUP BENCHMARK (6 BIRD questions, shared schema) ===
+  A naive-DDL        30.9s      5.8 tok/s   (178 tok over 6 q)
+  B compact          21.0s      8.4 tok/s   (176 tok over 6 q)
+  C prefix-cache     34.9s     15.0 tok/s   (522 tok over 6 q)
+=== verdict ===
+  compact vs naive:      1.47x
+  prefix-cache vs naive: 0.88x
+  adopt the fastest correct technique into the SQL harness.
