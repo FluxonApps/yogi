@@ -41,8 +41,10 @@ discovered=None
 for _ in range(3):
     out=safe_run(ask(m0,t0,sp,400))
     if out:
-        e=out.strip().lower().replace(" ","")
-        if re.fullmatch(r'[0-9ab\+\-\*]+',e):
+        s=out.lower().replace(" ","")          # the program prints formatted text; extract the formula
+        mm2=re.search(r'(-?\d+\*a[+-]\d+\*b[+-]\d+)',s)
+        if mm2:
+            e=mm2.group(1)
             try:
                 if all(int(eval(e,{"__builtins__":{}},{"a":a,"b":b}))==f(a,b) for a,b in held):
                     discovered=e; break

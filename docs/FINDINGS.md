@@ -1293,3 +1293,13 @@ ceilings): this is the being being BELOW-FLOOR on induction itself → cross it 
 lever (F6/F7): reformulate induction as PROGRAM-SEARCH (the model writes code that fits the examples),
 cross the induction floor, THEN internalize the discovered rule. Recursive application of the thesis:
 the action space is the ceiling, even for invention. Next: scripts/invent_v2.sh.
+
+## 2026-06-23 — CORRECTION: invent_v2's "deeper kill" was a PARSER bug — the being DID cross the induction floor
+
+Diagnosis (per the F1 diagnose-before-recording lesson) found invent_v2's "program-search failed" was MY
+harness, not the model: the being's brute-force code ran perfectly and printed "Formula: 5*a + 3*b + 7"
+(the exact hidden rule), but my parser expected a bare formula and rejected the formatted multi-line
+output. So INDUCTION-VIA-PROGRAM-SEARCH WORKS — the 8B, which could NOT induce the 2-var rule by reasoning
+(Phase 2a), CAN discover it by writing a search program (the action-space lever applied to invention).
+Fixed the parser (extract the formula substring) and re-running for the internalization result. The
+two-level story holds: can't-discover-by-thinking → can-discover-by-acting → internalize the discovery.
