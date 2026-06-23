@@ -44,6 +44,7 @@
 | **Safety red-team**: forbidden capability unrepresentable | ❌ needed | — |
 | C3/F4 graduation curve: naive sequential compounding LIMIT (cheap ~3 skills then plasticity collapses: yield 100→25%, learned 0/8; priors ~3/8) | ✅(neg) | graduation_curve |
 | Full phase-diagram sweep ({0.5,1.5,8}B × kinds × yield × split) | ◧ partial | points above |
+| F7 BET B ✅: autonomous floor-crossing ratchet — detect floor (4-digit mult) → SELECT reformulation by verifier (program 8/8 vs direct/decompose 0/8) → distill → internalize TOOL-USE (plain prompt → spontaneous program 12/12); raw-skill not (lives in executor) | ✅ | floor_crossing |
 | ASCII: failure-boundary case (below floor + paid verifier) | ✅(neg) | documented |
 | F6 MOONSHOT ✅: action-space change crosses the floor — held-out valid-program emission cold 1/6 → distilled 6/6, recognizable renders | ✅ | ascii_moonshot |
 

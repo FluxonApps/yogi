@@ -1246,3 +1246,23 @@ IMPLICATIONS (honest):
    frame strictly as "naive sequential LoRA self-distillation" (which is what we tested).
 3. This makes C3/F4 MORE valuable (it bounds a just-published positive claim) and keeps F1/C1/B as the
    load-bearing novelty (C1 structural safety, the phase diagram, the floor-crossing-internalization).
+
+## 2026-06-23 — BET B PHASE 1 ✓ (F7): the closed floor-crossing ratchet — autonomous select + internalized tool-use
+
+Below-floor task = multi-digit multiplication. Floor probe (8B direct-taught): 2-digit 8/8, 3-digit 3/8,
+4-digit 1/8, 5-digit 0/8 → FLOOR at 4-digit. Reformulation menu pass @ 4-digit (free verifier = product):
+direct 0/8, program 8/8, decompose 0/8. The being AUTONOMOUSLY SELECTED 'program' by verifier pass alone
+(correctly rejecting direct AND decompose — the 8B can't do partial-product decomposition in-head either).
+Ratchet: 40 self-gen verified program-traces, distilled under the COLD/plain prompt. RESULT (held-out n=12):
+- Floor-crossing ✓: 0/8 direct → 12/12 via the selected reformulation.
+- Internalized TOOL-USE ✓ (clean eval, PLAIN prompt with NO 'write a program' instruction): distilled model
+  spontaneously emits an executable program 12/12, executes-correct 12/12. The base needs the explicit
+  scaffold; the distilled model reaches for it NATIVELY → the tool-reaching POLICY is internalized into weights.
+- Raw-skill internalization ✗ (honest, expected): direct mental multiplication did NOT transfer (the
+  arithmetic lives in the executor, not the traces). Matches F6 (program-emission internalizes as emission).
+CLAIM (precise): action-space reformulation + distillation internalizes the POLICY OF USING THE ACTION —
+permanently raising the model's EFFECTIVE capability on a task it could not do (autonomously detected +
+the reformulation autonomously selected) — NOT the offloaded computation. This closes the loop the
+tool-making crowd (Agent0/LATM/test-time-tool-evolution) leaves open: they use tools at runtime; we distill
+the tool-reaching policy into the weights, selected by the model's own free verifier. Bet B Phase 1
+DEMONSTRATED. (Phase 2 = autonomous INVENTION of the reformulation, not menu-selection.)
