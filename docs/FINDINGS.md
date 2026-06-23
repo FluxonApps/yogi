@@ -1372,3 +1372,19 @@ the Roman-numeral saturation (F2): where the model is already capable, the ratch
 real usability proof, the task must sit in the genuine below-floor regime — either real BIRD/Spider
 (credible, needs the ~1GB DB download) or a much larger/messier self-contained schema (zero-friction but
 risks a 'manufactured floor'). Decision point surfaced to the operator (credibility fork).
+
+## 2026-06-23 — Real-Spider acquisition BLOCKED in-sandbox (honest, modest finding) — operator decision needed
+
+The operator chose real BIRD/Spider for a credible usability proof. Questions+gold SQL load fine from HF
+(xlangai/spider, 1034 val), but the EXECUTABLE .sqlite DBs — required for the free execution verifier —
+are not obtainable automatically here: HF xlangai/spider is text-only (no DB archive in the repo); the
+legacy `spider` loader (which used to bundle DBs) is removed (trust_remote_code unsupported); candidate HF
+DB-repos 401/empty; and gdown of the Spider/BIRD Google-Drive zips fails ("cannot retrieve public link" —
+Drive blocks unauthenticated large-file retrieval from this environment). Modest finding (environment
+limitation, not a research result): execution-verified real-SQL benchmarks need a manual ~1GB DB download,
+a real reproducibility/usability consideration for "zero-friction local" claims. NOT manufacturing a
+result. Options for the operator: (a) provide the Spider/BIRD DB zip (manual download / `! gdown` with a
+working link) → I run the credible real proof fully locally; (b) zero-friction alternative — local
+data-analysis over a generated CSV (NL question → answer; free verifier = computed ground truth), which is
+genuinely below-floor via exact multi-step computation (our thesis) but is close to F7's tool-use result;
+(c) hardened-synthetic SQL (manufactured-floor caveat, operator declined earlier).
