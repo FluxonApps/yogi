@@ -1336,3 +1336,16 @@ compositional), but COMPOSITION-EXECUTION needs the action-space lever at each l
 recursion stalls at the computation floor. Next: recurse_v2 acquires ⊠ via the PROGRAM lever (write code
 for the composition) → does ⊠ internalize as tool-use WHILE ⊞ stays retained = recursion-via-lever
 compounds (two skills held, no collapse).
+
+## 2026-06-23 — F9: recursion-via-lever ACQUIRES the new skill but FORGETS the prior — retention is the universal bottleneck
+
+recurse_v2 (⊠=(a⊞b)⊞b acquired via the PROGRAM lever, resume from ⊞-internalized S1, light replay=4):
+- self-gen ⊠ via program lever: 40/40 (vs 0/40 mental — the composition floor is crossed perfectly by the lever).
+- ⊠ tool-use internalized: cold 0/8 -> 8/8 (the new skill ACQUIRED perfectly under a plain prompt).
+- ⊞ retained: 6/8 -> 1/8 (the prior abstraction COLLAPSED).
+FINDING: recursion-via-lever solves ACQUISITION (new skill 0->8/8) but hits the same RETENTION limit as
+C3 (confusable, ->3/8) and the graduation curve (4-skill plasticity collapse) — now confirmed even for
+COMPOSITIONAL (non-confusable) skills under light replay. So across every compounding experiment the
+universal bottleneck is RETENTION under naive sequential LoRA + light replay, and the established fix is
+F3 (heavy / similarity-aware replay). Next: recurse_v3 applies the F3 fix (heavy ⊞ replay) to recursion —
+does ⊠ acquire AND ⊞ retain = recursion compounds with the fix.
