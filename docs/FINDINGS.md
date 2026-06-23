@@ -1467,3 +1467,25 @@ this completes the phase diagram (F2) on a real, popular benchmark and is the ho
 democratize ANY task": no — it democratizes the large, useful class of reachable-floor tasks.
 This is a clean negative that SHARPENS the thesis rather than weakening it (we now know exactly where the
 approach helps on real tasks). novelty = the SYSTEM + the map; BIRD = the use that drew the real boundary.
+
+## 2026-06-23 — CAPSTONE: the real-task usability map is COMPLETE — the ratchet democratizes SKILLS, not heterogeneous tasks
+
+BIRD reachable regime (simple+moderate, below-floor-but-reachable): floor 16/48, sample-6 scaffold-cross
+23/48 (the scaffold DOES cross here), distilled 23 traces → held-out one-shot 11/24 → 10/24 (FLAT, noise).
+So even where the scaffold crosses, distillation did NOT lift held-out one-shot. DIAGNOSIS (the deep, honest
+finding): the ratchet's internalization TRANSFERS only when held-out instances are the SAME skill as the
+trained ones. F1 generalized (train operands 1-8 → held-out 9-12 = SAME rule ⊕, new inputs). Real SQL
+held-out = NEW, DISTINCT queries (different joins/aggregates per question) — distilling 23 specific
+(schema,question→SQL) solutions does not teach the different logic each new question needs, even on the
+SAME schemas. So the real precondition is SKILL-HOMOGENEITY (one rule, many instances), MORE FUNDAMENTAL
+than below-floor. The complete real-task usability MAP:
+  - ABOVE-FLOOR  (clean SQL): 8B ~88% one-shot → no gap (saturated).
+  - REACHABLE    (simple+moderate): below-floor, scaffold crosses, BUT distillation doesn't transfer to
+                 new distinct questions (11/24→10/24) — heterogeneous task, few instances each.
+  - BEYOND-REACH (hard BIRD): scaffold can't even cross (+2).
+CONCLUSION: the self-distillation ratchet democratizes SKILL ACQUISITION (learn a rule/operator/cipher/
+tool-use and generalize to new instances — F1-F9, genuine wins) — NOT heterogeneous-task competence (real
+SQL = many distinct query-skills; needs per-skill traces or skill-decomposition, not 23 across-the-board).
+This SHARPENS the thesis (doesn't weaken F1-F9): democratization is at the SKILL grain, not the DOMAIN
+grain. It is the honest, precise answer to "what kind of goal can a local model teach itself": a skill with
+verifiable, repeatable instances — a large, useful class — but not an arbitrary heterogeneous real task.

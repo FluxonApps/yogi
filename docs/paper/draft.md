@@ -168,3 +168,13 @@ lacks. This bounds the contribution precisely: the ratchet democratizes the **re
 (below-floor but solvable-with-help — operators, induction, tool-use, §3/§7), not tasks beyond the base
 (hard enterprise SQL on an 8B needs a stronger base). It is the F2 phase diagram's yield-threshold, drawn
 on a real benchmark — an honest map of applicability, not a universal claim.
+
+### §9 (cont.) — the real-task usability map, completed
+Across BIRD difficulty: ABOVE-FLOOR (clean/simple SQL — 8B already capable, no gap); REACHABLE
+(simple+moderate — below-floor, scaffold crosses 16→23, but distilling 23 traces does NOT lift held-out
+one-shot, 11/24→10/24); BEYOND-REACH (hard — scaffold can't cross, +2). The deep finding unifying these:
+**the ratchet's internalization transfers only for SKILL-HOMOGENEOUS tasks** (one rule, many instances —
+F1's train-operands-1-8 → held-out-9-12). Real SQL held-out questions are DISTINCT queries, so few specific
+solved traces don't generalize. **Democratization is at the skill grain, not the domain grain**: a local
+model can teach itself a verifiable, repeatable *skill* and generalize (F1-F9), but not an arbitrary
+heterogeneous real task from a handful of solved instances. This is the honest scope of the contribution.

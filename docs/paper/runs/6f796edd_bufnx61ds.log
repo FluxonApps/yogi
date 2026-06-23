@@ -1,0 +1,12 @@
+=== GPU free? ===
+0
+=== run PHASE=full (reachable regime: distill 23 traces → held-out before→after) ===
+REACHABLE regime: simple+moderate only (excluding challenging/beyond-reach), 181 available
+DBs=['toxicology', 'california_schools', 'debit_card_specializing', 'student_club', 'superhero', 'financial']  train=48 held-out=24  sample-N=6  (compact schema)
+gold exec check: 0/72 errored
+=== PROBE v2 (sample-6): one-shot floor vs scaffold-cross (train n=48) ===
+  one-shot FLOOR 16/48   sample-6 scaffold-cross 23/48  -> 23 traces (was 14 naive)
+  HELD-OUT one-shot before: 11/24
+=== BIRD v2 RESULT (held-out one-shot exec-accuracy) ===
+  before 11/24 -> after 10/24   (stronger scaffold + faster harness)
+  USABLE ✓ iff after >> before.
