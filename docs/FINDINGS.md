@@ -1221,3 +1221,28 @@ consolidation for plasticity — cf. "models need sleep" 2606.03979, MoRAL 2402.
 finetuning 2510.15103). Caveat: single run; the skill-4 yield collapse could be partly ⊚-specific —
 worth a confirming re-run with a different 4th operator + with the F3 fix applied. This is the honest
 boundary of C3 and a strong motivation for the structured-accumulation follow-up.
+
+## 2026-06-23 — HONESTY DIFF (F3 + method positioning) vs SDFT and the self-distillation-forgetting literature
+
+Web diff of our work against just-published self-distillation papers:
+- **SDFT — "Self-Distillation Enables Continual Learning" (arXiv:2601.19897, MIT, Jan 2026)**: the SAME
+  mechanism as our ratchet — teacher = model conditioned on query+expert examples, student = model on
+  query only, student aligns to teacher. Confirms (as we already stated) our METHOD is not novel; this is
+  the most direct prior and MUST be cited. SDFT's headline: self-distillation enables continual learning
+  *without* catastrophic forgetting, and learns new tasks better than SFT.
+- Also: "Self-Distillation as a Performance Recovery Mechanism" (2604.15794); RAFT (2606.00147,
+  data-refinement + adaptive distillation with alleviated forgetting).
+
+IMPLICATIONS (honest):
+1. METHOD: fully not-novel (SDFT is the exact mechanism). Our paper already positions it so — now cite
+   SDFT 2601.19897 as the primary reference.
+2. F3 reframe: F3 is NOT "the first forgetting fix." SDFT claims self-distillation ALONE gives continual
+   learning. Our C3/F4 graduation curve shows the opposite in a harder regime: naive *sequential LoRA*
+   self-distillation with light replay DOES forget CONFUSABLE skills (priors→3/8) and collapses in
+   plasticity (skill-4 yield 100→25%). So our real contribution is a **boundary on SDFT's continual-
+   learning claim** (the confusable-skill + LoRA + plasticity-collapse regime) + similarity-aware replay
+   as the targeted fix in that regime. CAVEAT before claiming we refute SDFT: we used LoRA + light replay,
+   not SDFT's full recipe — to make the boundary claim rigorous we'd re-run with SDFT's exact method, or
+   frame strictly as "naive sequential LoRA self-distillation" (which is what we tested).
+3. This makes C3/F4 MORE valuable (it bounds a just-published positive claim) and keeps F1/C1/B as the
+   load-bearing novelty (C1 structural safety, the phase diagram, the floor-crossing-internalization).

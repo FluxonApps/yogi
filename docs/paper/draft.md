@@ -20,7 +20,7 @@ replay misses. Finally, where the base model is below the bootstrap floor for a 
 ## 1. Introduction & positioning
 The "self-evolving agent" space is crowded and moving monthly. The core mechanism we use is not novel:
 internalizing in-context knowledge into weights is **context distillation** [On-Policy Context
-Distillation, arXiv:2602.12275]; iterate-on-verified-successes is **ReST/STaR/RFT** [arXiv:2312.06585];
+Distillation, arXiv:2602.12275]; iterate-on-verified-successes is **ReST/STaR/RFT** [arXiv:2312.06585]; the exact teacher(query+examples)→student(query) self-distillation we use is **SDFT** [Self-Distillation Enables Continual Learning, arXiv:2601.19897];
 verifier-free variants use self-consistency [TTRL arXiv:2512.15146; Co-Reward arXiv:2505.21444; Semantic
 Voting arXiv:2509.23067]; metacognitive/ZPD curricula are studied [METIS arXiv:2605.11235; Self-Evolving
 Curriculum arXiv:2505.14970]; scaffolding-beyond-base via critique is Self-Refine [arXiv:2303.17651];
@@ -77,8 +77,7 @@ top of ⊕=3a+2b) catastrophically forgets the earlier one under uniform replay:
 dissimilar string skill is untouched, 8/8). Researching the gap (similarity↔forgetting is U-shaped;
 confusable pairs are worst-case) we invented **similarity-aware replay** (heavy-replay the *confusable*
 prior skill ± joint-contrast examples). Result: **A_add 1/8 → 8/8** while the new skill is learned *better*
-(C_mul 6/8 → 8/8). Generic feature-contrastive replay exists [Co²L arXiv:2106.14413; ACR arXiv:2410.07110]
-but not for self-distilled symbolic-rule confusion; this is a targeted fix to the boundary we identified.
+(C_mul 6/8 → 8/8). Positioning honestly: SDFT [arXiv:2601.19897] claims self-distillation ALONE enables continual learning; our graduation curve (below) shows naive *sequential LoRA* self-distillation with light replay still forgets CONFUSABLE skills and loses plasticity — so F3 is a targeted fix in the regime where that positive claim breaks, not the first forgetting fix. Generic feature-contrastive replay exists [Co²L arXiv:2106.14413; ACR arXiv:2410.07110] but not for self-distilled symbolic-rule confusion.
 
 **F6 — crossing the bootstrap floor by reformulating the action space (the moonshot).** ASCII *drawing*
 is a documented below-floor failure: the 8B cannot draw directly and emits empty/garbage when asked for a
