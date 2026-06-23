@@ -52,17 +52,25 @@ ratchet_panel() {
   printf "  ${D}verdict${R}  ${GB}%s${R}\n\n" "$(fit "$verdict" $((W-11)))"
 }
 
-# Live: are any local model jobs running right now? (always current — reads the process table)
+# Live: local model jobs right now (always current). Labels each python proc by ROLE so a single job's
+# orchestrator + LoRA-trainer + multiprocessing worker aren't mistaken for 3 separate models.
 running() {
   sec "running (local model jobs)"
-  local n; n=$(ps -eo comm 2>/dev/null | grep -c '[p]ython')
-  if [ "$n" = "0" ]; then
-    printf "  ${D}idle — no model running${R}\n\n"
-  else
-    ps -eo pid,etime,comm 2>/dev/null | grep '[p]ython' | head -3 | while read -r pid et _; do
-      printf "  ${Y}● pid %s${R} ${D}up %s (foreground model job)${R}\n" "$pid" "$et"
-    done; printf '\n'
+  local procs; procs=$(ps -eo pid,etime,args 2>/dev/null | grep '[p]ython' | grep -vE '/bin/zsh|shell-snapshot|grep ')
+  if [ -z "$procs" ]; then
+    printf "  ${D}idle — no model running${R}\n\n"; return
   fi
+  local trainers; trainers=$(echo "$procs" | grep -c 'mlx_lm.lora')
+  printf '%s\n' "$procs" | while read -r pid et args; do
+    local role="model gen"
+    case "$args" in
+      *mlx_lm.lora*)                     role="LoRA trainer ${GB}(the one model)${R}${D}";;
+      *multiprocessing*|*resource_tracker*) role="worker (child of trainer)";;
+      *" - /tmp/"*|*"Python - "*)        role="orchestrator script (waiting on child)";;
+    esac
+    printf "  ${Y}●${R} pid %s ${D}up %s — %s${R}\n" "$pid" "$et" "$role"
+  done
+  printf "  ${D}↳ %s model(s) actually loaded (mlx_lm.lora); others are its parent/worker — one model at a time${R}\n\n" "${trainers:-0}"
 }
 
 # Live experiment ledger — derived from docs/FINDINGS.md headers, so it never goes stale.
