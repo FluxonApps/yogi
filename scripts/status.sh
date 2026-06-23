@@ -52,6 +52,29 @@ ratchet_panel() {
   printf "  ${D}verdict${R}  ${GB}%s${R}\n\n" "$(fit "$verdict" $((W-11)))"
 }
 
+# Live: are any local model jobs running right now? (always current — reads the process table)
+running() {
+  sec "running (local model jobs)"
+  local n; n=$(ps -eo comm 2>/dev/null | grep -c '[p]ython')
+  if [ "$n" = "0" ]; then
+    printf "  ${D}idle — no model running${R}\n\n"
+  else
+    ps -eo pid,etime,comm 2>/dev/null | grep '[p]ython' | head -3 | while read -r pid et _; do
+      printf "  ${Y}● pid %s${R} ${D}up %s (foreground model job)${R}\n" "$pid" "$et"
+    done; printf '\n'
+  fi
+}
+
+# Live experiment ledger — derived from docs/FINDINGS.md headers, so it never goes stale.
+ledger() {
+  sec "experiment ledger (docs/FINDINGS.md — live, latest 12)"
+  grep -E '^## ' docs/FINDINGS.md 2>/dev/null | tail -12 | sed 's/^## [0-9-]* — //' | while IFS= read -r l; do
+    printf "  ${D}›${R} ${DD}%s${R}\n" "$(fit "$l" $((W-4)))"
+  done
+  printf "  ${D}raw run logs archived ${R}%s${D} · paper docs/paper/draft.md + ${R}%s${D} research notes${R}\n\n" \
+    "$(ls docs/paper/runs/*.log 2>/dev/null | wc -l | tr -d ' ')" "$(ls docs/research/*.md 2>/dev/null | wc -l | tr -d ' ')"
+}
+
 render() {
   local crates commits tests build phase now why upd
   crates=$(ls crates 2>/dev/null | wc -l | tr -d ' ')
@@ -77,8 +100,12 @@ render() {
   local bcol="$G"; [ "$build" != "green" ] && bcol="$Y"
   printf "  crates ${GB}%s${R}   tests ${GB}%s${R}   commits ${GB}%s${R}   build ${bcol}● %s${R}\n\n" "$crates" "$tests" "$commits" "$build"
 
+  running
+
   # The current thesis, featured.
   ratchet_panel
+
+  ledger
 
   sec "plan — democratization roadmap (docs/plan)"
   local plan; plan=$(field PLAN)
