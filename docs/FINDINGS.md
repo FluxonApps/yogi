@@ -1502,3 +1502,27 @@ distill (exactly SLM-SQL's SFT-on-teacher-CoT, which makes 0.5-1.5B models gener
 FRONTIER-DEPENDENCE DECAY (does the bootstrapped 8B self-solve more after? salary justified iff →0). Also
 noted: both free v4 attempts were first KILLED/OOM (16GB; long CoT seqs) — fixed memory config, now
 completes. Engineering lessons (memory-safe LoRA, surface errors) recorded.
+
+## 2026-06-23 — SALARY/TEACHER arm: salary buys correct traces but NOT generalization (well-powered conclusion across 3 conditions)
+
+Teacher-bootstrap: 64 claude calls → 50 verified CORRECT CoT traces (4x the 8B's free 12). Distilled
+(memory-safe LoRA). Held-out one-shot before 9/20 → after 8/20 (FLAT). The heterogeneous-task gap now
+tested across THREE genuinely different conditions, ALL flat:
+  - free answer-only (v3, 23 traces): 11/24→10/24
+  - free CoT (v4, 12 traces): 5/20→6/20
+  - SALARY teacher (50 CORRECT CoT traces): 9/20→8/20
+ROBUST CONCLUSION: the bottleneck is NOT trace source/quality/quantity (salary fixed those: 50 correct vs
+12) nor reasoning-vs-answer (CoT tested) nor memory/config (fixed) — it is that FEW-SHOT SFT DISTILLATION
+(~50 traces) CANNOT make a small model GENERALIZE across heterogeneous distinct SQL queries. The 50 demos
+cover 50 specific query-logics; held-out needs new ones. The literature's small-model SQL wins use ~916K
+synthetic traces (SLM-SQL) or RL (CogniSQL) — orders of magnitude beyond the local few-shot regime.
+SALARY-PRINCIPLE VERDICT (the operator's question, answered on-principle): salary did NOT amortize here —
+held-out after≈before (8/20), so the 8B is NOT more self-sufficient; frontier-dependence did NOT decay.
+By our own gate (salary justified iff cost→0 via internalization), salary is a CRUTCH for this task at
+this scale, not a frontier-push. It buys correct traces (real) but cannot buy few-shot generalization.
+This SHARPENS the thesis precisely: the ratchet (free OR salary-bootstrapped) democratizes at the SKILL
+grain (homogeneous, one-rule-many-instances — F1-F9 wins) but NOT heterogeneous real-task generalization,
+which needs SCALE (1000s of traces) or RL — both outside the local-few-shot-zero/low-salary regime.
+HONEST: this is a robust boundary after attacking from 3 empirical angles (not a give-up after one). The
+remaining untried levers (scale to 1000s of teacher traces; RL/GRPO) are deliberate, heavier phases — they
+likely WORK (the literature shows it) but exit the 'local + few-shot + cheap' setting that is our scope.

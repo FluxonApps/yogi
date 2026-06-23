@@ -1,0 +1,14 @@
+65935ad scripts/sql_teacher.sh: salary/teacher-bootstrap for BIRD (the operator's lever, root fix for trace-thinness)
+=== GPU free? ===
+0
+=== launch teacher-bootstrap (salary ~64 claude calls + memory-safe LoRA, ~45min) ===
+  teacher 16/64 -> 13 verified
+  teacher 32/64 -> 27 verified
+  teacher 48/64 -> 37 verified
+  teacher 64/64 -> 50 verified
+TEACHER (salary=64 claude calls): 50 verified CoT traces (free self-gen got ~12)
+SALARY_SPENT=64
+HELD-OUT one-shot before (8B, no teacher): 9/20
+=== BIRD TEACHER-BOOTSTRAP RESULT (held-out one-shot, n=20) ===
+  before 9/20 -> after 8/20  (8B self-sufficient at inference, no teacher)
+  SALARY JUSTIFIED ✓ iff after >> before = teacher traces internalized → frontier-dependence decays.

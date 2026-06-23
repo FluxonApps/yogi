@@ -178,3 +178,14 @@ F1's train-operands-1-8 → held-out-9-12). Real SQL held-out questions are DIST
 solved traces don't generalize. **Democratization is at the skill grain, not the domain grain**: a local
 model can teach itself a verifiable, repeatable *skill* and generalize (F1-F9), but not an arbitrary
 heterogeneous real task from a handful of solved instances. This is the honest scope of the contribution.
+
+### §9 (cont.) — salary/teacher-bootstrap: buys traces, not few-shot generalization
+We tested whether spending salary cracks the heterogeneous-task gap: a frontier teacher wrote 50 CORRECT
+CoT+SQL traces (4x the 8B's free 12) for BIRD; distilling them left held-out one-shot flat (9/20→8/20),
+matching free answer-only (23) and free CoT (12). So across three conditions, few-shot SFT distillation
+(~50 traces) does not yield heterogeneous generalization regardless of trace source/quality. Salary fixed
+the trace bottleneck but did not amortize (held-out after≈before → no frontier-dependence decay) — by our
+salary principle, a crutch here, not a frontier-push. The small-model SQL wins in the literature use ~916K
+traces or RL, beyond the local few-shot regime. Net: the ratchet (free or teacher-bootstrapped) democratizes
+the SKILL grain (F1–F9), not heterogeneous domain generalization at local few-shot scale — a precise,
+well-powered boundary, not a universal claim.
