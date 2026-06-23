@@ -1303,3 +1303,18 @@ output. So INDUCTION-VIA-PROGRAM-SEARCH WORKS — the 8B, which could NOT induce
 (Phase 2a), CAN discover it by writing a search program (the action-space lever applied to invention).
 Fixed the parser (extract the formula substring) and re-running for the internalization result. The
 two-level story holds: can't-discover-by-thinking → can-discover-by-acting → internalize the discovery.
+
+## 2026-06-23 — F8 ✓: the being discovers a novel rule WITH NO TEACHER (by acting) and internalizes its own discovery
+
+Two-level floor-crossing, end to end:
+- Phase 2a (induce by REASONING): FAILED — 8B can't induce ⊞=5a+3b+7 from 8 examples (proposed only a*k+c).
+- invent_v2 (induce by ACTING): the being writes a brute-force search program → discovers '5*a+3*b+7' CORRECT
+  (the induction floor crossed via the action-space lever — exactly F6/F7 applied to discovery itself).
+- Internalize: self-gen 40 traces via the SELF-DISCOVERED rule → distill → cold ⊞ 0/8 → 6/8.
+So: a sub-frontier local model, given only examples (NO teacher, NO rule stated), discovers the rule by
+writing code to find it, then bakes the self-discovered rule into its own weights. Strict escalation of
+F1 (there the rule was GIVEN/taught; here it is DISCOVERED). 6/8 (not 8/8) = honest partial internalization
+(the +7 constant is slightly harder; floor clearly rose 0→6/8). This is the novel frontier the literature
+leaves open: autonomous discovery + WEIGHT-internalization (vs DreamCoder's external library), with the
+discovery step itself a floor crossed by action-space change. Bounded by bet-A: the invention changes
+how-it-thinks, never what-it's-allowed-to-do.
