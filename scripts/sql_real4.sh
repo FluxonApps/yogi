@@ -73,8 +73,11 @@ d=f"{W}/data"; open(f"{d}/train.jsonl","w").write("\n".join(json.dumps(r) for r 
 open(f"{d}/valid.jsonl","w").write("\n".join(json.dumps(r) for r in rows[:max(3,len(rows)//6)])+"\n")
 del model,tok; ad=f"{W}/adapter"; os.makedirs(ad,exist_ok=True)
 print("=== LoRA on verified CoT traces (max-seq-length 1536) ===",flush=True)
-subprocess.run([sys.executable,"-m","mlx_lm.lora","--model",STU,"--train","--data",d,"--batch-size","2",
-  "--num-layers","16","--iters","200","--learning-rate","1e-4","--max-seq-length","1536","--adapter-path",ad],capture_output=True,text=True)
+r=subprocess.run([sys.executable,"-m","mlx_lm.lora","--model",STU,"--train","--data",d,"--batch-size","1",
+  "--num-layers","8","--iters","200","--learning-rate","1e-4","--max-seq-length","768","--grad-checkpoint",
+  "--adapter-path",ad],capture_output=True,text=True)
+if not os.path.exists(f"{ad}/adapters.safetensors"):
+    print("LoRA FAILED (surfacing stderr):\n"+(r.stderr or r.stdout)[-800:]); sys.exit(1)
 m1,t1=load(STU,adapter_path=ad)
 ta=sum(correct(q['db_id'],extract(gen(m1,t1,cot(q))),q['SQL']) for q in test)
 print(f"\n=== BIRD v4 RESULT (reasoning-distillation at scale, held-out n={len(test)}) ===",flush=True)
