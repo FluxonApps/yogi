@@ -1489,3 +1489,16 @@ SQL = many distinct query-skills; needs per-skill traces or skill-decomposition,
 This SHARPENS the thesis (doesn't weaken F1-F9): democratization is at the SKILL grain, not the DOMAIN
 grain. It is the honest, precise answer to "what kind of goal can a local model teach itself": a skill with
 verifiable, repeatable instances — a large, useful class — but not an arbitrary heterogeneous real task.
+
+## 2026-06-23 — v4 reasoning-distillation (free, CoT): flat at feasible local scale — pivot to the salary/teacher lever (NOT a conclusion)
+
+v4-lite (50q, sample-2, CoT, memory-fixed LoRA batch1/layers8/maxseq768/grad-checkpoint): held-out one-shot
+5/20 → 6/20 (flat, +1 noise), on 12 verified CoT traces. With v3 (23 answer-only, flat) this is two thin
+free-self-gen runs → the bottleneck is TRACE QUANTITY, and the 8B only self-solves ~25% of reachable
+questions, so free self-gen can't cheaply produce enough CORRECT traces on a heterogeneous task. NOT a
+conclusion (CoT untested at scale). The root fix = the SALARY lever (operator's question): a frontier
+TEACHER generates correct CoT+SQL for the questions the 8B CAN'T self-solve → many more correct traces →
+distill (exactly SLM-SQL's SFT-on-teacher-CoT, which makes 0.5-1.5B models generalize). Then measure
+FRONTIER-DEPENDENCE DECAY (does the bootstrapped 8B self-solve more after? salary justified iff →0). Also
+noted: both free v4 attempts were first KILLED/OOM (16GB; long CoT seqs) — fixed memory config, now
+completes. Engineering lessons (memory-safe LoRA, surface errors) recorded.
