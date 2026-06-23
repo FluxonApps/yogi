@@ -1318,3 +1318,21 @@ F1 (there the rule was GIVEN/taught; here it is DISCOVERED). 6/8 (not 8/8) = hon
 leaves open: autonomous discovery + WEIGHT-internalization (vs DreamCoder's external library), with the
 discovery step itself a floor crossed by action-space change. Bounded by bet-A: the invention changes
 how-it-thinks, never what-it's-allowed-to-do.
+
+## 2026-06-23 — Phase 2b (recursion / C3 rematch): RETENTION compounds; mental COMPOSITION hits the computation floor
+
+Diagnosed before recording (the recurring eval-truncation lesson — and it bit AGAIN):
+- ⊞ retention eval was truncated (120 tok → 0/8); at 400 tok ⊞ is RETAINED 6/8 — i.e. internalizing a new
+  COMPOSITIONAL skill alongside ⊞ does NOT collapse ⊞ (contrast C3, where a CONFUSABLE skill collapsed the
+  prior to ~3/8). So the RETENTION side of recursion compounds: compositional accumulation ≠ confusable
+  interference.
+- ⊠=(a⊞b)⊞b self-gen = 0/40 and this is REAL (not truncation: identical wrong answer at 240 and 512 tok).
+  The model computes one ⊞ step, errs on arithmetic (e.g. 45+12=54), and never chains the second step
+  (got 61, truth 339). The bottleneck is the model's MULTI-STEP EXACT-COMPUTATION floor — the SAME floor
+  behind 4-digit mult (F7) and reasoning-induction (F8). Mental composition of an internalized abstraction
+  hits that floor: the abstraction is retained but not reliably executable by reasoning.
+LESSON (coherent with the whole arc): recursion compounds on RETENTION (abstractions don't interfere when
+compositional), but COMPOSITION-EXECUTION needs the action-space lever at each level — pure-reasoning
+recursion stalls at the computation floor. Next: recurse_v2 acquires ⊠ via the PROGRAM lever (write code
+for the composition) → does ⊠ internalize as tool-use WHILE ⊞ stays retained = recursion-via-lever
+compounds (two skills held, no collapse).
