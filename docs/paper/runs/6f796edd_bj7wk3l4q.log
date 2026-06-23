@@ -1,0 +1,12 @@
+=== GPU free? ===
+0
+=== run PHASE=full (distill 14 scaffold-traces → one-shot; eval held-out before→after) ===
+DBs used (schema fits): ['toxicology', 'debit_card_specializing', 'student_club', 'superhero', 'financial']
+train=36 held-out=18 (difficulties: {'simple': 6, 'moderate': 8, 'challenging': 4})
+gold-SQL exec check: 1/54 golds errored (should be ~0)
+=== PROBE (8B on REAL BIRD, train n=36): one-shot floor vs scaffold-cross ===
+  one-shot (FLOOR): 12/36   scaffold-cross: 14/36  -> 14 traces
+  HELD-OUT one-shot before: 7/18
+=== BIRD USABILITY PROOF (held-out one-shot execution accuracy) ===
+  one-shot before 7/18 -> after 7/18
+  USABLE ✓ iff after >> before (weak 8B -> usable on REAL BIRD SQL, locally, zero salary).

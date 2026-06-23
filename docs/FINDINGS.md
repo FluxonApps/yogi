@@ -1417,3 +1417,22 @@ you haven't actually tested with the right method. (Same class as the 3 eval-tru
 REPORT STATUS: durable record = docs/FINDINGS.md (this log) + docs/paper/ + docs/research/ + ~28 git
 commits (audit trail w/ numbers) + memory/paper-complete.md. EPHEMERAL (not in repo): 122 raw task-output
 logs in /tmp (per-run primary evidence) — summarized here but not archived; archive on request.
+
+## 2026-06-23 — BIRD usability proof: HONEST BOUNDARY (yield-starvation on real hard SQL — the F2 threshold on a real task)
+
+Real BIRD mini-dev (5 small-schema DBs, 36 train/18 held-out, free execution verifier, qwen3-8B):
+  one-shot FLOOR 12/36 (33%) | scaffold-cross 14/36 (+2 only) | held-out one-shot 7/18 -> 7/18 (FLAT).
+FINDING (honest negative, on-thesis): real BIRD IS genuinely below-floor for the 8B (33% one-shot, unlike
+clean SQL's 88%) — so the benchmark choice was right. BUT the simple execution-repair scaffold
+(error-feedback only, no gold leak) barely crossed the floor (+2): BIRD failures are PLAUSIBLE-BUT-WRONG
+logic (query runs, returns wrong rows), and "wrong result" feedback doesn't tell the model HOW to fix the
+logic → only 14 verified traces, mostly the easier questions the model already solved → distilling them
+did NOT lift held-out one-shot (7/18→7/18). This is our F2 YIELD-THRESHOLD boundary, now demonstrated on a
+REAL, popular benchmark: below-floor is necessary but not sufficient — the ratchet needs the scaffold to
+generate ENOUGH verified traces on the HARD cases, and a naive repair loop doesn't on hard SQL.
+NEXT (one honest attempt): a STRONGER scaffold to lift yield — gold RESULT-SHAPE/column-count feedback (not
+the query, no leak of the answer), more repair rounds, or sample-N-keep-correct — does a better scaffold
+cross + internalize? Plus a faster harness (compact schema + prompt-prefix cache + LoRA --max-seq-length)
+to make the attempt feasible (this run's LoRA was ~37min due to long schema-in-context sequences).
+Framing: the SYSTEM (bounded floor-crossing self-distillation) is the contribution; BIRD is the use, and
+it honestly maps where the approach needs a richer scaffold on hard real tasks.
