@@ -1,0 +1,8 @@
+--- ⊞ retention on S1 at 120 vs 400 tokens (truncation check) ---
+  max_tokens=120: ⊞ 0/8
+  max_tokens=400: ⊞ 6/8
+--- ⊠ composition with rule given, at 240 vs 512 tokens (is 0/40 truncation or real?) ---
+  9⊠4 truth=339 mx=240: parsed=61 len=505 tail='$\n45 + 12 + 7 = 54 + 7 = 61\n$$\n\n### Final Answer:\n'
+  9⊠4 truth=339 mx=512: parsed=61 len=521 tail='54 + 7 = 61\n$$\n\n### Final Answer:\n$$\n\\boxed{61}\n$$'
+  3⊠9 truth=279 mx=240: parsed=49 len=412 tail='27 + 7 = 49\n$$\n\n### Final Answer:\n$$\n\\boxed{49}\n$$'
+  3⊠9 truth=279 mx=512: parsed=49 len=412 tail='27 + 7 = 49\n$$\n\n### Final Answer:\n$$\n\\boxed{49}\n$$'

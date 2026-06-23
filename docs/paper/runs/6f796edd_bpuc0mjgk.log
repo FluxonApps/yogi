@@ -1,0 +1,6 @@
+Full integrated being (foreground — loads qwen3:8b) ...
+turn 0: acted=true obs=["respond:4"]
+turn 1: acted=true obs=["respond:Paris."]
+durable+sandboxed being: journal_len=4 verifies=true
+after restart: journal_len=4 (was 4) verifies=true
+→ one being: durable (signed chain survived restart) + sandboxed (capability-gated) + model-backed.

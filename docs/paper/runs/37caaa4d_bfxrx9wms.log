@@ -1,0 +1,10 @@
+=== GPU free? ===
+0
+=== adapters saved? ===
+/tmp/yogi_disambig/ad_disambig
+/tmp/yogi_disambig/ad_heavyA
+/tmp/yogi_disambig/ad_uniform
+DISAMBIGUATION recovery — A_add retention (baseline uniform collapsed to 1/8) + C_mul learned, /8:
+  [uniform] A_add retention: 1/8   C_mul learned: 6/8
+  [heavyA] A_add retention: 8/8   C_mul learned: 8/8
+  [disambig] A_add retention: 8/8   C_mul learned: 8/8

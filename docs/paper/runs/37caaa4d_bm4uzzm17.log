@@ -1,0 +1,13 @@
+d8bf81d scripts/graduation_curve.sh: the democratization cost-decay curve (C3/F4)
+ok
+=== launching graduation curve (bg, ~80min) ===
+ROUND 1 [⊕]: self-gen yield 24/24=100%  learned 8/8  retention []
+ROUND 2 [⊗]: self-gen yield 24/24=100%  learned 8/8  retention [('⊕', '3/8')]
+ROUND 3 [⊙]: self-gen yield 24/24=100%  learned 8/8  retention [('⊕', '3/8'), ('⊗', '3/8')]
+ROUND 4 [⊚]: self-gen yield 6/24=25%  learned 0/8  retention [('⊕', '2/8'), ('⊗', '3/8'), ('⊙', '3/8')]
+=== GRADUATION CURVE ===
+  skill 1 [⊕]: yield=100%  learned=8/8  prior-retention=n/a
+  skill 2 [⊗]: yield=100%  learned=8/8  prior-retention=3.0/8
+  skill 3 [⊙]: yield=100%  learned=8/8  prior-retention=3.0/8
+  skill 4 [⊚]: yield=25%  learned=0/8  prior-retention=2.7/8
+Cost-decay ✓ iff later skills keep high yield+learned at fixed budget AND priors stay retained (cheap continual acquisition).

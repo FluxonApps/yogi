@@ -1,0 +1,7 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.23s
+=== transfer certification (foreground, ~40 inferences) ===
+Transfer-compounding certification: 20 cold-failing ⊕-tasks, foreground (qwen3:8b + nomic) ...
+cold (no skill)     mean: 0.000
+with learned skill  mean: 0.100
+paired delta: mean=0.100  CI=[0.000, 0.250]  compounds=false
+=> not certified at this N — widen the corpus (D-M3-3 sizing).

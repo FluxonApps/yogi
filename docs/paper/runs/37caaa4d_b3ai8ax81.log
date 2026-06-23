@@ -1,0 +1,16 @@
+bash ok
+gen py ok
+3ebbcf6 op_ratchet: add GOAL_KIND=roman — real-task de-risk (int→Roman numeral)
+ok
+=== launching Roman de-risk on the real 8B ===
+SELF-GENERATED: 51/80 instances solved with rule in-context -> 51 verified traces
+=== COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+PASS 9/12
+=== LoRA on the model's OWN self-generated verified traces (mlx-community/Qwen3-8B-4bit, layers=16 iters=300) ===
+=== HELD-OUT floor (cold prompt, no rule) — did the floor RISE? ===
+PASS 9/12
+PASS 6/12
+=== general (forgetting / non-inferiority) ===
+PASS 3/3
+PASS 3/3
+=== verdict: floor rose (P1 ✓) iff distilled held-out >> cold AND general non-inferior ===

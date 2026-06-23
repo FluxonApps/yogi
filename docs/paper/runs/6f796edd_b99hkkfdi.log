@@ -1,0 +1,7 @@
+=== held-out ⊕ (capability on UNSEEN operands) ===
+PASS 0/12
+PASS 8/12
+=== general (non-inferiority / forgetting) ===
+PASS 4/5
+PASS 1/5
+(Feed these pass-rates to being_distill::PromotionGate: promote iff gap closed AND non-inferior.)

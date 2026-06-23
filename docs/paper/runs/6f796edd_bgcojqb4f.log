@@ -1,0 +1,5 @@
+replay-train 55 valid 11 held-out test 12
+=== train 1.5B WITH REPLAY ===
+=== eval (replay-trained 1.5B) ===
+held-out ⊕: PASS 4/12
+general   : PASS 5/5

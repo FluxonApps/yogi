@@ -1,0 +1,3 @@
+final-train 96 (⊕x2 + 8 FACTS-ONLY replay)
+held-out ⊕: PASS 7/12
+general   : PASS 3/5

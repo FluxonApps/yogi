@@ -1,0 +1,8 @@
+=== snapshot full xlangai/spider repo — look for DB archives/files ===
+repo at /Users/gg/.cache/huggingface/hub/datasets--xlangai--spider/snapshots/0c350918f3f29ec754f1181c65cdce76cd6c133c
+=== try gdown BIRD mini-dev (has DBs) ===
+1UJysRkj9fFFq2ymerYsAGUmfYWcd1jjt: gdown ERR FileURLRetrievalError("Failed to retrieve file url:\n\n\tCannot retrieve the public link of the file. You may need to ch
+1iRDVHLr4mX2wQKSgA9J8Pire73Jahh0m: gdown ERR FileURLRetrievalError("Failed to retrieve file url:\n\n\tCannot retrieve the public link of the file. You may need to ch
+BIRD/Spider .sqlite found: 0
+=== total executable .sqlite anywhere ===
+0

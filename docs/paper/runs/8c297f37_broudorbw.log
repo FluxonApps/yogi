@@ -1,0 +1,5 @@
+Transfer cert v2 (thinking ON, deterministic rule injection, k=1 vote): 15 tasks, foreground ...
+cold (no rule)      mean: 0.000
+with injected rule  mean: 1.000
+paired delta: mean=1.000  CI=[1.000, 1.000]  compounds=true
+=> CERTIFIED: the rule transfers to new operands (CI excludes zero). Token-space compounding.

@@ -1,0 +1,6 @@
+drift process gone
+M3 gap detection (foreground — loads qwen3:8b twice: no-think student, thinking teacher) ...
+student (/no_think) pass-rate = 0.90   teacher (thinking) pass-rate = 1.00
+gap (teacher-success ∩ student-weak) = 1 tasks — the distillation target set:
+  [anagram] Rearrange the letters of 'silent' into another common word. One word.
+(A distilled student should close this gap WITHOUT regressing the broad set — being_distill::PromotionGate enforces both clauses.)

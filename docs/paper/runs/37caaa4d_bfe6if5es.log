@@ -1,0 +1,10 @@
+ok
+e984039 Phase 2b: retention compounds (no C3 collapse) but mental composition hits the computation floor; recurse_v2 tests recursion-via-lever
+=== GPU free? ===
+0
+=== launch recurse_v2 (bg, ~25min) ===
+self-gen ⊠ via PROGRAM lever: 40/40 verified (high yield => ⊞ reused to acquire ⊠)
+=== PHASE 2b RESULT (recursion / C3 rematch) ===
+  ⊠ tool-use (plain prompt->program): cold before 0/8 -> after 8/8
+  ⊞ retained (the abstraction): before 6/8 -> after 1/8
+  COMPOUND ✓ iff ⊠ rises (abstraction reused to acquire the next skill) AND ⊞ retained (vs C3 confusable collapse to ~3/8).

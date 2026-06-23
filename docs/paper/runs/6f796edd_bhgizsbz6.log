@@ -1,0 +1,3 @@
+=== conservative adapter eval ===
+held-out ⊕ distilled2: PASS 0/12
+general    distilled2: PASS 1/5

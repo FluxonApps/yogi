@@ -1,0 +1,5 @@
+M3 distillation flywheel (foreground — qwen3:8b thinking, cold vs distilled) ...
+⊕ domain: teacher=1.00  cold-student=0.00  distilled-student=1.00  (gap size 2)
+⊗/⊙ mixed: cold=0.00  distilled=0.00  (non-inferiority check)
+PromotionGate: gap_closure=1.00 (need ≥0.50)  mixed_delta=+0.00 (need ≥ -0.10)  → PROMOTED=true
+→ distillation closed the ⊕ gap on FRESH operands (capability, not memorization) without regressing ⊗/⊙: the M3 flywheel works end-to-end, live.

@@ -1,0 +1,11 @@
+py ok
+S1 adapter present
+9b87f5b scripts/recurse.sh: Phase 2b — recursion / the C3 rematch
+=== GPU free? ===
+0
+=== launch Phase 2b (bg, ~25min) ===
+self-gen ⊠ via internalized ⊞ + composition: 0/40 verified (high yield => ⊞ reused to acquire ⊠)
+=== PHASE 2b RESULT (recursion / C3 rematch) ===
+  ⊠ learned (built on ⊞): cold before 0/8 -> after 0/8
+  ⊞ retained (the abstraction): before 0/8 -> after 4/8
+  COMPOUND ✓ iff ⊠ rises (abstraction reused to acquire the next skill) AND ⊞ retained (vs C3 confusable collapse to ~3/8).

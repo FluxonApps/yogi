@@ -1,0 +1,11 @@
+   Compiling being-bench v0.0.0 (/Users/gg/Work/Yogi/crates/being-bench)
+    Finished `release` profile [optimized] target(s) in 1.82s
+=== run ===
+M6 illumination (foreground — loads qwen3:8b repeatedly) ...
+illumination: 7 evaluations, 1 archive improvements, 0 recombinations, 1 niches filled
+QD-score=0.900  mean-fitness=0.900  coverage=5.0%
+signed fork ledger: 6 committed forks · genealogy 7 lineages (depth 1) · colony did:key:hex:197f6b23e16c8532c6abc838facd5ea789be0c76b2920334039bfa8b3d368d61
+elites per verbosity niche (len-band -> fitness, gen, prompt):
+  cell fitness=0.90 gen=0 :: ""
+global best: fitness=0.90 gen=0 prompt=""
+(Set EVOLVE_DRIFT=1 for the replicate selection-vs-neutral-drift gate — the build-spec §6 acceptance on real model scores. The gate already fires on synthetic data.)

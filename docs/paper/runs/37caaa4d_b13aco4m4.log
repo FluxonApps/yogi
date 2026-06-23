@@ -1,0 +1,30 @@
+mkround py ok
+b5d6946 scripts/sequential_rounds.sh: sequential continual-learning test (forgetting vs compounding)
+ok
+  self-gen A_add: 64/64
+  self-gen B_dash: 38/38
+  self-gen C_mul: 64/64
+per-skill traces written
+=== COLD (all three novel) ===
+0/8
+0/8
+0/8
+=== ROUND 1: learn A_add ===
+  round(A_add) train=64 (=64 new + 0 replay)
+  eval-all after R1:
+8/8
+0/8
+2/8
+=== ROUND 2: learn B_dash (+replay A) ===
+  round(B_dash) train=48 (=38 new + 10 replay)
+  eval-all after R2:
+7/8
+8/8
+2/8
+=== ROUND 3: learn C_mul (+replay A,B) ===
+  round(C_mul) train=84 (=64 new + 20 replay)
+  eval-all after R3:
+1/8
+8/8
+6/8
+=== continual ✓ iff after R3 ALL of A_add/B_dash/C_mul are high (each learned over time, none forgotten) ===

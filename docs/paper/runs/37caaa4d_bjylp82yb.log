@@ -1,0 +1,11 @@
+AWARENESS: probing qwen3:8b on the operator goal (cold vs taught) — verifier-grounded...
+  9 op 3: cold=false taught=true
+  7 op 9: cold=false taught=true
+  9 op 9: cold=false taught=true
+  2 op 9: cold=false taught=true
+  9 op 6: cold=false taught=true
+  4 op 9: cold=false taught=true
+  9 op 1: cold=false taught=true
+  8 op 9: cold=false taught=true
+capability map: mastered=0 frontier=8 beyond=0  floor=0%
+AWARE → 8 items are learnable NOW (fail cold, pass taught = the ZPD): practice them, then distill.

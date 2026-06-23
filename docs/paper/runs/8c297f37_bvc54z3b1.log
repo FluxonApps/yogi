@@ -1,0 +1,4 @@
+Multi-skill cert: 9 single-op + 3 compositional tasks, 3 learned skills, foreground ...
+single-op transfer: cold 0.000 -> skilled 0.000 | delta 0.000 CI=[0.000,0.000] compounds=false
+compositional split: cold 0.000 -> skilled 0.000 | delta 0.000 CI=[0.000,0.000] compounds=false
+LiMem (single, skilled): 0.000  (0 = pure rule-application, high = memorization)

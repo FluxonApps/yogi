@@ -1,0 +1,22 @@
+teacher corpus: Claude draws 20 subjects (claude -p)...
+  cat: 6 lines — kept
+  dog: 11 lines — kept
+  house: 6 lines — kept
+  tree: 12 lines — kept
+  fish: 4 lines — kept
+  star: 10 lines — rejected
+  heart: 12 lines — rejected
+  flower: 11 lines — kept
+  sun: 7 lines — kept
+  boat: 9 lines — rejected
+  car: 4 lines — kept
+  bird: 5 lines — kept
+  face: 7 lines — kept
+  mountain: 9 lines — kept
+  cup: 6 lines — kept
+  key: 7 lines — kept
+  umbrella: 10 lines — kept
+  robot: 7 lines — kept
+  snake: 10 lines — kept
+  apple: 9 lines — kept
+teacher corpus: 17 validated drawings → .yogi/ascii_corpus/{train,valid,test}.jsonl

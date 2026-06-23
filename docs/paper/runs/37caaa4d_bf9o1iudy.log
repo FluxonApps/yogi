@@ -1,0 +1,46 @@
+186692c scripts/ascii_moonshot.sh: the ASCII moonshot (action-space change + teacher-bootstrap)
+ok
+=== launching moonshot (~40min: teacher corpus + LoRA + eval) ===
+  teacher house: VALID (11 lines)
+  teacher tree: VALID (11 lines)
+  teacher cat: VALID (11 lines)
+  teacher dog: VALID (10 lines)
+  teacher fish: VALID (8 lines)
+  teacher boat: VALID (11 lines)
+  teacher car: VALID (9 lines)
+  teacher star: rejected
+  teacher heart: rejected
+  teacher flower: VALID (11 lines)
+  teacher sun: VALID (11 lines)
+  teacher key: VALID (8 lines)
+  teacher cup: VALID (10 lines)
+  teacher robot: VALID (11 lines)
+  teacher face: VALID (11 lines)
+  teacher mountain: VALID (10 lines)
+  teacher arrow: rejected
+  teacher bird: VALID (10 lines)
+  teacher snake: VALID (9 lines)
+  teacher ladder: VALID (11 lines)
+  teacher table: rejected
+  teacher box: VALID (10 lines)
+  teacher flag: VALID (11 lines)
+  teacher clock: VALID (10 lines)
+TEACHER CORPUS: 20/24 valid programs (salary=24 claude calls)
+=== LoRA: teacher-bootstrap program emission ===
+=== COLD (no adapter) — valid-program emission on held-out ===
+  rocket: empty/invalid (27 cmds)
+  umbrella: empty/invalid (12 cmds)
+  bridge: empty/invalid (27 cmds)
+  lamp: VALID (16 cmds)
+  kite: empty/invalid (13 cmds)
+  drum: empty/invalid (10 cmds)
+VALID-PROGRAM RATE: 1/6
+=== DISTILLED — did it CROSS THE FLOOR? ===
+  rocket: VALID (14 cmds)
+  umbrella: VALID (7 cmds)
+  bridge: VALID (24 cmds)
+  lamp: VALID (20 cmds)
+  kite: VALID (5 cmds)
+  drum: VALID (18 cmds)
+VALID-PROGRAM RATE: 6/6
+=== moonshot ✓ iff distilled emits VALID programs (composed art) where cold emits empty/garbage ===

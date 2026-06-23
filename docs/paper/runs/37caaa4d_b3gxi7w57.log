@@ -1,0 +1,11 @@
+bash ok
+e4bd1e6 fix: invent_v2 parser rejected the model's correct formatted output (false kill)
+=== GPU free? ===
+0
+=== re-launch invent_v2 (fixed parser) ===
+INDUCTION-VIA-PROGRAM discovered: '5*a+3*b+7'  (truth 5*a+3*b+7) -> CORRECT
+self-gen via self-discovered rule: 40 traces
+=== PHASE 2a-v2 RESULT (induction-by-program-search, then internalize) ===
+  discovered: 5*a+3*b+7 (truth 5a+3b+7)
+  cold ⊞: before 0/8 -> after 6/8
+  ✓ iff discovered correct (induction floor crossed via program) AND cold after >> before (self-discovered rule internalized).

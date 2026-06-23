@@ -1,0 +1,5 @@
+c50ea72 scripts/invent.sh: Phase 2a — invent-the-rule-then-internalize (escalation of F1)
+=== launching Phase 2a invention (bg, ~30min, zero salary) ===
+INVENTED 5 candidate rules (sample): ['a * 10 - b', 'a * 9 + b', 'a * 8 + 12', 'a * 7 + 13', 'a * 6 + 22']
+DISCOVERED RULE: None  (truth: 5*a+3*b+7)  -> none/incorrect
+INVENTION FAILED at 8B scale — honest kill: the being could not induce the rule from examples.

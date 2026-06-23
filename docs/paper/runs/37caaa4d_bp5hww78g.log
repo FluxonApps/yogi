@@ -1,0 +1,11 @@
+SELF-GENERATED: 63/64 train pairs solved with rule in-context -> 63 verified traces
+=== COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+PASS 0/8
+=== LoRA on the model's OWN self-generated verified traces (mlx-community/Qwen2.5-1.5B-Instruct-4bit, layers=16 iters=300) ===
+=== HELD-OUT floor (cold prompt, no rule) — did the floor RISE? ===
+PASS 0/8
+PASS 1/8
+=== general (forgetting / non-inferiority) ===
+PASS 3/3
+PASS 2/3
+=== verdict: floor rose (P1 ✓) iff distilled held-out >> cold AND general non-inferior ===

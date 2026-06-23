@@ -1,0 +1,12 @@
+2:# STATS (F1 credibility): operator ⊕=3a+2b ratchet at 3 seeds × n=40 unseen-operand held-out → mean±std.
+5:echo "skill=⊕(3a+2b)  held-out n=40 (unseen operands 9-12)  seeds=1,2,3"
+8:  o=$(STUDENT=mlx-community/Qwen3-8B-4bit GOAL_KIND=numeric BIG_HELDOUT=1 EVAL_MAX=64 SEED=$s THINK_OFF=1 BATCH=2 \
+stats bash ok
+7598815 stats: re-scope eval cost (EVAL_MAX env=64, n=40 held-out) + fix SEED interpolation
+=== relaunching fast stats (n=40, EVAL_MAX=64, ~30min) ===
+skill=⊕(3a+2b)  held-out n=40 (unseen operands 9-12)  seeds=1,2,3
+seed 1:  cold    distilled 
+seed 2:  cold    distilled 
+seed 3:  cold 0/40   distilled 0/40
+distilled correct (/80) across seeds:   0
+DISTILLED mean=0.0/80 = 0%  std=0.0  (n_seeds=1)

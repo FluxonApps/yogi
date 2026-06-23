@@ -1,0 +1,2 @@
+=== cold eval (downloads Qwen2.5-0.5B-4bit, then evals held-out ⊕) ===
+PASS 0/12

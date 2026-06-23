@@ -1,0 +1,13 @@
+patched recurse_v3
+py ok
+ok
+2321e4f F9: recursion-via-lever acquires but forgets prior (retention is the universal bottleneck); recurse_v3 applies the F3 fix
+=== GPU free? ===
+0
+=== launch recurse_v3 (bg, ~25min) ===
+heavy ⊞ replay (F3 fix): 30 ⊞ CoT traces mixed with 40 ⊠ traces
+self-gen ⊠ via PROGRAM lever: 40/40 verified (high yield => ⊞ reused to acquire ⊠)
+=== PHASE 2b-v3 RESULT (recursion + F3 heavy-replay fix) ===
+  ⊠ tool-use (plain prompt->program): cold before 0/8 -> after 8/8
+  ⊞ retained (the abstraction): before 6/8 -> after 6/8
+  COMPOUND ✓ iff ⊠ rises (abstraction reused to acquire the next skill) AND ⊞ retained (vs C3 confusable collapse to ~3/8).

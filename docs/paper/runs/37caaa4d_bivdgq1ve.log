@@ -1,0 +1,9 @@
+b: 1.00  | Big bold bare bats brew.
+c: 0.64  | Cats chase cows and caves.
+d: 0.00  | 
+f: 1.00  | Frosted figs flow freely forward.
+m: 1.00  | Mighty marmalade melts mugs mints.
+l: 0.80  | Large ladders linger long.
+n: 0.80  | Narrow nests near new nests.
+a: 0.00  | 
+COLD mean=0.655  min=0.00 max=1.00  (sweet spot ~0.3-0.8)

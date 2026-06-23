@@ -1,0 +1,125 @@
+# Raw run logs — primary evidence (auto-archived)
+
+Cleaned per-run logs (progress noise stripped), `<session8>_<taskid>.log`. Narrative + interpretation
+in `docs/FINDINGS.md`; these are the raw outputs behind it. Descriptions auto-extracted from each
+log (not hand-labelled).
+
+- `237b4868_a1945901b5e7db9e9.log` — (see file)
+- `237b4868_afa5e38c6946052d0.log` — {"parentUuid":null,"isSidechain":true,"promptId":"ea5deda3-2082-4e82-9e86-49535c9f9f1d","agentId":"afa5e38c6946052d
+- `37caaa4d_b13aco4m4.log` — === COLD (all three novel) ===
+- `37caaa4d_b2acxcv2m.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_b303hio4g.log` — (see file)
+- `37caaa4d_b3ai8ax81.log` — === launching Roman de-risk on the real 8B ===
+- `37caaa4d_b3gxi7w57.log` — === GPU free? ===
+- `37caaa4d_b3uwjisf7.log` — === AFTER THINK (first 600) ===
+- `37caaa4d_b4bsgdur5.log` — ================ P4 cat WITH thinking on ================
+- `37caaa4d_b7tsvmtxq.log` — (see file)
+- `37caaa4d_b80jj0q3k.log` — === relaunching fast stats (n=40, EVAL_MAX=64, ~30min) ===
+- `37caaa4d_b8v1cpbk2.log` — (see file)
+- `37caaa4d_bb7zpm113.log` — === house: program-synthesis score=0.0 (direct-gen ceiling was 0.40) ===
+- `37caaa4d_bch625x5b.log` — (see file)
+- `37caaa4d_bd2y5wnjo.log` — === GPU free? ===
+- `37caaa4d_bd64d4hap.log` — (see file)
+- `37caaa4d_bdiooeffx.log` — ================ P1 cold: cat (no_think) ================
+- `37caaa4d_bdomahq8y.log` — (see file)
+- `37caaa4d_betc5ner5.log` — (see file)
+- `37caaa4d_bf9o1iudy.log` — === launching moonshot (~40min: teacher corpus + LoRA + eval) ===
+- `37caaa4d_bfe6if5es.log` — === GPU free? ===
+- `37caaa4d_bfi7oakxs.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_bfkmfcl4v.log` — === launching Phase 2a invention (bg, ~30min, zero salary) ===
+- `37caaa4d_bfn1bxj45.log` — (see file)
+- `37caaa4d_bfxrx9wms.log` — === GPU free? ===
+- `37caaa4d_bi97h7gb0.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_bivdgq1ve.log` — (see file)
+- `37caaa4d_bixhjgclk.log` — === 1.5B cipher self-gen yield (for info) ===
+- `37caaa4d_bj2oxmvla.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_bjylp82yb.log` — AWARENESS: probing qwen3:8b on the operator goal (cold vs taught) — verifier-grounded...
+- `37caaa4d_bkgu8qbk7.log` — === GPU free? ===
+- `37caaa4d_bkk8k9u3l.log` — - LinkedIn: direct outreach to people whose headline says "fractional" or "independent consultant," warmed by the b
+- `37caaa4d_blc1boebh.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_bm4uzzm17.log` — === launching graduation curve (bg, ~80min) ===
+- `37caaa4d_bmkd6kfr2.log` — === launching bet B phase 1 (bg, ~35min, zero salary) ===
+- `37caaa4d_bnlv45rco.log` — === POST-THINK PROGRAM ===
+- `37caaa4d_bnofv4kio.log` — ================ P1 cold cat (no_think) ================
+- `37caaa4d_bnqv7reui.log` — (see file)
+- `37caaa4d_bp5hww78g.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_bp86v4d33.log` — === launching 3-seed stats run (~75min) ===
+- `37caaa4d_bpvt4q761.log` — === launching F7-suite (bg, ~40min, zero salary) ===
+- `37caaa4d_bpyx9efaa.log` — 9:echo -n " cold (no adapter): "; EVAL_MAX=256 "$PY" "$EV" "$STUDENT" - "$TEST"
+- `37caaa4d_bqdydbsc4.log` — (see file)
+- `37caaa4d_bqjfx44rn.log` — === wrapper output (likely empty from the parse bug) ===
+- `37caaa4d_brbvgejfj.log` — === COLD (no adapter) — each skill held-out ===
+- `37caaa4d_brfaxasju.log` — AWARE → 8 items are learnable NOW (fail cold, pass taught = the ZPD): practice them, then distill.
+- `37caaa4d_btubg2jlu.log` — === GPU free? ===
+- `37caaa4d_bv57ixhib.log` — === rabbit: cold=0.0 teacher-shot=0.0 ===
+- `37caaa4d_bvqxeqlio.log` — === COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+- `37caaa4d_bw0q1h86d.log` — AWARE → 8 items are learnable NOW (fail cold, pass taught = the ZPD): practice them, then distill.
+- `37caaa4d_bxffy6xnl.log` — === NOVEL ✓ iff heavyA/disambig keep A_add high (vs uniform's 1/8 collapse) AND C_mul stays learned ===
+- `37caaa4d_bz1nrsq17.log` — (see file)
+- `6f796edd_b0zjsz6gk.log` — held-out ⊕: PASS 7/12
+- `6f796edd_b1wcsvzzu.log` — === cold eval (downloads Qwen2.5-0.5B-4bit, then evals held-out ⊕) ===
+- `6f796edd_b2h2fxm9n.log` — === train 1.5B BALANCED ===
+- `6f796edd_b73xlal61.log` — === downloading BIRD mini-dev (direct HTTP, real source) ===
+- `6f796edd_b78gui12a.log` — === run ===
+- `6f796edd_b99hkkfdi.log` — === held-out ⊕ (capability on UNSEEN operands) ===
+- `6f796edd_baq5e99cd.log` — === try legacy spider loader (historically downloads DBs) ===
+- `6f796edd_bb5mmh3cy.log` — (A distilled student should close this gap WITHOUT regressing the broad set — being_distill::PromotionGate enforces
+- `6f796edd_bbfdjh6gb.log` — (see file)
+- `6f796edd_bfc60qx09.log` — === held-out ⊕: COLD vs DISTILLED ===
+- `6f796edd_bg3n49qtd.log` — M3 distillation flywheel (foreground — qwen3:8b thinking, cold vs distilled) ...
+- `6f796edd_bgcojqb4f.log` — === train 1.5B WITH REPLAY ===
+- `6f796edd_bhgizsbz6.log` — === conservative adapter eval ===
+- `6f796edd_bilyotby3.log` — === GPU free? ===
+- `6f796edd_bk32mx1zi.log` — (see file)
+- `6f796edd_bklfiilb5.log` — M3 distillation flywheel (foreground — qwen3:8b thinking, cold vs distilled) ...
+- `6f796edd_boysu4o52.log` — (see file)
+- `6f796edd_bpc3xl211.log` — === snapshot full xlangai/spider repo — look for DB archives/files ===
+- `6f796edd_bpuc0mjgk.log` — (see file)
+- `6f796edd_bqw0s5wnd.log` — held-out ⊕: PASS 8/12
+- `6f796edd_bu2zyz2d7.log` — === GPU free? ===
+- `6f796edd_bwtw73vgt.log` — === datasets installed? ===
+- `8c297f37_a0c75e73218e5c8e8.log` — {"parentUuid":null,"isSidechain":true,"promptId":"ed988829-c186-4cf7-8fda-2a36bf7006f0","agentId":"a0c75e73218e5c8e
+- `8c297f37_a12db5ed54240f2d0.log` — (see file)
+- `8c297f37_a1a2b12365cad33d6.log` — {"parentUuid":"7d305828-fc0d-41be-b6e4-9badc8344b7d","isSidechain":true,"promptId":"e117d56d-29de-4df3-8e3a-07358c4
+- `8c297f37_a1cf23d1e97c4e687.log` — {"parentUuid":"6e9651fd-9829-4370-9d9f-188738a4258e","isSidechain":true,"promptId":"b83cd85c-215e-4dfb-b12b-82fa273
+- `8c297f37_a25edca7176cfc694.log` — {"parentUuid":"41741833-5cde-4113-adfd-4f74bde514fd","isSidechain":true,"promptId":"e117d56d-29de-4df3-8e3a-07358c4
+- `8c297f37_a2c2fb2f89230a0db.log` — {"parentUuid":null,"isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b911d737","agentId":"a2c2fb2f89230a0d
+- `8c297f37_a2cceb1c12f4a6bcd.log` — {"parentUuid":null,"isSidechain":true,"promptId":"896d0f12-96e2-42a4-8fdf-b1fab5546f55","agentId":"a2cceb1c12f4a6bc
+- `8c297f37_a314bc97408580996.log` — {"parentUuid":"8ac7157d-c9e4-4503-adcc-2b2eb29a935b","isSidechain":true,"agentId":"a314bc97408580996","message":{"m
+- `8c297f37_a426968626a78bc3d.log` — {"parentUuid":"31ab7337-ccc4-4fd7-977f-ee190fb3ce5c","isSidechain":true,"promptId":"e117d56d-29de-4df3-8e3a-07358c4
+- `8c297f37_a4aac89b1c1b7db5a.log` — {"parentUuid":"3fef1e2c-9e1a-4872-bd2c-4a0cb6730593","isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b91
+- `8c297f37_a51a7a37c07b9faa2.log` — {"parentUuid":null,"isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b911d737","agentId":"a51a7a37c07b9faa
+- `8c297f37_a51cea8e99efb2b84.log` — {"parentUuid":"630f4abf-4540-49b8-a979-8a1d4f70edfc","isSidechain":true,"agentId":"a51cea8e99efb2b84","message":{"m
+- `8c297f37_a618fae97ae923ec1.log` — {"parentUuid":"0eeb9c9f-0813-4f47-8270-dc6892d80f9c","isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b91
+- `8c297f37_a6867b8fa220460c5.log` — (see file)
+- `8c297f37_a68890b8706007304.log` — {"parentUuid":"a42760bf-f2de-4bd6-ace5-5ccee84d62ea","isSidechain":true,"promptId":"96f7ce82-27af-4c04-ae02-270c487
+- `8c297f37_a694ec9ee8d30ccac.log` — {"parentUuid":"b69c49b6-5645-4a49-b5ca-225ff6ecbd12","isSidechain":true,"agentId":"a694ec9ee8d30ccac","message":{"m
+- `8c297f37_a72217cc746f6deac.log` — {"parentUuid":"52b3b900-9007-4853-88c2-835b157da611","isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b91
+- `8c297f37_a78d82338f3aeef1a.log` — {"parentUuid":"0d163e98-9e90-4f32-8dac-6c8a3741b498","isSidechain":true,"promptId":"fb0cadc7-1603-40bf-9d82-d900b7e
+- `8c297f37_a7a7a51fc4106ad65.log` — {"parentUuid":"637692c8-9f5a-4b3d-9aff-d7cd9a427a50","isSidechain":true,"promptId":"e117d56d-29de-4df3-8e3a-07358c4
+- `8c297f37_a7ac81ca118e1dc58.log` — {"parentUuid":"634480db-ad33-45ed-9650-e9877755f02c","isSidechain":true,"promptId":"e117d56d-29de-4df3-8e3a-07358c4
+- `8c297f37_a8795bfae9e2c2e2b.log` — {"parentUuid":null,"isSidechain":true,"promptId":"86e3c656-fdf4-40b7-9b8a-223e791a3151","agentId":"a8795bfae9e2c2e2
+- `8c297f37_a8a9cbb753123834b.log` — {"parentUuid":"c2567ee7-d860-4848-9acb-47abc0e23254","isSidechain":true,"promptId":"fb0cadc7-1603-40bf-9d82-d900b7e
+- `8c297f37_aa28e0abdc3b5ed74.log` — (see file)
+- `8c297f37_aa47f8eb58a90b448.log` — {"parentUuid":"87376167-e5da-4438-a204-cfac602dcb41","isSidechain":true,"agentId":"aa47f8eb58a90b448","message":{"m
+- `8c297f37_aba4c59c369d45698.log` — {"parentUuid":"db4bee06-34ba-4d8a-9740-0cbf367ff6ed","isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b91
+- `8c297f37_ac756c0b95ee51fa9.log` — {"parentUuid":"6dda6301-d225-470f-baaf-8faa58161858","isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b91
+- `8c297f37_ac7c99e6fe1d41e66.log` — (see file)
+- `8c297f37_ac8f883e15ef792f8.log` — (see file)
+- `8c297f37_ad2e30b85cc1c5b90.log` — {"parentUuid":"caa04057-efff-4c4c-952f-cdf7708f3b7a","isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b91
+- `8c297f37_ada254e2f5c7002a8.log` — (see file)
+- `8c297f37_ae50cd09b1428afac.log` — (see file)
+- `8c297f37_ae758cc42afc8818b.log` — {"parentUuid":"42c258ca-f6d4-4ef1-9139-c0ec3f11dfb1","isSidechain":true,"promptId":"e117d56d-29de-4df3-8e3a-07358c4
+- `8c297f37_aed8b63927090d2d9.log` — {"parentUuid":null,"isSidechain":true,"promptId":"dcbe4efb-6e32-4db6-a75a-aa49b911d737","agentId":"aed8b63927090d2d
+- `8c297f37_afd7b3466a6880b47.log` — (see file)
+- `8c297f37_b0o4gg0u1.log` — cold (no skill) mean: 0.000
+- `8c297f37_b76pptdto.log` — === transfer certification (foreground, ~40 inferences) ===
+- `8c297f37_bab1sk69h.log` — single-op transfer: cold 0.000 -> skilled 1.000 | delta 1.000 CI=[1.000,1.000] compounds=true
+- `8c297f37_bez3axk1g.log` — single-op transfer: cold 0.000 -> skilled 0.000 | delta 0.000 CI=[0.000,0.000] compounds=false
+- `8c297f37_bg8n6d2pa.log` — single-op transfer: cold 0.000 -> skilled 0.000 | delta 0.000 CI=[0.000,0.000] compounds=false
+- `8c297f37_bor65ksw5.log` — cold (no skill) mean: 0.000
+- `8c297f37_bovrbkrzc.log` — cold (no skill) mean: 0.000
+- `8c297f37_broudorbw.log` — cold (no rule) mean: 0.000
+- `8c297f37_buqq5poe0.log` — single-op transfer: cold 0.000 -> skilled 1.000 | delta 1.000 CI=[1.000,1.000] compounds=true
+- `8c297f37_bvc54z3b1.log` — single-op transfer: cold 0.000 -> skilled 0.000 | delta 0.000 CI=[0.000,0.000] compounds=false
+- `e57fd0c3_bgr3658k5.log` — === /v1/chat/completions shape (qwen3:8b, no_think, tiny) ===

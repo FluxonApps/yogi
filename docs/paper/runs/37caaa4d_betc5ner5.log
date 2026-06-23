@@ -1,0 +1,13 @@
+OK  want -8 got -8
+XX  want 180 got None
+XX  want 90 got None
+XX  want -34 got None
+XX  want 2 got None
+XX  want 640 got None
+XX  want -53 got None
+XX  want 18 got None
+XX  want 44 got None
+XX  want 202 got None
+XX  want -40 got None
+XX  want 151 got None
+COLD accuracy (no_think) on 4-step chains: 1/12 = 8%  (pure-STaR sweet spot ~0.3-0.7)

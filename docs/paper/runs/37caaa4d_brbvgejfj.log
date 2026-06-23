@@ -1,0 +1,16 @@
+862eeee scripts/multi_round.sh: the compounding test (does the floor ratchet up cumulatively?)
+ok
+  self-gen ⊕⊕: 64/64
+  self-gen ⊙dash: 38/38
+  self-gen ⊕⊗: 64/64
+UNION train set: 169 traces across 3 novel skills (2 kinds)
+=== COLD (no adapter) — each skill held-out ===
+0/8
+0/8
+0/8
+=== LoRA on the UNION of all 3 skills' self-gen traces ===
+=== DISTILLED — does ONE model hold ALL THREE skills at once? (compounding) ===
+8/8
+8/8
+6/8
+=== compounding ✓ iff all three held-out sets rose (one model, multiple novel skills, no interference) ===

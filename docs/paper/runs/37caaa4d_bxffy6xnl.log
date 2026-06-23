@@ -1,0 +1,12 @@
+ok
+baseline (uniform replay, from the sequential run): A_add collapsed to 1/8 when C_mul was learned.
+  [uniform] train=84 (C=64 + replay=20)
+1/8
+6/8
+  [heavyA] train=138 (C=64 + replay=74)
+8/8
+8/8
+  [disambig] train=148 (C=64 + replay=84)
+8/8
+8/8
+=== NOVEL ✓ iff heavyA/disambig keep A_add high (vs uniform's 1/8 collapse) AND C_mul stays learned ===

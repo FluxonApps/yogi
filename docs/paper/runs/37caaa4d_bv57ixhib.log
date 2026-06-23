@@ -1,0 +1,27 @@
+=== rabbit: cold=0.0  teacher-shot=0.0 ===
+[cold]
+[taught]
+=== fish: cold=0.1  teacher-shot=0.2 ===
+[cold]
+/\
+  /  \
+ /    \
+/______\
+  |    |
+  |    |
+  |    |
+  |    |
+  |    |
+  |    |
+  |    |
+  |    |
+  |    |
+[taught]
+____
+   /    \
+  |  o   |
+  |     |
+  |     |
+  |     |
+  |     |
+  |     |

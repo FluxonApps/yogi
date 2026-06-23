@@ -1,0 +1,19 @@
+cb290cc scripts/floor_crossing_suite.sh: generalize bet B (F7) to a multi-task suite
+ok
+=== launching F7-suite (bg, ~40min, zero salary) ===
+=== PROBE (cold): direct floor vs program crosses, per task (k=6) ===
+  mult: direct 0/6  program 6/6  -> BELOW-FLOOR, program crosses
+  sort: direct 6/6  program 6/6  -> check
+  count: direct 0/6  program 6/6  -> BELOW-FLOOR, program crosses
+  base: direct 0/6  program 6/6  -> BELOW-FLOOR, program crosses
+  self-gen mult: 10 verified program-traces
+  self-gen sort: 10 verified program-traces
+  self-gen count: 10 verified program-traces
+  self-gen base: 10 verified program-traces
+=== ONE multi-task LoRA over pooled program-traces ===
+=== F7-SUITE RESULT (held-out n=6/task) — internalized tool-use under a PLAIN prompt ===
+  mult: floor(direct cold) 0/6 | program-crosses 6/6 | DISTILLED plain->tool-use 6/6 (direct-answer 0/6) | before 0/6
+  sort: floor(direct cold) 6/6 | program-crosses 6/6 | DISTILLED plain->tool-use 6/6 (direct-answer 0/6) | before 5/6
+  count: floor(direct cold) 0/6 | program-crosses 6/6 | DISTILLED plain->tool-use 6/6 (direct-answer 0/6) | before 0/6
+  base: floor(direct cold) 0/6 | program-crosses 6/6 | DISTILLED plain->tool-use 6/6 (direct-answer 0/6) | before 0/6
+GENERAL ✓ iff across tasks: direct cold low (floor) AND distilled plain-prompt tool-use high (internalized reaching-for-code, no scaffold instruction).

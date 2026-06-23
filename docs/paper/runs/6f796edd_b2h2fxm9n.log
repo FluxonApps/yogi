@@ -1,0 +1,4 @@
+balanced-train 98 (⊕x2 + 10 facts-weighted replay)
+=== train 1.5B BALANCED ===
+held-out ⊕: PASS 5/12
+general   : PASS 3/5

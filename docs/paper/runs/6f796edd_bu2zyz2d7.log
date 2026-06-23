@@ -1,0 +1,10 @@
+0042628 scripts/sql_ratchet.sh: the text-to-SQL usability proof (real task, free execution verifier)
+ok
+=== GPU free? ===
+0
+=== launch PROBE (bg, ~7min, zero salary) ===
+=== PROBE (8B, train n=16): one-shot floor vs scaffold-cross ===
+  one-shot (FLOOR): 14/16   scaffold-cross: 16/16
+  -> scaffold yields 16 verified one-shot traces to distill
+  HELD-OUT one-shot before: 7/8
+PROBE done. If floor low (one-shot << scaffold) -> run PHASE=full for the ratchet.

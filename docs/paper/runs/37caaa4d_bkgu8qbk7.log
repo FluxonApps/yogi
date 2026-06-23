@@ -1,0 +1,5 @@
+=== GPU free? ===
+0
+=== launching invent_v2 (bg, ~30min, zero salary) ===
+INDUCTION-VIA-PROGRAM discovered: None  (truth 5*a+3*b+7) -> FAILED
+program-search induction also failed — honest deeper kill.

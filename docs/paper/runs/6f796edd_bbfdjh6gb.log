@@ -1,0 +1,13 @@
+M6 transfer illumination (foreground — loads qwen3:8b thinking mode) ...
+illumination: 11 evals, 7 improvements, 7 recombinations, 7 niches (coverage 88%)
+QD-score=3.667  mean-fitness=0.524
+signed fork ledger: 10 forks · genealogy 11 lineages (depth 4)
+niches (fitness, gen, #parents, skills):
+  fitness=0.00 gen=0 parents=0 skills=[]
+  fitness=0.33 gen=3 parents=2 skills=["s2"]
+  fitness=0.33 gen=1 parents=1 skills=["s1"]
+  fitness=0.67 gen=2 parents=1 skills=["s1", "s2"]
+  fitness=0.67 gen=4 parents=2 skills=["s0", "s2"]
+  fitness=0.67 gen=2 parents=1 skills=["s0", "s1"]
+  fitness=1.00 gen=3 parents=2 skills=["s0", "s1", "s2"]
+global best: fitness=1.00 skills=["s0", "s1", "s2"]

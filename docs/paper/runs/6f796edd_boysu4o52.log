@@ -1,0 +1,4 @@
+global best: fitness=0.33 skills=["s0"]
+M6 transfer drift acceptance: 6 replicates × 2 arms (thinking mode) ...
+M6 TRANSFER ACCEPTANCE: selection=0.294 vs drift=0.294  advantage CI=[0.000,0.000]  fires=false
+→ no significant edge over drift at this budget: honest null (try more replicates/iters).

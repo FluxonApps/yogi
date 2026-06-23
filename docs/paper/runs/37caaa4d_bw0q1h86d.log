@@ -1,0 +1,19 @@
+4d1baf7 self_improve.sh: fix frontier-parse (read 'frontier=N', not the absent 'PracticeFrontier(N)')
+════ 1. ASSESS (awareness) — verifier-grounded: what can the agent learn now? ════
+capability map: mastered=0 frontier=8 beyond=0  floor=0%
+AWARE → 8 items are learnable NOW (fail cold, pass taught = the ZPD): practice them, then distill.
+════ 2. DECIDE — 8 items at the frontier (ZPD). The agent chooses to practice them. ════
+════ 3. PRACTICE + INTERNALIZE — self-gen verified traces → LoRA (the ratchet, real qwen3:8b) ════
+SELF-GENERATED: 64/64 instances solved with rule in-context -> 64 verified traces
+=== COLD baseline (held-out, NO rule) — expect ~0 on a novel rule ===
+PASS 0/8
+=== LoRA on the model's OWN self-generated verified traces (mlx-community/Qwen3-8B-4bit, layers=16 iters=300) ===
+=== HELD-OUT floor (cold prompt, no rule) — did the floor RISE? ===
+PASS 0/8
+PASS 8/8
+=== general (forgetting / non-inferiority) ===
+PASS 3/3
+PASS 3/3
+=== verdict: floor rose (P1 ✓) iff distilled held-out >> cold AND general non-inferior ===
+════ 4. RE-ASSESS — the cold→distilled held-out eval above is the re-assessment: ════
+       if distilled >> cold, the Frontier items became Mastered — the floor rose, agent-driven.

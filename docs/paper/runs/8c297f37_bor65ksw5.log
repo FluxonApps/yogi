@@ -1,0 +1,5 @@
+Transfer cert E2E (full being: hybrid retrieval + thinking + learn_skill): 10 tasks, foreground ...
+cold (no skill)    mean: 0.000
+with learned skill mean: 1.000
+paired delta: mean=1.000  CI=[1.000, 1.000]  compounds=true
+=> CERTIFIED end-to-end: the full retrieve→apply loop self-certifies. Token-space compounding.

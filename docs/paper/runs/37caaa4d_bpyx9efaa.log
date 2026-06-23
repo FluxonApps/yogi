@@ -1,0 +1,10 @@
+9:echo -n "  cold (no adapter): "; EVAL_MAX=256 "$PY" "$EV" "$STUDENT" - "$TEST"
+14:  d=$(EVAL_MAX=256 "$PY" "$EV" "$STUDENT" "$ad" "$TEST" | grep -oE '[0-9]+/[0-9]+' | head -1)
+1b048ff fix: stats 0/40 was eval truncation (EVAL_MAX=64 cut the distilled CoT) — re-eval at 256
+=== re-eval saved adapters at EVAL_MAX=256 (true F1 on n=40) ===
+recover stats — operator ⊕, held-out n=40 (unseen operands), saved adapters:
+  cold (no adapter): PASS 0/40
+  seed 1 distilled: 40/40
+  seed 2 distilled: 40/40
+  seed 3 distilled: 38/40
+  DISTILLED mean=39.3/40 = 98%  std=0.9  (n_seeds=3)

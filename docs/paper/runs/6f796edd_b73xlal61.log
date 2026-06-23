@@ -1,0 +1,30 @@
+=== downloading BIRD mini-dev (direct HTTP, real source) ===
+HTTP 200  size 800943648 bytes
+=== size on disk ===
+764M /tmp/yogi_bird/minidev.zip
+=== peek inside (top-level) ===
+Archive:  /tmp/yogi_bird/minidev.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  06-20-2024 10:24   minidev/
+        0  06-20-2024 10:24   minidev/MINIDEV/
+   129350  06-19-2024 14:59   minidev/MINIDEV/mini_dev_mysql_gold.sql
+        0  06-20-2024 10:24   minidev/MINIDEV/dev_databases/
+        0  06-20-2024 10:24   minidev/MINIDEV/dev_databases/debit_card_specializing/
+        0  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/database_description/
+      208  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/database_description/customers.csv
+      233  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/database_description/gasstations.csv
+      158  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/database_description/products.csv
+      179  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/database_description/yearmonth.csv
+      445  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/database_description/transactions_1k.csv
+ 34635776  06-13-2024 19:53   minidev/MINIDEV/dev_databases/debit_card_specializing/debit_card_specializing.sqlite
+        0  06-20-2024 10:24   minidev/MINIDEV/dev_databases/financial/
+ 71294976  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/financial.sqlite
+        0  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/
+      630  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/loan.csv
+      252  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/client.csv
+     1095  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/district.csv
+     1155  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/trans.csv
+      480  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/account.csv
+      415  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/card.csv
+      602  06-13-2024 19:53   minidev/MINIDEV/dev_databases/financial/database_description/order.csv

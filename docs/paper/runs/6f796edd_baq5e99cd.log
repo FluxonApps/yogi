@@ -1,0 +1,15 @@
+=== try legacy spider loader (historically downloads DBs) ===
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'spider' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+LEGACY ERR: HfUriError("Invalid HF URI 'hf://datasets/spider@0c350918f3f29ec754f1181c65cdce76cd6c133c/.huggingface.yaml'. Repository id must be 'namespace/name', got 'spider'.")
+=== .sqlite in HF cache now? ===
+count: 0
+=== fallback: try a HF dataset repo that bundles Spider sqlite DBs ===
+richardr1126/spider-databases: ERR RepositoryNotFoundError('401 Client Error. (Request ID: Root=1-6a3a3d94-49f0aca937f940b24f129b93;0281c714-0a3a-4985-aa17
+NESPED-GEN/spider: downloaded -> 0 sqlite files at /Users/gg/.cache/huggingface/hub/datasets--NESPED-GEN--spider/snapshots/9a5d0565de4f22c84613b120b562ae512a4f6225
+xlang-ai/spider: ERR RepositoryNotFoundError('401 Client Error. (Request ID: Root=1-6a3a3d98-35827d3a377e2d4e0ed4b144;a9c911d9-18d3-48b1-8d58
+spider-databases: ERR RepositoryNotFoundError('401 Client Error. (Request ID: Root=1-6a3a3d98-36ca6c365e5744527e2bfe0d;f6b388ae-9a9d-41e8-af65
+=== final .sqlite count ===
+0

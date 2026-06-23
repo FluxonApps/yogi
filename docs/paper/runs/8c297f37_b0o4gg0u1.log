@@ -1,0 +1,5 @@
+Transfer cert E2E (full being: hybrid retrieval + thinking + learn_skill): 10 tasks, foreground ...
+cold (no skill)    mean: 0.000
+with learned skill mean: 0.000
+paired delta: mean=0.000  CI=[0.000, 0.000]  compounds=false
+=> not certified end-to-end — retrieval is likely the gap; inspect the hybrid hit on ⊕.

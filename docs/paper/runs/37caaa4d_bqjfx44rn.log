@@ -1,0 +1,15 @@
+=== wrapper output (likely empty from the parse bug) ===
+seed 1:  cold    distilled 
+seed 2:  cold    distilled 
+seed 3:  cold 0/40   distilled 0/40
+distilled correct (/80) across seeds:   0
+DISTILLED mean=0.0/80 = 0%  std=0.0  (n_seeds=1)
+=== procs free? ===
+0
+=== RECOVER from saved adapters ===
+recover stats — operator ⊕, held-out n=40 (unseen operands), saved adapters:
+  cold (no adapter): PASS 0/40
+  seed 1 distilled: 0/40
+  seed 2 distilled: 0/40
+  seed 3 distilled: 0/40
+  DISTILLED mean=0.0/40 = 0%  std=0.0  (n_seeds=3)

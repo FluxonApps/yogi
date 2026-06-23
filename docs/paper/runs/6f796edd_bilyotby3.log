@@ -1,0 +1,9 @@
+py ok
+53ce346 scripts/sql_real.sh: usability proof on REAL BIRD mini-dev (download unblocked — direct HTTP)
+=== GPU free? ===
+0
+=== launch BIRD PROBE (bg, ~10min, zero salary) ===
+DBs used (schema fits): ['toxicology', 'debit_card_specializing', 'student_club', 'superhero', 'financial']
+train=36 held-out=18 (difficulties: {'simple': 6, 'moderate': 8, 'challenging': 4})
+gold-SQL exec check: 1/54 golds errored (should be ~0)
+=== PROBE (8B on REAL BIRD, train n=36): one-shot floor vs scaffold-cross ===

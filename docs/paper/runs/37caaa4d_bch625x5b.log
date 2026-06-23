@@ -1,0 +1,9 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.36s
+live ASCII illumination: 6 generations x 2 subjects; salary cap 14 Claude calls...
+gen 0: best=0.50 mean=0.50 niches=1 salary=3/14 best_tool=Some(Direct)
+gen 1: best=0.50 mean=0.50 niches=1 salary=3/14 best_tool=Some(Direct)
+gen 2: best=0.50 mean=0.50 niches=1 salary=5/14 best_tool=Some(Direct)
+gen 3: best=0.50 mean=0.50 niches=1 salary=7/14 best_tool=Some(Direct)
+gen 4: best=0.50 mean=0.50 niches=1 salary=7/14 best_tool=Some(Direct)
+gen 5: best=0.50 mean=0.50 niches=1 salary=7/14 best_tool=Some(Direct)
+Done. The being's evolved tool usage across elites: {"Direct": 1}. Live dashboard: ./scripts/status.sh

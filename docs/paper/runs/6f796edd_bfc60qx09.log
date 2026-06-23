@@ -1,0 +1,6 @@
+=== held-out ⊕: COLD vs DISTILLED ===
+cold     : PASS 0/12
+distilled: PASS 0/12
+=== general (non-inferiority): COLD vs DISTILLED ===
+cold     : PASS 4/5
+distilled: PASS 1/5

@@ -1,0 +1,17 @@
+24bfa3f scripts/floor_crossing.sh: bet B phase 1 — the closed floor-crossing ratchet
+ok
+=== launching bet B phase 1 (bg, ~35min, zero salary) ===
+=== probe floor (direct-taught pass by digit count) ===
+  2-digit: taught 8/8
+  3-digit: taught 3/8
+  4-digit: taught 1/8
+  5-digit: taught 0/8
+FLOOR at 4-digit multiplication (direct-taught fails).
+=== reformulation pass @ 4-digit: {'direct': 0, 'program': 8, 'decompose': 0} ===
+AUTONOMOUS SELECT (by verifier pass): 'program' (crosses iff >> direct 0/8)
+self-gen via program: 40 verified traces
+=== BET B PHASE 1 RESULT (4-digit mult, held-out n=12) ===
+  selected reformulation: program  (taught/program/decompose pass = {'direct': 0, 'program': 8, 'decompose': 0})
+  DIRECT cold:  before 1/12  ->  after 0/12   (skill internalized?)
+  via program: after 12/12   (scaffold internalized?)
+  Floor-crossing ✓ = a reformulation crosses where direct fails; Internalization ✓ = DIRECT after >> before.

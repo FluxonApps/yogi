@@ -1,0 +1,5 @@
+ok
+════ 1. ASSESS (awareness) — verifier-grounded: what can the agent learn now? ════
+capability map: mastered=0 frontier=8 beyond=0  floor=0%
+AWARE → 8 items are learnable NOW (fail cold, pass taught = the ZPD): practice them, then distill.
+════ DECIDE — no frontier (nothing learnable-now). Stop. ════
