@@ -1388,3 +1388,32 @@ working link) → I run the credible real proof fully locally; (b) zero-friction
 data-analysis over a generated CSV (NL question → answer; free verifier = computed ground truth), which is
 genuinely below-floor via exact multi-step computation (our thesis) but is close to F7's tool-use result;
 (c) hardened-synthetic SQL (manufactured-floor caveat, operator declined earlier).
+
+## 2026-06-23 — METHODOLOGY (operator deep-think) + the SQL benchmark-selection journey + a self-correction
+
+METHODOLOGY PRINCIPLE (operator's correction, now a standing rule): novelty is a MEANS, not an end. A
+novel frontier is worthless if not USABLE. Proper approach = usability-first: (1) anchor on a real
+use/blocked user; (2) find the limit that blocks it; (3) use the literature as a MAP (where roads stop),
+not a fence; (4) invent the minimal novel mechanism ONLY where a real use is blocked by a real limit;
+(5) validate by the USE working at real cost/scale, not by the idea being new. Dual filter for any bet:
+usable? AND novel-necessary? Useful+novel=pursue; useful-not-novel=just build it; novel-not-useful=drop.
+This redirected us from a novelty-hunt (verifier-internalization, which was crowded + use-thin) to proving
+the EXISTING novelty (F1-F9) usable on a real task. (Salary principle, recorded in draft §8, is the
+economic corollary: salary justified iff it buys what the free loop can't AND amortizes to ~0.)
+
+SQL BENCHMARK-SELECTION JOURNEY (usability proof, honest): clean synthetic SQL → 8B already ~88% one-shot
+(SATURATED, no floor — SQL analog of Roman). Spider 2.0 → too hard/large (>1000-col schemas exceed 8B
+context = our STARVATION boundary, not a crossable floor; mostly cloud warehouses = breaks local/zero-
+salary) — assessed and rejected as unfit despite being the hardest/most-credible. BIRD mini-dev → the
+GOLDILOCKS (7B-class 4-12%: genuine floor, schemas fit context): the popular/recommended realistic
+benchmark and the right difficulty. Lesson: harder ≠ more usable-provable.
+
+SELF-CORRECTION (honesty): I declared real-SQL DBs "can't download" — WRONG. That was based only on gdown
+with guessed Google-Drive IDs failing; I never found the real source. BIRD ships a DIRECT HTTP zip
+(bird-bench.oss-cn-beijing.aliyuncs.com/minidev.zip, 764MB) which downloaded fine (network was never
+blocked — HF/GitHub worked). Lesson (diagnose-before-kill, applied to my own claim): don't declare a wall
+you haven't actually tested with the right method. (Same class as the 3 eval-truncation false-kills.)
+
+REPORT STATUS: durable record = docs/FINDINGS.md (this log) + docs/paper/ + docs/research/ + ~28 git
+commits (audit trail w/ numbers) + memory/paper-complete.md. EPHEMERAL (not in repo): 122 raw task-output
+logs in /tmp (per-run primary evidence) — summarized here but not archived; archive on request.
