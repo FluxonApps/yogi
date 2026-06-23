@@ -1266,3 +1266,19 @@ the reformulation autonomously selected) — NOT the offloaded computation. This
 tool-making crowd (Agent0/LATM/test-time-tool-evolution) leaves open: they use tools at runtime; we distill
 the tool-reaching policy into the weights, selected by the model's own free verifier. Bet B Phase 1
 DEMONSTRATED. (Phase 2 = autonomous INVENTION of the reformulation, not menu-selection.)
+
+## 2026-06-23 — F7 GENERALIZED: internalized tool-use is a multi-task PHENOMENON (not multiplication-specific)
+
+One multi-task LoRA over pooled program-traces from 4 below-floor tasks, distilled under the PLAIN prompt;
+held-out n=6/task (cold direct floor | program crosses | DISTILLED plain->tool-use | raw direct-after):
+  mult:  0/6 | 6/6 | 6/6 | 0/6   (genuine floor, internalized tool-use ✓)
+  count: 0/6 | 6/6 | 6/6 | 0/6   (genuine floor, ✓)
+  base:  0/6 | 6/6 | 6/6 | 0/6   (genuine floor, ✓)
+  sort:  6/6 | 6/6 | 6/6 | 0/6   (ABOVE-floor — 8B sorts one-shot; honest non-floor case; tool-use still internalized)
+FINDING: autonomous floor-crossing + internalized TOOL-USE generalizes across diverse below-floor task
+types — under a plain prompt (no 'write a program' instruction) the distilled model spontaneously reaches
+for code 6/6 on all, where the base failed the 3 genuine floors 0/6. Raw-skill stays 0/6 (computation lives
+in the executor — tool-USE is internalized, not the skill; consistent with F6/F7). This is the
+RAG-internalization thesis (arXiv:2510.01375: internalize the scaffold, drop the runtime dependency)
+realized as MODEL-SELECTED, weight-internalized tool-reaching across a task suite. F7 is now n=3 genuine
+floors (+1 honest non-floor), not n=1. Caveat: 'sort' wasn't below-floor (recorded straight).
