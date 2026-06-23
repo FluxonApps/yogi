@@ -1,0 +1,14 @@
+417da13 scripts/sfsc.sh: SFSC factored-distillation arm (isolates the learning GRAIN)
+=== GPU free? ===
+0
+=== launch SFSC (salary ~64 + memory-safe LoRA, ~45min) ===
+  factored-teacher 16/64 -> 13 verified
+  factored-teacher 32/64 -> 26 verified
+  factored-teacher 48/64 -> 36 verified
+  factored-teacher 64/64 -> 49 verified
+SFSC factored traces: 49 (salary=64 claude calls)
+SALARY_SPENT=64
+HELD-OUT factored one-shot before: 9/20
+=== SFSC RESULT (factored distillation, held-out one-shot n=20) ===
+  before 9/20 -> after 9/20  (vs teacher-WHOLE baseline 9→8 flat)
+  GRAIN ✓ iff factored after >> before AND >> teacher-whole — decomposition is the lever.

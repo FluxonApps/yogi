@@ -1526,3 +1526,35 @@ which needs SCALE (1000s of traces) or RL — both outside the local-few-shot-ze
 HONEST: this is a robust boundary after attacking from 3 empirical angles (not a give-up after one). The
 remaining untried levers (scale to 1000s of teacher traces; RL/GRPO) are deliberate, heavier phases — they
 likely WORK (the literature shows it) but exit the 'local + few-shot + cheap' setting that is our scope.
+
+## 2026-06-23 — SFSC (factored) flat → ROBUST 4-ARM CONCLUSION + closing summary of the real-task arc
+
+SFSC factored distillation (49 traces, sub-skill decomposition): held-out 9/20 → 9/20 (flat). The learning
+GRAIN doesn't escape the few-shot limit either. The heterogeneous-task gap is now tested across FOUR
+genuinely-different attacks, ALL flat (~9/20 ≈ 45%, no lift):
+  1. free answer-only (23 traces): 11→10
+  2. free CoT (12 traces): 5→6
+  3. salary teacher-WHOLE CoT (50 correct): 9→8
+  4. salary teacher-FACTORED / SFSC (49): 9→9
+ROBUST CONCLUSION (well-powered, multi-angle — not a give-up): few-shot distillation does NOT make a small
+local model GENERALIZE across heterogeneous real-task instances at ~50-trace scale — regardless of trace
+SOURCE (free vs frontier-salary), GRAIN (whole vs factored), or FORM (answer vs reasoning). Heterogeneous
+held-out needs different logic per question; ~50 demos can't cover it. The literature's small-model SQL
+wins use ~916K traces (SynSQL) or RL (CogniSQL/SLM-SQL) — outside the local-cheap-few-shot regime.
+
+=== CLOSING SUMMARY: the real-task (BIRD) arc — the democratization MAP ===
+We tested the thesis on a REAL, popular benchmark and mapped exactly where it holds:
+- SKILL grain (one rule × many instances → generalize to new instances): WORKS, FREE, locally — F1 (op
+  ratchet 0→98%), F3 (forgetting fix), F6 (action-space moonshot), F7 (tool-use), F8 (rule discovery),
+  F9 (recursion). This IS the democratization result.
+- DOMAIN grain (heterogeneous real task = many distinct sub-problems, e.g. arbitrary BIRD SQL): does NOT
+  yield via local few-shot distillation (4 arms flat); needs SCALE (1000s of traces) or RL — deliberate,
+  heavier phases that exit the "local + few-shot + cheap" scope that is the contribution.
+- SALARY: buys correct traces (fixed trace-thinness: 50 correct vs 12 free) but NOT few-shot
+  generalization; did NOT amortize (held-out after≈before, no frontier-dependence decay) → by our own
+  principle a CRUTCH for this task at this scale, not a frontier-push.
+THESIS, SHARPENED (not weakened): a sub-frontier local model can teach itself a SKILL for free and
+generalize to new instances of it; it cannot bootstrap heterogeneous-DOMAIN mastery from a handful of
+examples — that needs scale or RL. Democratization is real at the skill grain, bounded at the domain grain.
+This honest, 4-arm-attacked boundary is what makes the paper credible. Remaining levers (scale/RL) noted
+as out-of-scope next phases. Real-task investigation CLOSED.

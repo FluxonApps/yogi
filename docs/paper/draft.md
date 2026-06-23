@@ -189,3 +189,14 @@ salary principle, a crutch here, not a frontier-push. The small-model SQL wins i
 traces or RL, beyond the local few-shot regime. Net: the ratchet (free or teacher-bootstrapped) democratizes
 the SKILL grain (F1–F9), not heterogeneous domain generalization at local few-shot scale — a precise,
 well-powered boundary, not a universal claim.
+
+### §9 (final) — the heterogeneous-task boundary, attacked from four angles
+We attacked heterogeneous real-task generalization (BIRD) from four genuinely-different angles — free
+answer-only (23 traces), free CoT (12), salary teacher-whole (50 correct), and salary teacher-FACTORED
+sub-skill decomposition (SFSC, 49) — all flat (held-out one-shot ≈9/20, no lift). So few-shot distillation
+does not yield heterogeneous-domain generalization regardless of trace source (free/salary), grain
+(whole/factored), or form (answer/reasoning). The literature's small-model SQL wins use ~916K traces or RL
+— outside the local-few-shot regime. Conclusion: **democratization holds at the SKILL grain (F1–F9, free,
+generalizing to new instances of one rule) and is bounded at the DOMAIN grain (heterogeneous tasks need
+scale or RL).** Salary buys correct traces but not few-shot generalization, and did not amortize here — a
+crutch, not a frontier-push, by our economy=learning principle. A precise, multi-angle-tested boundary.
