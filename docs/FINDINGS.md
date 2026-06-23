@@ -1349,3 +1349,14 @@ COMPOSITIONAL (non-confusable) skills under light replay. So across every compou
 universal bottleneck is RETENTION under naive sequential LoRA + light replay, and the established fix is
 F3 (heavy / similarity-aware replay). Next: recurse_v3 applies the F3 fix (heavy ⊞ replay) to recursion —
 does ⊠ acquire AND ⊞ retain = recursion compounds with the fix.
+
+## 2026-06-23 — F9-FINAL ✓: recursion COMPOUNDS with the F3 fix (acquire via lever + retain via heavy replay)
+
+recurse_v3 (⊠ acquired via PROGRAM lever + HEAVY ⊞ replay = 30 CoT traces, the F3 fix):
+- ⊠ tool-use internalized: cold 0/8 -> 8/8 (new skill acquired, built on ⊞, via the lever; self-gen 40/40).
+- ⊞ retained: 6/8 -> 6/8 (prior abstraction FULLY retained — vs 1/8 collapse under light replay in v2).
+RESULT: recursion COMPOUNDS — two skills held, no collapse. The two halves are now both solved:
+ACQUISITION by the action-space lever (the model can't compute the composition mentally, but can via code),
+RETENTION by F3 heavy/similarity-aware replay (the universal bottleneck across C3/graduation/F9). Together,
+a being can invent/discover (F8), cross its computation floor at every level via the lever (F7/F8/F9), and
+accumulate skills without collapse (F3 fix) — bounded by the closed-surface safety theorem (bet A).

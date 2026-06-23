@@ -122,3 +122,36 @@ On commodity hardware, a sub-frontier local model can teach itself a novel skill
 verifier-checked traces — generalizing, at zero frontier cost — *within a closed, typed action space that makes forbidden capabilities unrepresentable*,
 and we map exactly when this works and when it fails. The artifact (a reproducible local-self-improvement
 testbed + the phase-diagram benchmark) is the intended contribution to others.
+
+## 7. Frontier extension — invention, recursion, and the unifying thesis (F7–F9)
+Beyond the rule-internalization spine, three results push past the literature (DreamCoder/LILO = external
+library; RAG-internalization arXiv:2510.01375 = no invention; self-evolving agents = no containment):
+
+- **F7 — autonomous floor-crossing + internalized tool-use (multi-task).** Across 3 below-floor tasks
+  (4-digit mult, char-count, base-conversion) the being detects its floor, autonomously selects the
+  reformulation that crosses it (program, by free-verifier pass), and internalizes the tool-reaching
+  policy: under a plain prompt it spontaneously emits correct code (direct 0/6 → tool-use 6/6 each).
+- **F8 — discovery with no teacher.** Reasoning-induction fails (the 8B can't induce a 2-var rule from
+  examples); the being instead writes a search *program* that discovers the rule (5a+3b+7, correct) and
+  internalizes its own discovery (cold 0/8 → 6/8). A strict escalation of F1 (rule discovered, not given);
+  weight-internalization, not an external library.
+- **F9 — recursion compounds (with the retention fix).** A skill built on a prior abstraction
+  (⊠=(a⊞b)⊞b) is acquired via the lever (self-gen 40/40; tool-use 0/8 → 8/8) while the prior is retained
+  under heavy replay (⊞ 6/8 → 6/8; light replay collapses it to 1/8).
+
+**Unifying thesis.** The model's fundamental floor is *multi-step exact computation*; the action-space
+lever crosses it at every level — raw capability (F7), induction (F8), composition (F9). Abstractions
+*internalize and retain* (heavy/similarity-aware replay, the F3 fix to the universal retention bottleneck
+seen in C3/graduation/F9), but they *execute* via the lever. All invention/recursion is bounded by the
+closed mutation surface (§4 theorem): the being invents *how it thinks*, never *what it is allowed to do*.
+
+## 8. When salary (frontier calls) pushes a frontier vs. is a crutch
+Economy = learning: **salary pushes a frontier iff it buys what the free loop structurally cannot AND the
+bought thing is internalized so the cost amortizes toward zero.** Three structural gaps qualify:
+(1) *ignition* — buy the first rung above the bootstrap floor, then climb free (the F6 moonshot;
+measure frontier-dependence decay → 0); (2) *verification where none is free* — pay the frontier to judge
+a batch, **distill a local verifier**, then gate further self-improvement for free (removes the
+verifier-must-exist limitation — the next open bet); (3) *invention the weak model can't propose for* —
+the frontier proposes, the local model verifies (free) and internalizes. The anti-pattern is salary that
+creates permanent per-call dependency (RAG/judge-every-inference): renting capability, not acquiring it.
+The test: does next iteration need *less* salary than this one?
