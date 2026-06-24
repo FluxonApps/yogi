@@ -6,7 +6,7 @@
 # holds: RL self-improvement compounds where the answer is reachable. Ties to F6. Memory-safe LoRA.
 set -uo pipefail; cd "$(dirname "$0")/.." || exit 1
 export HF_HUB_DISABLE_PROGRESS_BARS=1
-PY=.venv-mlx/bin/python; STUDENT=mlx-community/Qwen3-8B-4bit; W=/tmp/yogi_rlvrascii; mkdir -p "$W/data"; K="${K:-4}"; R="${R:-3}"; NTR="${NTR:-48}"; NTE="${NTE:-24}"
+PY=.venv-mlx/bin/python; STUDENT=mlx-community/Qwen3-8B-4bit; W=/tmp/yogi_rlvrascii; mkdir -p "$W/data"; K="${K:-4}"; R="${R:-3}"; NTR="${NTR:-36}"; NTE="${NTE:-18}"
 "$PY" - "$W" "$STUDENT" "$K" "$R" "$NTR" "$NTE" <<'PY'
 import sys,re,json,random,os,subprocess
 W,STU,K,R,NTR,NTE=sys.argv[1],sys.argv[2],int(sys.argv[3]),int(sys.argv[4]),int(sys.argv[5]),int(sys.argv[6])
@@ -19,16 +19,20 @@ def square(n): return "\n".join("#"*n for _ in range(n))
 def rtri(n): return "\n".join("*"*i for i in range(1,n+1))
 def hollow(n): return "\n".join("#"*n if r in (0,n-1) else "#"+" "*(n-2)+"#" for r in range(n))
 def pyr(n): return "\n".join(" "*(n-i)+"*"*(2*i-1) for i in range(1,n+1))
+def downtri(n): return "\n".join("*"*(n-i) for i in range(n))
+def rect(n): return "\n".join("#"*(n+2) for _ in range(n))
 SH={
  "square": (lambda n: square(n), lambda n: f"a solid square of size {n} using '#'"),
  "rtri":   (lambda n: rtri(n),   lambda n: f"a left-aligned right triangle of height {n} using '*' (row i has i stars)"),
  "hollow": (lambda n: hollow(n), lambda n: f"a hollow square of size {n} using '#' (border '#', interior spaces)"),
  "pyr":    (lambda n: pyr(n),    lambda n: f"a centered pyramid of height {n} using '*' (row i has 2i-1 stars, left-padded with spaces)"),
+ "downtri":(lambda n: downtri(n),lambda n: f"an inverted left-aligned triangle of height {n} using '*' (row i has n-i stars, first row has {n})"),
+ "rect":   (lambda n: rect(n),   lambda n: f"a solid rectangle of {n} rows by {n+2} columns using '#'"),
 }
 def gen_inst(rng,k):
     out=[]
     while len(out)<k:
-        sh=rng.choice(list(SH)); n=rng.randint(3,9); out.append((sh,n))
+        sh=rng.choice(list(SH)); n=rng.randint(3,12); out.append((sh,n))
     return out
 random.seed(0); allk=set()
 train=[]; 
