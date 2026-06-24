@@ -270,3 +270,42 @@ accuracy on the weak model (distraction). The lesson is that a small model's too
 **Net:** this reinforces the report's headline ("scaffolding beats parameters for local usability") and
 revises the boundary: interactive, verified-selected tools move the local model's *effective* ceiling, even
 though more parameters / more data are still what move the *base* capability.
+
+---
+
+## Addendum 2 (update): the full inference-time stack, and what does not work
+
+Pushing further on the local 4-bit 8B (BIRD text-to-SQL, held-out n=80, zero salary, all measured identically),
+a clear picture emerged: **inference-time scaffolding is the lever; weight-update is not.**
+
+```
+LOCAL 4-bit 8B, held-out n=80, execution accuracy
+
+one-shot                          ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
++ interactive tools (run/fix)     ███████████████████░░░░░░░░░░░░░░░░░░░░░   48%
++ in-context decomposition        ████████████████████▌░░░░░░░░░░░░░░░░░░░   52%
++ embedding-retrieved few-shot    █████████████████████░░░░░░░░░░░░░░░░░░░   53%   best
+combined (all three)              ████████████████████▌░░░░░░░░░░░░░░░░░░░   52%   saturates
+frontier baseline (Claude)        ██████████████████████████████░░░░░░░░░░   75%
+```
+
+What helped (each an inference-time lever): an interactive tool loop (run the SQL, read the error, fix);
+in-context decomposition (plan-then-solve); and few-shot examples retrieved by embedding similarity. Net lift
+from scaffolding alone: **37% to about 53%, +16 points, zero training and zero API cost.**
+
+What did NOT help, and the lessons:
+- **Weight-update at local data scale hurts.** Per-database test-time fine-tuning (LoRA on ~15 solved
+  examples) dropped accuracy to 32% (overfit and forgot); distillation on ~100 correct traces was flat. Small
+  fine-tuning does not generalize on a heterogeneous task; that needs roughly 900k-scale data or RL.
+- **The levers overlap, they do not stack.** Combining all three lands at the best single lever (~53%), not
+  higher: they fix the same easier queries; the hard ~47% resist all of them (a base generation-capability
+  limit, not a scaffolding limit).
+- **Retrieval quality matters more than the idea.** Cheap lexical retrieval was flat (48%); embedding
+  retrieval reached 53%. Measure with the strong implementation before concluding a lever fails.
+- **Unverified self-toolmaking backfires.** Letting the model invent its own pre-joined views (kept if they
+  merely ran) dropped accuracy to 22%; even frontier-designed correct views (41%) underperformed no views.
+  The discipline that matters is **verified-selection**: keep a tool only if it raises end-task accuracy.
+
+Practical upshot, unchanged and reinforced: for a local model, spend on the agent loop, a free verifier, good
+retrieval, and decomposition before spending on a bigger model or fine-tuning. The remaining gap to frontier
+is base capability, which needs scale or RL (out of the local-cheap scope).
