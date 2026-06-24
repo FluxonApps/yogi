@@ -1,0 +1,15 @@
+py ok
+a9ea453 scripts/verifier_internalize.sh: BREADTH frontier - distill a local verifier, select candidates WITHOUT executing (extends ratchet beyond execution-verifiable)
+=== GPU free? launch verifier-internalization (~70min) ===
+0
+Phase A: labeling...
+  95 verifier labels (60 yes / 35 no)
+Phase B: training verifier LoRA...
+Phase C: eval with learned verifier as selector...
+  10/40: single 3 oracle 3 sc 3 verifier-select 3
+  20/40: single 7 oracle 8 sc 8 verifier-select 7
+  30/40: single 12 oracle 13 sc 13 verifier-select 12
+  40/40: single 15 oracle 16 sc 16 verifier-select 15
+=== VERIFIER-INTERNALIZATION (learned verifier as gold-free selector, n=40, K=4) ===
+  single 15/40 (37%)  execution-ORACLE 16/40 (40%)  self-consistency 16/40 (40%)  LEARNED-VERIFIER-select 15/40 (37%)
+  VERIFIER-INTERNALIZATION WORKS iff learned-verifier-select >> single and approaches execution-oracle (selects WITHOUT executing -> extends the ratchet beyond execution-verifiable domains).
