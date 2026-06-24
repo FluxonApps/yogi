@@ -1811,3 +1811,18 @@ New stack (zero-salary, local, n=80): one-shot 37% -> tools 48% -> +decompose 52
 examples 53% (best). Levers that help: interactive feedback, in-context decomposition, embedding-retrieved
 examples. Levers that don't: extra tools, abstraction/views, lexical retrieval, self-consistency. Next:
 TTT-per-DB (does gradient adaptation beat in-context retrieval?) + combine winners. HOLD remote pushes.
+
+## 2026-06-24 — TTT-per-DB HURT (32% vs base 37%): gradient adaptation overfits at local data scale -> inference-time levers win
+
+TTT-per-DB (per-DB LoRA on ~15 raw solved pairs, eval one-shot with adapter; items[0:80]): base one-shot
+30/80 (37%) -> TTT 26/80 (32%), a -5pt REGRESSION. Diagnosis: LoRA on ~15 raw examples per DB overfits /
+forgets general SQL ability (no augmentation; ARC-style TTT needs heavy augmentation + more data). With the
+earlier distillation-flat result (97 correct traces flat), the pattern is firm: WEIGHT-UPDATE approaches
+(distillation, TTT) do NOT help the weak 8B at feasible LOCAL DATA SCALE (~15-100 examples) — they are
+flat-to-harmful (overfit/forget). The levers that help are all INFERENCE-TIME: interactive tools (48%),
+in-context decomposition (52%), embedding-retrieved few-shot examples (53%). PRACTICAL/PRODUCTIZATION
+takeaway: for a weak local model on a heterogeneous task, spend on INFERENCE-TIME scaffolding, not
+fine-tuning; weight-update needs ~900k-scale data to help. Re-validation TODO (low EV): TTT with heavy
+augmentation + more examples (but distillation-flat prior says unlikely to beat 53% at local scale). NEXT:
+COMBINE the three inference-time winners (tools + decompose + embedding-retrieved examples) = cumulative
+headline agent. HOLD remote pushes.
