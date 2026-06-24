@@ -1,0 +1,17 @@
+py ok
+=== GPU free? ===
+0
+=== launch frontier-designed-views (n=80, ~6 claude calls + ~45min, capped salary) ===
+  frontier views [toxicology]: ['atom_molecule', 'bond_molecule']
+  frontier views [california_schools]: ['school_sat', 'school_frpm']
+  frontier views [debit_card_specializing]: ['transaction_full', 'customer_monthly']
+  frontier views [student_club]: ['member_full', 'expense_detail']
+  frontier views [superhero]: ['superhero_detail', 'hero_power_detail']
+  frontier views [financial]: []
+  20/80: frontier-views+tools 9
+  40/80: frontier-views+tools 17
+  60/80: frontier-views+tools 24
+  80/80: frontier-views+tools 33
+=== FRONTIER-DESIGNED VIEWS + TOOLS (items[0:80], n=80, 10 views, capped salary) ===
+  frontier-views+tools 33/80 (41%)   vs base 39/80(48%) decompose 42/80(52%) self-invent 18/80(22%) one-shot 30/80(37%)
+  VIEWS-HELP-IF-CORRECT ✓ iff > 48% — bottleneck was correctness not concept; frontier abstractions are a salary lever.
