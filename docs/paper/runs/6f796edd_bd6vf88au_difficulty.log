@@ -1,0 +1,8 @@
+   8c29504..4018a9d  main -> main
+ahead: 0
+bash ok
+=== launch (GPU free? 0) ===
+=== WITHIN-TASK headroom: BIRD by difficulty (one-shot vs agent-loop) ===
+  BIRD-simple   (n=32): one-shot 16/32 (50%) -> agent-loop 17/32 (53%)  delta +3
+  BIRD-moderate (n=40): one-shot 10/40 (25%) -> agent-loop 15/40 (38%)  delta +12
+  headroom law holds WITHIN a task iff agent-loop delta is LARGER on the lower-base (moderate) stratum.
