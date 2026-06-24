@@ -1826,3 +1826,17 @@ fine-tuning; weight-update needs ~900k-scale data to help. Re-validation TODO (l
 augmentation + more examples (but distillation-flat prior says unlikely to beat 53% at local scale). NEXT:
 COMBINE the three inference-time winners (tools + decompose + embedding-retrieved examples) = cumulative
 headline agent. HOLD remote pushes.
+
+## 2026-06-24 — combined agent = 52% (saturates, = best single lever): inference-time levers OVERLAP, ceiling ~53%
+
+combined (embedding-retrieved few-shot + decompose + interactive tools; items[0:80]): 42/80 (52%) = embed-lib
+43/80 (53%), decompose 42/80 (52%), tools 39/80 (48%), one-shot 30/80 (37%). The three inference-time winners
+do NOT stack additively — they OVERLAP/SATURATE at ~53% (each fixes the same easy/moderate queries; the hard
+~47% resist all). HEADLINE so far: inference-time scaffolding lifts the local 4-bit 8B from 37% (one-shot) to
+~53% (+16pts, +43% relative), zero-salary, local; levers overlap so the single best ≈ the combined ≈ 53%.
+The remaining ~47% appear GENERATION-bound (correct hard SQL not in the model's distribution; consistent with
+oracle best-of-8 = 40% earlier and flat self-consistency). Decisive test next: ORACLE HEADROOM of the best
+agent (sample N, any-correct) — if oracle >> 53% a selector/search/ensemble could still push it; if ~53% the
+BIRD ceiling is definitively generation-bound and inference-time ceiling-pushing is exhausted (pivot to the
+breadth/productization axis: verifier-internalization on a no-free-verifier task; + the containment theorem).
+HOLD remote pushes.
