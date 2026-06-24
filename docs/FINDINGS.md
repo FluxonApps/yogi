@@ -2123,3 +2123,13 @@ feedback). PRACTICAL: scaffolding levers compose and are worth stacking on a wea
 diminishing returns — budget for the strongest single lever first (agent-loop), then add a second for a
 smaller marginal gain. Completes the headroom picture: across tasks, across levers, within-task, AND in
 composition.
+
+## 2026-06-25 — verified-selection moat (Law 5) demonstrated across tasks: auto-adopt where it helps, prune where it doesn't
+
+Verified-selection (keep a lever only if held-out acc > base + ~1-std noise margin, gold-free), from measured
+n=80 results: BIRD (base 38) -> KEEP agent-loop (+8) + decompose (+7); MBPP (base 70) -> PRUNE both (+1/-1);
+HumanEval (base 84) -> PRUNE (+2). So the SAME selection rule auto-adopts scaffolding on the weak-base task and
+stays bare on strong-base tasks — the system LEARNS where each lever earns its cost, per task, with no gold and
+no human. This is the operational moat (Law 5) and it directly composes with the headroom law (Law 2): the
+margin gate prunes exactly the within-noise gains that the headroom law predicts on strong-base tasks.
+Reproducible: scripts/vselect.sh.
