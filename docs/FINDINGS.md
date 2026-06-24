@@ -2084,3 +2084,19 @@ tests = correct), so routing NEVER accepts a wrong answer — it is safe by cons
 accuracy/cost frontier and the core productization claim: local+verifier handles the verifiable majority cheaply,
 escalation is a small tail. (Caveat: where provided tests are a STRICT SUBSET of full correctness, acceptance
 precision < 100%; use the most complete free verifier available.)
+
+## 2026-06-24 — 7th domain JSONExtract SATURATED (100%): the 8B is strong on clean structured tasks; scaffolding concentrates on weak domains
+
+JSONExtractTask (structured extraction, parse-match verifier) one-shot base 12/12 (100%) — SATURATED, no
+headroom (clean templated text). Another STRONG-base domain. The cross-task map is now robust across 7 task
+types:
+  STRONG-base (one-shot near ceiling, scaffolding adds ~0): GSM8K reasoning ~100, JSON extraction ~100,
+    HumanEval code 84, MBPP code 70.
+  WEAK-base (scaffolding pays off): BIRD heterogeneous SQL 37 (+11 agent-loop, +7 decompose), ASCII spatial 50.
+CONCLUSION: a 4-bit 8B is already strong on clean/structured/reasoning tasks with free verifiers; the
+inference-time levers (agent-loop, decompose) earn their cost ONLY on its genuinely weak domains (heterogeneous
+multi-table SQL, spatial generation). This is the actionable form of the headroom law: profile one-shot base
+per task; deploy local-bare where it is already strong (extraction/reasoning/code), local+scaffolding where it
+is weak-but-fixable (SQL), and route the residual via a correctness verifier. (Note: this extraction set is
+clean-templated; messier real-world extraction would have more headroom — calibration not pursued to avoid a
+treadmill.)
