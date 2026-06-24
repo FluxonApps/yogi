@@ -1558,3 +1558,15 @@ generalize to new instances of it; it cannot bootstrap heterogeneous-DOMAIN mast
 examples — that needs scale or RL. Democratization is real at the skill grain, bounded at the domain grain.
 This honest, 4-arm-attacked boundary is what makes the paper credible. Remaining levers (scale/RL) noted
 as out-of-scope next phases. Real-task investigation CLOSED.
+
+## 2026-06-24 — SCALE (2x traces) flat too → distillation boundary HARDENED; trying best-of-N (different lever)
+
+Scaled teacher-bootstrap: 130 calls → 97 verified CORRECT CoT traces (2x the 50, 8x free's 12). Held-out
+one-shot (n=40) before 10/40 → after 11/40 (FLAT). TRACE-COUNT AXIS, all flat: 12(free-CoT), 23(free-ans),
+49(factored), 50(teacher-whole), 97(teacher-2x). NO trend toward lifting. So heterogeneous-domain
+generalization via local few-shot SFT distillation does NOT emerge with more correct data at feasible
+local scale — it genuinely needs 916K-class data (SynSQL) or RL (CogniSQL), outside the local-cheap regime.
+Boundary HARDENED across 5 conditions + a 2x-scale point. NEXT (different lever, not distillation):
+best-of-N + execution self-consistency at INFERENCE (CogniSQL: +9.7% from best-of-6) — runtime compute,
+gold-free selector (majority executed result-set across N samples). Tests whether the local 8B is USABLE
+on real BIRD via test-time compute (distinct from weight-internalization, which is robustly bounded).
