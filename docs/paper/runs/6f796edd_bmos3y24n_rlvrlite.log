@@ -1,0 +1,10 @@
+py ok
+=== push milestone + launch RLVR-lite (~2hr, zero salary) ===
+   60f9374..8d98783  main -> main
+0
+ROUND 0 (base) held-out one-shot: 13/40 (32%)  [oracle ~55%, one-shot ~37%]
+ROUND 1: +36 new correct traces (36 total) -> held-out one-shot 15/40 (37%)
+ROUND 2: +16 new correct traces (52 total) -> held-out one-shot 15/40 (37%)
+ROUND 3: +19 new correct traces (71 total) -> held-out one-shot 15/40 (37%)
+=== RLVR-LITE (iterated rejection-FT, BIRD, K=4, R=3) ===
+  base 13/40 -> round-by-round above. COMPOUNDS iff held-out rises round-over-round toward ~55% oracle (RL beats flat one-shot distillation); FLAT iff iterated RL-lite cant move the generation-bound ceiling (needs full GRPO/scale).
