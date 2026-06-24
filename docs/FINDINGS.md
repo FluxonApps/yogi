@@ -2100,3 +2100,15 @@ per task; deploy local-bare where it is already strong (extraction/reasoning/cod
 is weak-but-fixable (SQL), and route the residual via a correctness verifier. (Note: this extraction set is
 clean-templated; messier real-world extraction would have more headroom — calibration not pursued to avoid a
 treadmill.)
+
+## 2026-06-24 — headroom law holds WITHIN a task too (BIRD by difficulty): 3-level confirmation
+
+Within-task (BIRD held-out split by difficulty): BIRD-simple (n=32, base 50%) agent-loop +3 (50->53);
+BIRD-moderate (n=40, base 25%) agent-loop +12 (25->38). The agent-loop helps the LOWER-base (moderate)
+stratum ~4x more than the higher-base (simple) stratum. So the HEADROOM LAW is confirmed at THREE levels:
+(1) ACROSS TASKS (SQL 37->+11, code 70->+1, extraction/reasoning ~100 saturated); (2) ACROSS LEVERS
+(agent-loop AND decompose both inverse to base); (3) WITHIN A TASK (BIRD-moderate +12 vs BIRD-simple +3).
+Robust, multi-grain law: inference-time scaffolding's ROI is inversely proportional to the model's base
+accuracy on the instance class — it converts fixable headroom into accuracy, and there is little to convert
+where the model is already strong. (Per-stratum n=32/40 < 80; the +3 vs +12 contrast is large + directional;
+aggregate BIRD was n=80.)
