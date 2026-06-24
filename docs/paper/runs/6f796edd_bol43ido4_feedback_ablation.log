@@ -1,0 +1,9 @@
+MinimalLoop ok
+bash ok
+=== launch (GPU free? 0) ===
+=== FEEDBACK ABLATION on BIRD (content vs retries), n=80 ===
+  one-shot       30/80 (38%)
+  agent-loop-min 39/80 (49%)
+  agent-loop     37/80 (46%)
+  retries-alone gain = +11; feedback-CONTENT gain (rich - min) = -3.
+  If feedback-content gain >> retries-alone, the agent-loop's value is the EXECUTION FEEDBACK, not just resampling.

@@ -74,6 +74,8 @@ build-vs-buy frontier with numbers — local + verifier for the verifiable major
 **verifier taxonomy** matters: a *correctness* verifier enables this; an *execution-only* signal (a SQL query
 "ran" ≠ "is correct"; correctness needs gold) can only catch hard errors, not self-certify.
 
+*Mechanism (ablation, BIRD n=80): the loop's gain is the verifier-gated RETRY — one-shot 38 -> retry-only 49 (+11) -> rich-feedback 46 (-3 vs retry-only). The verifier's binary accept/reject signal that gates the resample is the lever; rich error prose is secondary (and can distract a small model). So even an inexpensive correctness signal suffices to drive the loop — richer feedback may help more on code tracebacks (untested here).*
+
 ## Law 5 — Selection is the discipline that makes the above safe
 
 Across every lever, the rule that separated gains from regressions was **verified selection**: keep a
