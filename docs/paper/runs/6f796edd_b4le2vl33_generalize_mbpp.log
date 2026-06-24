@@ -1,0 +1,8 @@
+committed
+bash ok
+=== launch (GPU free? 0) ===
+loading model once...
+=== GENERALIZATION: agent-loop lever on CODE (MBPP), via the same harness ===
+  MBPP one-shot    56/80 (70%)
+  MBPP agent-loop  57/80 (71%)
+  agent-loop delta on CODE = +1 pts. BIRD/SQL delta was +11 (37->48). GENERALIZES iff the agent-loop lifts code too (the lever is domain-independent, not SQL-specific).
