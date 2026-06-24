@@ -1,0 +1,11 @@
+abf18b2 scripts/toolspace_v1.sh: toolspace-evolution iter 1 — interactive multi-tool agent (FKs+VALUES+run/fix)
+ok
+=== launch toolspace v1 (~40min, zero salary) ===
+  10/40 done (6 correct so far)
+  20/40 done (9 correct so far)
+  30/40 done (16 correct so far)
+  40/40 done (19 correct so far)
+=== TOOLSPACE v1 — explore(FKs+VALUES) + run/fix (held-out n=40, zero salary) ===
+  toolspace 19/40 (47%)   vs  agentic-plain 16/40 (40%)  one-shot 13/40 (33%)  rich-schema 15/40 (37%)
+  avg sample-value probes used: 3.5
+  CROSSES THE WALL ✓ iff toolspace > 40% — interactive exploration beats one-shot generation.
