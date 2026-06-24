@@ -1876,3 +1876,17 @@ remaining gap to frontier (75%) is BASE GENERATION capability -> needs scale (~9
 PRODUCT: the self-evolving toolspace LAYER (task-agnostic via the new harness, verifier-gated, safe-by-closed-
 surface). NEXT AXIS (not capped by the generation ceiling): BREADTH = verifier-internalization (a learned
 local verifier extends the ratchet beyond execution-verifiable domains) + the capability-containment theorem.
+
+## 2026-06-24 — verifier-internalization on BIRD: learned-verifier-select 37% = single (no gain; testbed-limited)
+
+verifier-internalization (95 labels 60y/35n -> LoRA verifier -> select among K=4 temp candidates without
+executing; n=40): single 15/40 (37%), execution-oracle 16/40 (40%), self-consistency 16/40 (40%),
+LEARNED-VERIFIER-select 15/40 (37%). The learned verifier did NOT beat single or reach oracle. DIAGNOSIS: BIRD
+is a poor testbed for verifier-internalization — (a) temp candidates have ~no headroom (oracle 40 ~= single 37),
+so there is almost nothing to select; (b) a free execution verifier already exists, so a learned one adds
+nothing here; (c) 95 labels likely under-trains a discriminative judge. NOT validated, but expected: the value
+of an internalized verifier is on a NO-EXECUTION task WITH headroom (the breadth/productization axis), not on
+BIRD. Reinforces the direction: (1) RLVR from verifiable rewards to RAISE the generation-bound capability
+(the only lever the whole arc + 2026 literature says moves it); (2) test verifier-internalization on a
+no-free-verifier task. NEXT: validate the standard harness end-to-end on the model (cross-task one-shot
+baselines: SQL/code/math/ASCII), then build the RLVR-lite (STaR/ReST iterated, verifier-gated) loop.
