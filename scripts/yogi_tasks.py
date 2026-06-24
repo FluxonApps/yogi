@@ -226,6 +226,59 @@ class ASCIIArtTask(Task):
     def gold(self, ex): return ex["gold"]
 
 
+# ----------------------------------------------------------------- JSON structured extraction (parse-match verifier)
+# 7th domain: extract structured fields from messy text -> verifier = parsed-JSON exact match. Practical
+# productization use-case (structured extraction). Distractors give headroom; short output (truncation-safe).
+class JSONExtractTask(Task):
+    id = "json-extract"
+    NAMES = ["Alice Chen","Bob Ortiz","Carol Singh","David Kim","Eva Rossi","Frank Mueller","Grace Park","Hugo Silva"]
+    CITIES = ["Berlin","Toronto","Osaka","Nairobi","Lima","Oslo","Pune","Austin"]
+    JOBS = ["nurse","welder","analyst","chef","pilot","teacher"]
+    def examples(self):
+        out = []
+        for i in range(160):
+            r = random.Random(1000 + i)
+            name = r.choice(self.NAMES); age = r.randint(18, 79); city = r.choice(self.CITIES)
+            email = name.lower().replace(" ", ".") + "@mail.com"; job = r.choice(self.JOBS); yr = r.randint(1990, 2024)
+            templates = [
+                f"{name}, a {job} based in {city}, turned {age} last spring (joined in {yr}); reach them at {email}.",
+                f"Record #{yr}: {email} belongs to {name} ({job}), age {age}, currently living in {city}.",
+                f"{name} ({city}) — {age} y/o {job}. Since {yr}. Contact {email}.",
+            ]
+            gold = {"name": name, "age": age, "city": city, "email": email}
+            out.append({"text": r.choice(templates), "gold": gold})
+        return out
+    def split(self, seed=0):
+        ex = self.examples(); random.Random(seed).shuffle(ex); return ex[80:], ex[:80]
+    def context(self, ex):
+        return (f"Text: {ex['text']}\nExtract a JSON object with exactly these keys: name (string), age (integer), "
+                f"city (string), email (string).")
+    def instruction(self): return "Output ONLY the JSON object in a ```json ...``` block. /no_think"
+    def _parse(self, raw):
+        raw = raw.split('</think>')[-1]; m = re.findall(r'```(?:json)?\s*(\{.*?\})\s*```', raw, re.S) or re.findall(r'(\{.*?\})', raw, re.S)
+        if not m: return None
+        try: return json.loads(m[-1])
+        except Exception: return None
+    def extract(self, raw):
+        d = self._parse(raw); return json.dumps(d, sort_keys=True) if d is not None else ""
+    def _norm(self, d):
+        try: return {"name": str(d["name"]).strip(), "age": int(d["age"]), "city": str(d["city"]).strip(), "email": str(d["email"]).strip().lower()}
+        except Exception: return None
+    def verify(self, pred, ex):
+        try: d = json.loads(pred)
+        except Exception: return False
+        return self._norm(d) == self._norm(ex["gold"])
+    def feedback(self, pred, ex):
+        try: d = json.loads(pred)
+        except Exception: return (False, "output was not valid JSON / missing the ```json``` block")
+        nd, ng = self._norm(d), self._norm(ex["gold"])
+        if nd == ng: return (True, "ok")
+        if nd is None: return (False, "JSON missing one of the required keys name/age/city/email or age not an integer")
+        wrong = [k for k in ng if nd.get(k) != ng[k]]
+        return (False, f"these fields are wrong: {wrong}")
+    def gold(self, ex): return json.dumps(ex["gold"], sort_keys=True)
+
+
 # ----------------------------------------------------------------- CPU-only self-test (no model)
 if __name__ == "__main__":
     print("=== HARNESS GENERICITY SELF-TEST (CPU, no model) ===")
