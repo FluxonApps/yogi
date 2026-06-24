@@ -1,0 +1,10 @@
+running: 0
+py ok
+=== launch evolve candidate 1: base+LIKEFIND (n=80, ~55min, zero salary) ===
+  20/80: base+LIKEFIND 11
+  40/80: base+LIKEFIND 20
+  60/80: base+LIKEFIND 29
+  80/80: base+LIKEFIND 40
+=== TOOLSPACE EVOLVE — base + LIKEFIND candidate (items[0:80], n=80, zero salary) ===
+  base+LIKEFIND 40/80 (50%)   vs  base(FKs+VALUES) 39/80 (48%)
+  KEEP LIKEFIND ✓ iff > 39/80 (verified selection: keep only tools that raise accuracy).
