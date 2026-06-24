@@ -2169,3 +2169,19 @@ operative condition is resample-spread. Different error types need different lev
 spread-errors (SQL), a GENERATION-CHANGING lever (decompose/plan) for systematic errors (spatial) — testing
 next. This sharpens the agent-loop characterization: it is fast verified resampling (retry not content, rounds=2)
 that pays off only where correct answers live in the sampling distribution.
+
+## 2026-06-25 — spatial is CAPABILITY-BOUND (decompose ALSO flat): the operative variable is REACHABLE headroom, not raw headroom
+
+Generation-changing lever on ASCII (n=24): one-shot 10/24 (42%) -> decompose(row-plan) 10/24 (42%) = +0. So
+NEITHER retry (resampling) NOR decompose (generation-change) helps spatial — both flat at 42%. ASCII is
+CAPABILITY-BOUND for this 8B: it has RAW headroom (58% to 100) but ~0 REACHABLE headroom (the correct
+renderings are out of the model's reach — retry finds no correct variant, planning doesn't enable a rendering
+it cannot produce). KEY REFINEMENT of the headroom law: scaffolding converts REACHABLE headroom (~ pass@k
+oracle minus one-shot), NOT raw headroom (100 minus one-shot). The base-accuracy-inverse pattern held for the
+clean tasks because there reachable~=raw; ASCII is the exception that reveals the true variable. Unified law:
+  scaffolding ROI ~ REACHABLE headroom = oracle - one-shot,   bounded by Law 1 (reachability).
+Evidence across tasks: SQL one-shot 37, oracle ~55 -> reachable headroom ~18 -> levers +11/+12 (convert most of
+it). ASCII one-shot 42, oracle ~42 (retry/decompose flat -> oracle≈one-shot) -> reachable headroom ~0 -> levers
++0. This is cleaner and more predictive than "inverse to base accuracy": MEASURE pass@k spread (a few temp
+samples + verifier) to predict whether ANY inference lever will help, before building scaffolding. Spatial here
+is generation-bound like heterogeneous SQL was — a capability ceiling, not a lever-choice problem.
