@@ -1,0 +1,7 @@
+=== CPU: JSONExtract gold verifies? ===
+JSONExtract gold verifies 10/10; sample ctx:
+  Text: David Kim (Nairobi) — 79 y/o nurse. Since 2005. Contact david.kim@mail.com.
+Extract a JSON object with exactly these keys: name (strin
+committed
+=== base cold-check (one-shot, 12, max_tokens 512) ===
+JSONExtract one-shot base: 12/12 (100%)  [want ~40-80% for headroom]
