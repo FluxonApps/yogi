@@ -1,0 +1,10 @@
+bash ok
+=== GPU free? launch cross-task harness validation (~15min) ===
+0
+loading model once (shared across all tasks)...
+=== HARNESS CROSS-TASK SWEEP (OneShot via the standard evaluate() runner) ===
+  bird-sql             one-shot 13/40 (32%)  [UNDERPOWERED (n<80) — confirm at n>=80 before recording a win]
+  python-code          one-shot 4/4 (100%)  [UNDERPOWERED (n<80) — confirm at n>=80 before recording a win]
+  math-wordproblems    one-shot 8/8 (100%)  [UNDERPOWERED (n<80) — confirm at n>=80 before recording a win]
+  ascii-art            one-shot 3/6 (50%)  [UNDERPOWERED (n<80) — confirm at n>=80 before recording a win]
+  Harness runs the model end-to-end across 4 verifier types via ONE interface. (small n on code/math/ascii = noisy; real datasets are the follow-up for robust cross-task patterns.)
