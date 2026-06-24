@@ -83,7 +83,8 @@ honesty for a better-looking number; never trade safety for novelty.)
 
 ## 6. OPERATIONS
 
-1. **HOLD ALL REMOTE PUSHES** — commit LOCAL only, never `git push`, until the operator lifts it.
+1. **Remote pushes: ALLOWED** (operator lifted the hold 2026-06-24). Push after meaningful milestones (a
+   finding recorded, report/PDF updated); keep commits clean. (History: hold-all-pushes was in force, now lifted.)
 2. **One model at a time** (16 GB); GPU-free check before launch. Memory-safe LoRA: `batch-size 1,
    num-layers 8, max-seq-length <=896, --grad-checkpoint`.
 3. **Zero salary by default;** spend (claude -p) only when structurally needed, capped + deliberate, and
