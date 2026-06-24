@@ -102,6 +102,24 @@ class Decompose(Method):
         return task.extract(out)
 
 
+class MinimalLoop(Method):
+    """Ablation of AgentLoop: same retries, but feedback is GENERIC ('incorrect, try again') — NO rich execution
+    error. Isolates whether the agent-loop gain comes from the FEEDBACK CONTENT or merely from retrying."""
+    name = "agent-loop-min"; max_tokens = 512; rounds = 2
+    def _gen(self, model, prompt):
+        out, cap = model.gen(prompt, self.max_tokens)
+        if cap: out, _ = model.gen(prompt, self.max_tokens * 2)
+        return out
+    def solve(self, ex, task, model):
+        base = task.context(ex) + "\n" + task.instruction()
+        pred = task.extract(self._gen(model, base))
+        for _ in range(self.rounds):
+            if task.verify(pred, ex): return pred
+            fix = base + f"\n\nYour previous attempt:\n{pred}\n\nIt was INCORRECT. Try a different answer."
+            pred = task.extract(self._gen(model, fix))
+        return pred
+
+
 class Combined(Method):
     """Lever COMPOSITION: decompose (plan) THEN agent-loop (execute->observe->fix) on the plan-augmented prompt.
     Tests whether two inference-time levers STACK on a weak-base task (toward the full-stack ceiling)."""
