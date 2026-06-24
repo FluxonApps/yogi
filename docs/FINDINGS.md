@@ -1757,3 +1757,15 @@ so the local tool-assisted ceiling is ~48-52% and refinements give marginal in-b
 lever: VOYAGER-style verified-example LIBRARY — retrieve similar solved (question, SQL) pairs and few-shot
 them into the tool-agent (concrete structural templates for similar queries, which in-context planning alone
 can't provide). HOLD remote pushes (local commits only).
+
+## 2026-06-24 — Voyager library (retrieved examples) = 48%, no gain over base; pattern: only INTERACTIVE feedback helps
+
+library+tools (retrieve K=3 similar solved examples, few-shot the tool-agent; items[0:80]): 39/80 (48%) =
+base tools 39/80, below decompose 42/80 (52%). Retrieved structural templates did NOT help the weak 8B.
+SHARP PATTERN across the whole thrust: only INTERACTIVE feedback (run the SQL, see the error/result, fix)
+raised accuracy (37->48); every CONTEXT augmentation is marginal or flat — static rich-schema 37%, richer
+tools 37% (hurt), retrieved examples 48% (=base), in-context planning 52% (only +3). The 8B exploits real
+runtime INFORMATION, not more text. Implication for the next bold lever: it must change the model's effective
+runtime environment, not add context. Next: AUTONOMOUS TOOL INVENTION via reusable VIEWS — the 8B invents
+pre-joined/pre-aggregated SQL views from the foreign keys (read-only TEMP views, safe), then queries the
+simpler schema directly (attacks the #1 failure, joins). Verified-select vs base 48%. HOLD remote pushes.
