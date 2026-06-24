@@ -1,0 +1,30 @@
+THE HEADROOM LAW — scaffolding gain (pts) vs one-shot base accuracy (%)
+gain
+  +12 |             *                                           
+      |                    *                                    
+      |                                                         
+      |                                                         
+      |                                                         
+      |                     *                                   
+      |                                                         
+      |                                                         
+      |                           *                             
+      |                                               *         
+      |                                       *                 
+   +0 |........................................................*
+      |                                       *                 
+   -2 __________________________________________________________
+      0%                                                100%   base accuracy ->
+
+points (base -> gain):
+  BIRD-moderate    base  25%  gain +12
+  BIRD-SQL/loop    base  37%  gain +11
+  BIRD-SQL/decomp  base  38%  gain  +7
+  BIRD-simple      base  50%  gain  +3
+  MBPP/decomp      base  70%  gain  -1
+  MBPP             base  70%  gain  +1
+  HumanEval        base  84%  gain  +2
+  GSM8K/JSON       base 100%  gain  +0
+
+Trend: gain falls as base rises (inverse). Big where weak-but-fixable (SQL/spatial),
+~0 where already strong (code/reasoning). Scaffolding converts fixable headroom only.

@@ -44,6 +44,8 @@ is weak-but-fixable and near zero where it is already strong. This holds at four
 - **Within a task** (BIRD by difficulty): simple stratum base 50% → +3; moderate stratum base 25% → +12.
 - **In composition** (next law).
 
+See `figures/headroom-law.txt` for the gain-vs-base scatter (the inverse trend across all measured points).
+
 Actionable form: profile one-shot base per task first. Deploy local-bare where the model is already strong
 (extraction, reasoning, code); add scaffolding only where it is weak with fixable errors (heterogeneous SQL,
 spatial generation).
