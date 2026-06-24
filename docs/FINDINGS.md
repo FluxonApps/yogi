@@ -1681,3 +1681,8 @@ raising it needs scale (916K) or RL — outside the local-cheap scope. The exper
 is EXHAUSTED. Final thesis: democratization is real+free at the SKILL grain (F1-F9) and the TOOL-USE loop
 (usable at the ceiling, gold-free); heterogeneous-domain generation capability is bounded locally at ~40%.
 Tools make the local model usable AT its ceiling; only scale/RL raise the ceiling. REAL-TASK ARC CLOSED.
+
+## 2026-06-24 — frontier baseline (measured): 30/40 (75%) on the held-out n=40
+Claude one-shot, execution-verified on the SAME n=40 held-out (items[130:170]) used for every local-model
+row. frontier 30/40 (75%) vs local 8B one-shot 13/40 (33%), 8B+tool 16/40 (40%). Folded into the shareable
+report (docs/local-model-eval-report.{md,pdf}), replacing the prior ~78% estimate. scripts/frontier_baseline.sh.
