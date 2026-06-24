@@ -1,0 +1,11 @@
+py ok
+=== GPU free? ===
+0
+=== launch library+tools (n=80, ~55min, zero salary) ===
+  20/80: library+tools 10
+  40/80: library+tools 20
+  60/80: library+tools 30
+  80/80: library+tools 39
+=== VOYAGER LIBRARY + TOOLS — retrieve K=3 similar solved examples (items[0:80], n=80, zero salary) ===
+  library+tools 39/80 (48%)   vs  base tools 39/80 (48%)  decompose 42/80 (52%)  one-shot 30/80 (37%)
+  PUSHES CEILING ✓ iff > 42/80 — retrieved structural templates beat planning alone.
