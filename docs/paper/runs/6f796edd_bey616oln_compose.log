@@ -1,0 +1,9 @@
+Combined imports ok
+bash ok
+=== launch (GPU free? 0) ===
+=== LEVER COMPOSITION on BIRD (weak base), n=80 ===
+  one-shot       30/80 (38%)
+  decompose      36/80 (45%)
+  agent-loop     37/80 (46%)
+  decompose+loop 40/80 (50%)
+  Levers STACK iff decompose+loop > best single lever (toward the ~53 full-stack).
