@@ -2060,3 +2060,14 @@ An EXECUTION-only verifier (SQL "runs" != "correct"; correctness needs gold) can
 only escalate hard errors. So: local+correctness-verifier self-certifies ~71-86% of code for FREE; routing the
 residual (~14-29%) to a frontier reaches ~frontier accuracy at a fraction of frontier cost — the practical
 accuracy/cost frontier (verifier = the moat that makes routing SAFE).
+
+## 2026-06-24 — headroom law generalizes ACROSS LEVERS: decompose too pays off inverse to base accuracy
+
+Second-lever sweep (n=80): bird-sql one-shot 30/80 (38%) -> decompose 36/80 (45%) = +7; mbpp-code one-shot
+56/80 (70%) -> decompose 55/80 (69%) = -1. So DECOMPOSE follows the SAME headroom law as the agent-loop:
+helps the WEAK-base task (SQL +7), flat/negative on the STRONG-base task (code -1). Combined with agent-loop
+(SQL +11, MBPP +1, HumanEval +2), the law is now lever-INDEPENDENT: inference-time scaffolding (agent-loop OR
+decompose) pays off INVERSE to the model's one-shot base accuracy on the task — large where weak-but-fixable
+(heterogeneous SQL), ~0 where already strong (code/reasoning). The ROI of scaffolding is a property of
+(model x task base accuracy), not of the specific technique. PRACTICAL: measure one-shot base first; only invest
+in scaffolding where the base is low AND errors are fixable/decomposable.
