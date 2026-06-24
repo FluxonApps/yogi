@@ -2228,3 +2228,22 @@ UNIFIED, simpler law: the agent-loop IS verified resampling; realized gain = the
 within the round budget, and the capture rate ~ per-item resample probability. Set rounds by that probability:
 SQL needs ~2 (high prob), MBPP would need ~8 (low prob). Prediction (testing): MBPP retry@8 -> approaches +12.
 This corrects the earlier anchoring guess and tightens "agent-loop = verified resampling, budget-limited."
+
+## 2026-06-25 — sequential RETRY != independent pass@k: agent-loop is CORRELATED resampling; best-of-N captures more
+
+MBPP rounds-scaling (n=80): one-shot 70, retry@2 71 (+1), retry@4 72 (+2), retry@8 72 (+2) — PLATEAUS at +2,
+does NOT reach the +12 reachable (pass@8 90). CORRECTS the budget interpretation: sequential RETRY is a
+CORRELATED, less-effective sampler than INDEPENDENT pass@k — on a hard item the model repeats similar wrong
+answers across retries, so 8 sequential retries != 8 independent draws. Since MBPP's verifier (provided tests)
+can SELECT the correct sample, pass@8 IS verifier-selected best-of-8 = +12. So the clean comparison:
+  MBPP:  sequential retry@8 = +2   vs   independent best-of-8 (verifier-selected) = +12.
+  SQL:   sequential retry@2 = +11  ~=  its pass@8 spread (+20 ceiling, retry captures most) — equal regime.
+WHY the difference: SQL's reachable correct answers have HIGH per-sample probability (even correlated retries
+hit them fast); MBPP's reachable residual has LOW per-sample probability and needs INDEPENDENT diversity that
+sequential retry doesn't provide. UNIFIED, corrected law for the agent-loop:
+  - Reachable headroom (pass@k, independent) = the CEILING (bounded by Law 1).
+  - SEQUENTIAL retry (the agent-loop) realizes it only where per-sample success is high; it is correlated.
+  - INDEPENDENT best-of-N (verifier-selected) realizes more of low-probability reachable headroom.
+DEPLOYMENT RULE: measure reachable headroom (pass@k, cheap); if cheap sequential retry@2 saturates well below
+it, switch to verifier-selected best-of-N (independent samples) — same verifier, better coverage. Feedback
+content is ~irrelevant either way (ablation: retry not content). This is the full reduction of the agent-loop.
