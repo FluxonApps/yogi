@@ -44,6 +44,8 @@ is weak-but-fixable and near zero where it is already strong. This holds at four
 - **Within a task** (BIRD by difficulty): simple stratum base 50% → +3; moderate stratum base 25% → +12.
 - **In composition** (next law).
 
+**Refinement (the operative variable is REACHABLE headroom).** Raw headroom (100−base) does not predict lever value; *reachable* headroom does — the pass@k spread, ≈ oracle−one-shot, bounded by Law 1. Clean tasks had reachable≈raw so the base-accuracy-inverse pattern held; spatial ASCII breaks it: one-shot 42%, but BOTH retry and decompose are flat (oracle≈one-shot → reachable headroom ≈0 → no lever helps; the correct renderings are simply unreachable). Practical test: take a few temperature samples + verify; if the oracle barely exceeds one-shot, no inference lever will help — it is a capability ceiling, so route or scale instead of scaffolding.*
+
 See `figures/headroom-law.txt` for the gain-vs-base scatter (the inverse trend across all measured points).
 
 Actionable form: profile one-shot base per task first. Deploy local-bare where the model is already strong

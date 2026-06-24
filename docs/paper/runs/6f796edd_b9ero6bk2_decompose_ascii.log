@@ -1,0 +1,7 @@
+   3f0ba27..90d93b8  main -> main
+ahead: 0  GPU: 0
+py ok
+=== launch (GPU free? 0) ===
+=== GENERATION-CHANGING lever on SPATIAL (ASCII, n=24) — where retry was FLAT ===
+  one-shot 10/24 (42%) -> decompose(row-plan) 10/24 (42%)  delta +0
+  Generation-changing helps systematic errors iff decompose > one-shot (retry was +0 here).
