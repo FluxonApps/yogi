@@ -1,0 +1,6 @@
+py ok
+=== launch (GPU free? 0) ===
+=== pass@8 reachable-headroom on CODE ===
+  mbpp-code      one-shot 31/40 (78%)  pass@8 36/40 (90%)  reachable-headroom +12
+  humaneval-code one-shot 34/40 (85%)  pass@8 35/40 (88%)  reachable-headroom +2
+  4-task table now: SQL reachable +18..22 (lever +11) | ASCII +5 (lever +0) | + code above (levers +1/+2).

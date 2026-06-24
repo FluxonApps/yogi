@@ -1,0 +1,12 @@
+REACHABLE vs RAW headroom as predictors of inference-lever gain (n=40 each)
+
+  task       raw(100-1shot)  reachable(o@8-1shot)  lever realized   ceiling ok?
+  SQL                    68                    20              11   yes (11<= 20)
+  ASCII                  50                     5               0   yes (0<= 5)
+  MBPP                   22                    12               1   yes (1<= 12)
+  HumanEval              15                     2               2   yes (2<= 2)
+
+  Reachable headroom UPPER-BOUNDS the lever gain (realized<=reachable for all 4).
+  Raw headroom does NOT: ASCII raw 50 -> gain 0; HumanEval raw 15 -> gain 2 (anti-correlated).
+  Below the ceiling, realization is lever-dependent: SQL +11/20 (retry~=fresh), MBPP +1/12 (rich
+  'fix broken code' feedback ANCHORS), HumanEval +2/2 (tiny ceiling, fully captured).
