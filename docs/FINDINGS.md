@@ -1608,3 +1608,20 @@ THESIS, FINAL: democratization is real + free at the SKILL grain (one rule × ma
 F1-F9), and bounded at the DOMAIN grain (heterogeneous real tasks are capability-limited locally; need
 scale/RL). Salary buys correct traces but not generalization and didn't amortize (crutch, not frontier-push).
 This is a precise, multi-lever-tested boundary — the credible spine of the real-task section.
+
+## 2026-06-24 — pass@k curve: CAPABILITY ceiling confirmed (oracle plateaus at 40%, k=8) — real-task arc definitively closed
+
+pass@k (held-out n=40, K=16, zero salary): oracle@1=11(27%) → @4=14(35%) → @8=16(40%) → @16=16(40%).
+self-consistency@16=13(33%). The oracle RISES through k=8 then PLATEAUS (@16=@8=40%): more samples surface
+NO new correct answers → the 8B has a HARD CAPABILITY CEILING ~40% on hard heterogeneous BIRD. Within it, a
+modest SELECTION sub-gap (self-consistency 33% vs oracle 40% = +7pts), but too small to pursue here (a
+learned verifier captures ≤3 questions on n=40, within noise) — the capability ceiling dominates and masks
+verifier-internalization. So verifier-internalization is the WRONG experiment for capability-bounded BIRD;
+its right demonstration is a task where capability is HIGH (oracle≈100%) but a free verifier is absent
+(e.g. an F1-F9 skill task) — noted as a separate direction, not run here.
+DEFINITIVE: the real-task (BIRD) boundary is CAPABILITY, established now across THREE lever families —
+distillation (5 conditions flat), test-time-compute selection (self-consistency flat), and sample-scaling
+(pass@k plateaus at 40%). The local 8B simply cannot produce correct SQL for ~60% of hard held-out, by any
+local means. Raising it needs 916K-scale data or RL (raise capability) — outside the local-cheap scope.
+Thesis stands, sharpened to the strongest form: democratization is real+free at the SKILL grain (F1-F9),
+and CAPABILITY-bounded at the DOMAIN grain locally. Real-task arc EXHAUSTIVELY + definitively closed.

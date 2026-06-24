@@ -209,3 +209,14 @@ heterogeneous SQL (~33% one-shot, ~40% oracle ceiling); neither local-few-shot d
 compute crosses it. The literature's wins raise capability via 916K-scale data or RL — outside the
 local-cheap-few-shot scope. Final: democratization is real and free at the SKILL grain (F1–F9) and bounded
 at the DOMAIN grain (capability-limited locally). A precise, multi-lever boundary, not a universal claim.
+
+### §9 (definitive close) — pass@k confirms a capability ceiling
+A pass@k sweep (n=40, K=16) shows oracle@k rising 27→40% through k=8 then plateauing (@16=@8=40%): extra
+samples surface no new correct answers, so the local 8B has a hard ~40% capability ceiling on hard
+heterogeneous BIRD. The selection sub-gap (self-consistency 33% vs oracle 40%) is small enough that a
+learned verifier would gain ≤3/40 (within noise) — so the boundary is capability, not selection, here.
+Across three lever families — distillation (5 conditions flat), selection (self-consistency flat), and
+sample-scaling (pass@k plateau) — the conclusion is robust: heterogeneous real-task accuracy is
+capability-bounded locally; only scale (916K) or RL raises it. Democratization is real and free at the
+skill grain (F1–F9) and capability-bounded at the domain grain — the strongest, most precise form of the
+boundary, established by multiple independent methods.

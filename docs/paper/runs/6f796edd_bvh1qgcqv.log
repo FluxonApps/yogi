@@ -1,0 +1,13 @@
+=== GPU free? ===
+1
+py ok
+30a955d scripts/passk.sh: pass@k curve — does latent capability rise with samples (sampling-bound vs capability-bound)?
+=== launch pass@k (K=16, ~45min, zero salary) ===
+  10/40 done
+  20/40 done
+  30/40 done
+  40/40 done
+=== pass@k CURVE (held-out n=40, K=16 samples/q, zero salary) ===
+  oracle@k: @1=11/40(27%)  @4=14/40(35%)  @8=16/40(40%)  @16=16/40(40%)
+  self-consistency@16: 13/40
+  INTERPRET: oracle@k RISING with k → sampling+selection bound (verifier usable); PLATEAU → hard capability bound.
