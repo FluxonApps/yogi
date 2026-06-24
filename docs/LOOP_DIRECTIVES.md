@@ -168,3 +168,6 @@ safety theorem is now stateable rigorously, and the verifier is both the moat an
 
 *This file is the loop's operating system. Read + print Sections 1-6 every iteration; keep 7-9 current; append
 new directives/learnings + novel inventions as they are earned.*
+
+## 10. FIND-THE-PATTERN: cross-task sweep (higher-value than squeezing one ceiling)
+BIRD is one data point; generality is a hypothesis. Run the GENERIC lever-stack (one-shot, decompose, retrieval, oracle-headroom, verified-selection) across MULTIPLE goals via the harness (SQL/execution, Python/unit-tests, Math/exact-match; add more spanning the SKILL-vs-DOMAIN grain spectrum) and extract the LAW relating task properties (grain/homogeneity, verifier type, difficulty) to (a) where the ceiling sits, (b) achievable-vs-oracle gap (generation-bound?), (c) which levers help. A reproduced pattern = a law (the real contribution + the productization 'works across tasks' claim); a divergence tells us what drives it. The standardized harness makes each new goal a small Task — this is now the primary frontier.

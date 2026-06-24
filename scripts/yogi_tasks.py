@@ -92,6 +92,33 @@ class CodeTask(Task):
     def gold(self, ex): return ex['gold']
 
 
+# ----------------------------------------------------------------- Math word problems (exact-match verifier)
+class MathTask(Task):
+    id = "math-wordproblems"
+    PROBS = [
+        {"q": "A shop sells pens at 3 for $2. How many dollars for 12 pens?", "a": 8},
+        {"q": "Sara had 45 apples, gave away 18, then bought 7 more. How many now?", "a": 34},
+        {"q": "A train goes 60 km/h for 2.5 hours. How many km?", "a": 150},
+        {"q": "There are 24 students; 3/8 are girls. How many boys?", "a": 15},
+        {"q": "A book is $20 with 15% off. Final price in dollars?", "a": 17},
+        {"q": "5 boxes hold 12 each; 7 items are removed. How many left?", "a": 53},
+        {"q": "Tom reads 25 pages/day for a week. Total pages?", "a": 175},
+        {"q": "A rectangle is 9 by 6. What is its area?", "a": 54},
+    ]
+    def examples(self): return self.PROBS
+    def split(self, seed=0): return self.PROBS, self.PROBS          # tiny demo set
+    def context(self, ex): return f"Problem: {ex['q']}"
+    def instruction(self): return "Solve it. End your answer with 'Answer: N' where N is the final integer. /no_think"
+    def extract(self, raw):
+        raw = raw.split('</think>')[-1]
+        m = re.findall(r'[Aa]nswer\s*:?\s*(-?\d+)', raw) or re.findall(r'(-?\d+)', raw)
+        return m[-1] if m else ""
+    def verify(self, pred, ex):
+        try: return int(pred) == int(ex['a'])
+        except Exception: return False
+    def gold(self, ex): return f"Answer: {ex['a']}"
+
+
 # ----------------------------------------------------------------- CPU-only self-test (no model)
 if __name__ == "__main__":
     print("=== HARNESS GENERICITY SELF-TEST (CPU, no model) ===")
@@ -106,10 +133,12 @@ if __name__ == "__main__":
     # Code: gold solutions must pass their own unit tests (unit-test verifier works)
     ct = CodeTask(); okc = sum(ct.verify(ct.gold(ex), ex) for ex in ct.examples())
     results.append(("CodeTask (Python, unit-test verifier)", okc, len(ct.examples())))
+    mt = MathTask(); okm = sum(mt.verify(mt.extract(mt.gold(ex)), ex) for ex in mt.examples())
+    results.append(("MathTask (word problems, exact-match verifier)", okm, len(mt.examples())))
     print()
     for name, ok, n in results:
         flag = "OK" if isinstance(ok, int) and ok == n else "CHECK"
         print(f"  [{flag}] {name}: gold verifies {ok}/{n}")
     tasks_ok = sum(1 for _, ok, n in results if isinstance(ok, int) and ok == n)
-    print(f"\n  GENERIC ACROSS {tasks_ok}/{len(results)} TASK TYPES (SQL execution + Python unit-tests) via ONE Task interface + ONE evaluate() runner.")
+    print(f"\n  GENERIC ACROSS {tasks_ok}/{len(results)} TASK TYPES (SQL execution + Python unit-tests + Math exact-match) via ONE Task interface + ONE evaluate() runner.")
     print("  => the harness is NOT SQL-specific: any free-verifier task plugs in (math/answer-check, regex, JSON-schema, ...).")
