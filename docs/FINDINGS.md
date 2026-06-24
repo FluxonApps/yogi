@@ -1798,3 +1798,16 @@ only INTERACTIVE feedback (run/fix, 48%) and IN-CONTEXT DECOMPOSE (52%) help; ev
 genuine re-validation: retrieved-example library with EMBEDDING retrieval (concrete templates != abstraction;
 lexical null may be the weak retriever). Then consolidate the headline local ceiling (tools+decompose ~52%).
 HOLD remote pushes.
+
+## 2026-06-24 — embedding-retrieval library = 53% (NEW BEST): re-validation overturns the lexical null
+
+embed-library (nomic-embed cosine retrieval of K=3 similar solved examples, few-shot the tool-agent;
+items[0:80]): 43/80 (53%) vs lexical-library 39/80 (48%, SAME setup, only retriever changed), base 39/80
+(48%), decompose 42/80 (52%), one-shot 30/80 (37%). The embedding version cleanly beats the lexical one
+(43 vs 39) -> the earlier "library flat" was a WEAK-RETRIEVAL ARTIFACT, not a real null (rigor directive #5
+vindicated: cheap impl manufactured a false negative). CORRECTION: in-context examples DO help the weak 8B,
+but ONLY with good (embedding) retrieval; poor-retrieval few-shot and abstraction layers (views) do not.
+New stack (zero-salary, local, n=80): one-shot 37% -> tools 48% -> +decompose 52% -> +embedding-retrieved
+examples 53% (best). Levers that help: interactive feedback, in-context decomposition, embedding-retrieved
+examples. Levers that don't: extra tools, abstraction/views, lexical retrieval, self-consistency. Next:
+TTT-per-DB (does gradient adaptation beat in-context retrieval?) + combine winners. HOLD remote pushes.
