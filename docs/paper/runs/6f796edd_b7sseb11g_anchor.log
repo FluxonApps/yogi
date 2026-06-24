@@ -1,0 +1,8 @@
+bash ok
+=== launch (GPU free? 0) ===
+=== MBPP ANCHORING TEST (fresh retry vs rich 'fix-this'), n=80 ===
+  one-shot       56/80 (70%)
+  agent-loop-min 57/80 (71%)
+  agent-loop     57/80 (71%)
+  fresh-retry gain +1; rich-feedback gain +1; anchoring penalty (rich-fresh) +0.
+  If fresh-retry > rich, rich 'fix the broken code' feedback ANCHORS and under-realizes reachable headroom (+12) on code.
