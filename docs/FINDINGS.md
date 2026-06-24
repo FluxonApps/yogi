@@ -1943,3 +1943,34 @@ REDESIGN: harder reachable operator f(x,y,z)=3x+2y+4z+5 with 2-digit operands (c
 multi-term arithmetic the 8B sometimes slips), max_tokens=300, train + held-out same 2-digit distribution
 (held-out = unseen instances = clean generalization, not a harder-arithmetic confound). Re-running to test the
 reachability law (does RLVR-lite compound where reachable-but-not-saturated?).
+
+## 2026-06-24 — REACHABILITY LAW + unified lever-map (consolidated; operator micro-task abandoned as a truncation/format rabbit hole)
+
+Stop-condition hit: the synthetic operator task is a truncation/format trap (reasoning needed for correct
+arithmetic but it truncates; concise prompt fixes truncation but gives wrong answers — base 0/10). Per the
+directive, STOP fighting it and consolidate the law from EXISTING strong evidence.
+
+THE REACHABILITY LAW: local self-improvement (any weight-update OR inference-time lever) can only realize
+accuracy the model can REACH; it cannot manufacture correct outputs outside the model's reachable
+distribution.
+  - BIRD (heterogeneous, GENERATION-bound): one-shot 37, oracle 55. RLVR-lite (iterated rejection-FT)
+    PLATEAUS at 37 (recovers achievable, cannot reach new-correct). Inference scaffolding raises achievable
+    37->53 (toward, not past, the reachable). Temp+structural diversity both cap oracle ~55.
+  - F1-F9 (skill-grained, REACHABLE): the self-distillation/ratchet COMPOUNDS to ~98% (one rule x many
+    instances; the answer is in-distribution once the rule is learned).
+  => Self-improvement COMPOUNDS where the answer is reachable; PLATEAUS where generation-bound.
+
+UNIFIED LEVER-MAP (the project's contribution):
+  1. Floor = multi-step exact computation (F1-F9).
+  2. ACTION-SPACE / inference-time scaffolding (interactive tools + decompose + retrieval) raises ACHIEVABLE
+     toward the reachable ceiling (BIRD 37->53), gold-free; verified-selection is the moat; abstraction/
+     unverified-self-toolmaking HURT; weight-update at local scale HURTS/flat.
+  3. SELF-IMPROVEMENT ratchet (distill/RL) compounds where REACHABLE (skill grain), plateaus where
+     generation-bound (domain grain).
+  4. To raise the REACHABILITY ceiling itself: scale (~900k) or full GRPO (out of local-cheap scope).
+  5. SAFETY: all inside the closed mutation surface (forbidden powers unrepresentable); the 2026 literature
+     (PAC-safe iff bounded-capacity; SEVerA) frames this rigorously.
+PRODUCTIZATION: the self-evolving toolspace LAYER (task-agnostic via the harness: SQL/code/math/ASCII;
+verifier-gated; safe-by-construction). It works on reachable + verifiable tasks; the boundary is reachability.
+NEXT (future, higher-EV): GRPO-lite (mlx-lm-lora) to push the generation-bound case via the negative signal;
+cross-task sweep on REAL datasets (GSM8K/HumanEval) to map the law across task types.
