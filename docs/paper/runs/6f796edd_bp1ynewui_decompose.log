@@ -1,0 +1,13 @@
+Decompose imports ok
+bash ok
+fatal: /Users/gg/.claude/projects/-Users-gg-Work-Yogi/memory/paper-complete.md: '/Users/gg/.claude/projects/-Users-gg-Work-Yogi/memory/paper-complete.md' is outside repository at '/Users/gg/Work/Yogi'
+=== launch decompose sweep (GPU free? 0) ===
+loading model once...
+=== DECOMPOSE generalization (plan-then-answer) vs base, n=80 ===
+  bird-sql      one-shot  30/80 (38%)
+  bird-sql      decompose 36/80 (45%)
+  -> bird-sql decompose delta +7
+  mbpp-code     one-shot  56/80 (70%)
+  mbpp-code     decompose 55/80 (69%)
+  -> mbpp-code decompose delta -1
+  GENERALIZES on the headroom law iff decompose helps the WEAK-base task (SQL) more than the STRONG-base task (code).
