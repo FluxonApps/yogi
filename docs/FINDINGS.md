@@ -1661,3 +1661,23 @@ THESIS, FINAL+COMPLETE: democratization is real+free at the SKILL grain (F1-F9) 
 loop is a homogeneous skill the local model can USE (Stage A, gold-free) and partially INTERNALIZE (Stage B);
 but heterogeneous-domain GENERATION CAPABILITY is bounded locally (~40% ceiling, needs scale/RL). Tools make
 the local model usable AT its ceiling; they don't raise the ceiling. Real-task arc EXHAUSTIVELY closed.
+
+## 2026-06-24 — input-enrichment (rich schema) ALSO caps at ~40% → the capability ceiling is definitive (every lever family tried)
+
+Agentic + RICH schema (sample distinct values per column, held-out n=40): agentic+rich 15/40 (37%) vs
+agentic-plain 16/40 (40%) vs one-shot 13/40 (33%). Richer schema-knowledge (value formats, real column
+names) does NOT raise the ceiling (15 ≈ 16, within noise). So schema-ignorance was NOT the bound — the ~40%
+is PURE GENERATION CAPABILITY. This was the last untried lever family (input/context enrichment).
+
+=== REAL-TASK CEILING — DEFINITIVE, every lever family caps at ~40% ===
+  1. distillation ×5 (free-answer/free-CoT/factored/teacher-whole/teacher-2x-scale): all flat
+  2. selection (self-consistency): flat (33%)
+  3. sample-scaling (pass@k): plateau at 40% by k=8
+  4. tool-use (agentic run_sql + execution feedback): 40% (GOLD-FREE — the usability win)
+  5. internalized self-critique (salary-distilled loop): ~38% tool-free
+  6. input-enrichment (rich schema, sample values): 37%
+NOTHING local exceeds ~40%. The local 8B's hard-heterogeneous-BIRD generation capability is a hard ceiling;
+raising it needs scale (916K) or RL — outside the local-cheap scope. The experimental space of local levers
+is EXHAUSTED. Final thesis: democratization is real+free at the SKILL grain (F1-F9) and the TOOL-USE loop
+(usable at the ceiling, gold-free); heterogeneous-domain generation capability is bounded locally at ~40%.
+Tools make the local model usable AT its ceiling; only scale/RL raise the ceiling. REAL-TASK ARC CLOSED.

@@ -1,0 +1,11 @@
+py ok
+3c62756 scripts/agentic_rich.sh: toolspace input-enrichment — agentic loop + rich schema (sample values per column)
+=== launch agentic+rich (T=5, ~35min, zero salary) ===
+rich-schema sizes: [('toxicology', 288), ('california_schools', 3065), ('debit_card_specializing', 565), ('student_club', 1835), ('superhero', 698), ('financial', 1131)]
+  10/40 done (avg turns 1.0)
+  20/40 done (avg turns 1.8)
+  30/40 done (avg turns 1.7)
+  40/40 done (avg turns 1.9)
+=== AGENTIC + RICH SCHEMA (held-out n=40, T=5, sample-values, zero salary) ===
+  agentic+rich 15/40 (37%)   vs   agentic-plain 16/40 (40%)   one-shot 13/40 (33%)
+  RAISES CEILING ✓ iff agentic+rich > 40% — schema-knowledge (not capability) was part of the bound.
