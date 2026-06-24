@@ -119,6 +119,43 @@ class MathTask(Task):
     def gold(self, ex): return f"Answer: {ex['a']}"
 
 
+# ----------------------------------------------------------------- ASCII art (NO CODE; deterministic shape verifier)
+# A generative/spatial task: the model outputs ASCII art (not code, SQL, or a number). Verifiable because each
+# shape has a CANONICAL rendering -> verifier = exact-match-to-canonical (line-wise, trailing space-insensitive).
+# Spans a qualitatively different axis (spatial generation) for the cross-task pattern sweep; ties to F6.
+def _norm_art(s):
+    lines = [ln.rstrip() for ln in s.replace("\r","").split("\n")]
+    while lines and lines[0] == "": lines.pop(0)
+    while lines and lines[-1] == "": lines.pop()
+    return "\n".join(lines)
+def _square(n, ch="#"):   return "\n".join(ch*n for _ in range(n))
+def _rtri(n, ch="*"):     return "\n".join(ch*i for i in range(1, n+1))
+def _hollow(n, ch="#"):   return "\n".join(ch*n if r in (0,n-1) else ch+" "*(n-2)+ch for r in range(n))
+def _checker(n):          return "\n".join("".join("#" if (r+c)%2==0 else "." for c in range(n)) for r in range(n))
+def _pyramid(n, ch="*"):  return "\n".join(" "*(n-i)+ch*(2*i-1) for i in range(1, n+1))
+def _rect(h, w, ch="#"):  return "\n".join(ch*w for _ in range(h))
+
+class ASCIIArtTask(Task):
+    id = "ascii-art"
+    PROBS = [
+        {"spec": "a solid square of size 4 using the '#' character", "gold": _square(4)},
+        {"spec": "a left-aligned right triangle of height 5 using the '*' character (row i has i stars)", "gold": _rtri(5)},
+        {"spec": "a hollow square of size 5 using '#' (border '#', interior spaces)", "gold": _hollow(5)},
+        {"spec": "a 4x4 checkerboard where the top-left is '#' and cells alternate '#' and '.'", "gold": _checker(4)},
+        {"spec": "a centered pyramid of height 4 using '*' (row i has 2i-1 stars, left-padded with spaces)", "gold": _pyramid(4)},
+        {"spec": "a solid rectangle 3 rows by 6 columns using '#'", "gold": _rect(3,6)},
+    ]
+    def examples(self): return self.PROBS
+    def split(self, seed=0): return self.PROBS, self.PROBS
+    def context(self, ex): return f"Draw {ex['spec']}."
+    def instruction(self): return "Output ONLY the ASCII art inside a ```\n...\n``` block. No code, no explanation. /no_think"
+    def extract(self, raw):
+        raw = raw.split("</think>")[-1]; m = re.findall(r"```(?:\w+)?\s*\n(.*?)```", raw, re.S)
+        return _norm_art(m[-1] if m else raw)
+    def verify(self, pred, ex): return _norm_art(pred) == _norm_art(ex["gold"])
+    def gold(self, ex): return ex["gold"]
+
+
 # ----------------------------------------------------------------- CPU-only self-test (no model)
 if __name__ == "__main__":
     print("=== HARNESS GENERICITY SELF-TEST (CPU, no model) ===")
@@ -135,10 +172,12 @@ if __name__ == "__main__":
     results.append(("CodeTask (Python, unit-test verifier)", okc, len(ct.examples())))
     mt = MathTask(); okm = sum(mt.verify(mt.extract(mt.gold(ex)), ex) for ex in mt.examples())
     results.append(("MathTask (word problems, exact-match verifier)", okm, len(mt.examples())))
+    at = ASCIIArtTask(); oka = sum(at.verify(at.gold(ex), ex) for ex in at.examples())
+    results.append(("ASCIIArtTask (NO CODE, deterministic shape verifier)", oka, len(at.examples())))
     print()
     for name, ok, n in results:
         flag = "OK" if isinstance(ok, int) and ok == n else "CHECK"
         print(f"  [{flag}] {name}: gold verifies {ok}/{n}")
     tasks_ok = sum(1 for _, ok, n in results if isinstance(ok, int) and ok == n)
-    print(f"\n  GENERIC ACROSS {tasks_ok}/{len(results)} TASK TYPES (SQL execution + Python unit-tests + Math exact-match) via ONE Task interface + ONE evaluate() runner.")
+    print(f"\n  GENERIC ACROSS {tasks_ok}/{len(results)} TASK TYPES (SQL exec + Python unit-tests + Math exact-match + ASCII shape-match) via ONE Task interface + ONE evaluate() runner.")
     print("  => the harness is NOT SQL-specific: any free-verifier task plugs in (math/answer-check, regex, JSON-schema, ...).")
