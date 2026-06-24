@@ -1,0 +1,12 @@
+=== push milestone ===
+To github.com:FluxonApps/yogi.git
+   3c4d3c5..ee2952a  main -> main
+=== GPU free? launch typed-diversity ceiling-attack (n=40, K=4 forms, ~45min) ===
+0
+  10/40: single 2 typed-oracle 5 typed-SC 5
+  20/40: single 7 typed-oracle 11 typed-SC 11
+  30/40: single 11 typed-oracle 17 typed-SC 17
+  40/40: single 13 typed-oracle 22 typed-SC 20
+=== TYPED STRUCTURAL DIVERSITY (K=4 forms, items[0:40], n=40, zero salary) ===
+  single(type0) 13/40 (32%)  typed-ORACLE 22/40 (55%)  typed-self-consistency 20/40 (50%)
+  vs best so far ~53%. DIVERSITY-EXPANDS-ORACLE iff typed-oracle >> 53 (structural beats temp's oracle=single); CEILING-BROKEN iff typed-SC > 53.
