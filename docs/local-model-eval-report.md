@@ -244,3 +244,29 @@ an interactive tool loop — and the loop is where the value is.
 
 *Next step would be extending the harness to other open-weight models (e.g. GLM-5.2 / Gemma / DeepSeek) to
 produce a full model × quant × (with/without tools) matrix.*
+
+---
+
+## Addendum (update): interactive tools cross the 40% wall (confirmed, n=80)
+
+A later experiment supersedes the "~40% ceiling across every lever" finding above. That ceiling held only for
+**static context** (one-shot, sampling, fine-tuning, static rich-schema). Letting the model **interactively
+explore** the database before committing — foreign-key join paths, on-demand sample values, then run-and-fix —
+crosses it.
+
+```
+CONFIRMATION (fresh held-out, n=80, zero salary)
+
+one-shot                  ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
+interactive tools         ███████████████████░░░░░░░░░░░░░░░░░░░░░   48%   +11 points, lead held throughout
+                          (foreign keys + on-demand sample values + run/fix)
+```
+
+The +11 points is about 2 standard deviations at n=80 (robust, not small-sample noise). One caveat learned the
+hard way: a **richer** toolset (adding fuzzy-find and exploratory-subquery tools, multi-round) *lowered*
+accuracy on the weak model (distraction). The lesson is that a small model's toolspace must be
+**verified-selected — keep only tools that measurably raise accuracy, prune the rest — not expanded.**
+
+**Net:** this reinforces the report's headline ("scaffolding beats parameters for local usability") and
+revises the boundary: interactive, verified-selected tools move the local model's *effective* ceiling, even
+though more parameters / more data are still what move the *base* capability.
