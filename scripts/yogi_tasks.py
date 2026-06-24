@@ -138,6 +138,30 @@ class MBPPTask(Task):
     def gold(self, ex): return ex['gold']
 
 
+class HumanEvalTask(Task):
+    """Second REAL code scenario (HumanEval, 164) — LOWER base than MBPP, to confirm the agent-loop lifts code
+    WHEN headroom exists (the headroom x fixability prediction). Verifier = the problem's check() harness."""
+    id = "humaneval-code"
+    def __init__(self, path="/tmp/yogi_he/HumanEval.jsonl"):
+        self.path = path
+    def examples(self):
+        D = [json.loads(l) for l in open(self.path)]
+        return [{"prompt": d["prompt"], "test": d["test"], "entry": d["entry_point"],
+                 "gold": d["prompt"] + d["canonical_solution"]} for d in D]
+    def split(self, seed=0):
+        ex = self.examples(); random.Random(seed).shuffle(ex); return ex[80:], ex[:80]
+    def _run(self, cand, ex):
+        return _run_pytests_msg(cand, ex["test"] + f"\ncheck({ex['entry']})", "")
+    def context(self, ex):
+        return f"Complete this Python function (keep the signature):\n{ex['prompt']}"
+    def instruction(self): return "Output the FULL function in a ```python ...``` block. /no_think"
+    def extract(self, raw):
+        raw = raw.split('</think>')[-1]; m = re.findall(r'```(?:python)?\s*(.*?)```', raw, re.S); return (m[-1] if m else raw).strip()
+    def verify(self, pred, ex): return self._run(pred, ex)[0]
+    def feedback(self, pred, ex): return self._run(pred, ex)
+    def gold(self, ex): return ex['gold']
+
+
 # ----------------------------------------------------------------- Math word problems (exact-match verifier)
 class MathTask(Task):
     id = "math-wordproblems"
