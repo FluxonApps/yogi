@@ -1890,3 +1890,16 @@ BIRD. Reinforces the direction: (1) RLVR from verifiable rewards to RAISE the ge
 (the only lever the whole arc + 2026 literature says moves it); (2) test verifier-internalization on a
 no-free-verifier task. NEXT: validate the standard harness end-to-end on the model (cross-task one-shot
 baselines: SQL/code/math/ASCII), then build the RLVR-lite (STaR/ReST iterated, verifier-gated) loop.
+
+## 2026-06-24 — harness validated end-to-end (cross-task one-shot); building RLVR-lite (the recommended ceiling lever)
+
+Cross-task sweep via the standard evaluate() runner (OneShot, one model load, all 4 tasks): bird-sql 13/40
+(32%) [reproduces the standalone ~33% -> HARNESS VALIDATED, no drift], python-code 4/4 (100%, demo too easy),
+math-wordproblems 8/8 (100%, demo too easy), ascii-art 3/6 (50%, real headroom). The harness runs the model
+end-to-end across SQL/code/math/ASCII via ONE interface — the productizable instrument. (Code/math demo sets
+saturate -> real datasets HumanEval/MBPP/GSM8K are the follow-up for robust cross-task patterns.) NEXT: RLVR-
+lite = iterated rejection-sampling FT (STaR/ReST), the feasible RL-from-verifiable-rewards on 16GB. Tests the
+recommendation: does ITERATED on-policy reward-gated self-improvement lift BIRD held-out toward the 55% oracle,
+where ONE-SHOT distillation was flat? (RL should sharpen the model onto its own verified-correct generations,
+raising ACHIEVABLE toward REACHABLE. If it compounds round-over-round -> RL is the local ceiling lever; if flat
+-> even iterated RL-lite needs full GRPO/scale.)
