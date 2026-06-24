@@ -2133,3 +2133,16 @@ stays bare on strong-base tasks — the system LEARNS where each lever earns its
 no human. This is the operational moat (Law 5) and it directly composes with the headroom law (Law 2): the
 margin gate prunes exactly the within-noise gains that the headroom law predicts on strong-base tasks.
 Reproducible: scripts/vselect.sh.
+
+## 2026-06-25 — mechanism: the agent-loop gain is the VERIFIER-GATED RETRY, not the rich feedback content (BIRD)
+
+Feedback ablation (BIRD, n=80): one-shot 30/80 (38%); agent-loop-MIN (generic "incorrect, try again") 39/80
+(49%); agent-loop (RICH execution feedback: error/wrong-rowcount) 37/80 (46%). Retries-alone gain = +11
+(one-shot->min); feedback-CONTENT gain = -3 (rich - min, i.e. rich is NOT better, slightly worse within noise).
+MECHANISM: the agent-loop's gain is the VERIFIER-GATED RETRY (resample when the verifier says wrong), NOT the
+rich error message. For a small model on BIRD the verbose error may even distract. This REFINES Law 4 / the
+agent-loop story: the verifier's binary accept/reject SIGNAL (which gates the retry) is the lever; feedback
+RICHNESS is secondary here. Caveat: BIRD's available feedback is weak ("ran but wrong, N rows" — no WHY);
+richer signals (code tracebacks/test diffs) could matter more on code — untested at n>=80 here. But the robust,
+transferable core is: a correctness signal driving resample-on-failure, not feedback prose. (Consistent with
+verifier-as-moat: it is the correctness SIGNAL that pays, and even an inexpensive binary one suffices.)
