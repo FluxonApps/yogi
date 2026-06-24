@@ -2044,3 +2044,19 @@ heterogeneous-domain SQL + spatial — and scaffolding pays off exactly where it
 LEVER-MAP is domain-independent in STRUCTURE (harness+verifier+agent-loop port everywhere = the product), and
 the BENEFIT is predictable from base accuracy (inverse). Next: confirm on a LOWER-base code task (HumanEval)
 that the agent-loop DOES lift code when headroom exists.
+
+## 2026-06-24 — generalization CONFIRMED (3 points): agent-loop benefit is INVERSE to base accuracy; verifier-taxonomy
+
+HumanEval one-shot 67/80 (84%) -> agent-loop 69/80 (86%), delta +2. Three points pin the HEADROOM LAW:
+  base 37% (BIRD/SQL) -> agent-loop +11   |  base 70% (MBPP) -> +1   |  base 84% (HumanEval) -> +2.
+The agent-loop lever GENERALIZES IN KIND (same harness, 6 task types) but its MAGNITUDE is INVERSE to one-shot
+base accuracy — it pays off where the model is WEAK-but-fixable (heterogeneous SQL), near-zero where already
+STRONG (code 70-84, reasoning ~100). The 8B is strong at code+reasoning, weak at heterogeneous-domain SQL +
+spatial ASCII; scaffolding earns its cost exactly on the weak-but-fixable axis.
+VERIFIER TAXONOMY (productization nuance): not all free verifiers enable the same thing. A CORRECTNESS verifier
+(unit tests, provided at inference like MBPP/HumanEval) lets the local model SELF-CERTIFY answers without gold ->
+enables safe cost-optimal ROUTING (accept the verified-correct locally for free, escalate only the residual).
+An EXECUTION-only verifier (SQL "runs" != "correct"; correctness needs gold) cannot self-certify -> routing can
+only escalate hard errors. So: local+correctness-verifier self-certifies ~71-86% of code for FREE; routing the
+residual (~14-29%) to a frontier reaches ~frontier accuracy at a fraction of frontier cost — the practical
+accuracy/cost frontier (verifier = the moat that makes routing SAFE).
