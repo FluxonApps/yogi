@@ -47,6 +47,11 @@ class BIRDTask(Task):
     def verify(self, pred, ex):
         g = self._key(self._run(ex['db_id'], ex['SQL'])); p = self._key(self._run(ex['db_id'], pred)); return g is not None and g == p
     def gold(self, ex): return ex['SQL']
+    def feedback(self, pred, ex):
+        rows = self._run(ex['db_id'], pred)
+        if rows is None: return (False, "the query raised an error or was rejected (must be a single read-only SELECT)")
+        if self.verify(pred, ex): return (True, "ok")
+        return (False, f"the query ran but returned the wrong result ({len(rows)} rows); reconsider joins/filters/aggregation")
 
 
 # ----------------------------------------------------------------- Python code (unit-test verifier)
@@ -89,6 +94,47 @@ class CodeTask(Task):
     def extract(self, raw):
         raw = raw.split('</think>')[-1]; m = re.findall(r'```(?:python)?\s*(.*?)```', raw, re.S); return (m[-1] if m else raw).strip()
     def verify(self, pred, ex): return _run_pytests(pred, ex['tests'])
+    def gold(self, ex): return ex['gold']
+
+
+def _run_pytests_msg(code, tests, setup="", timeout=8):
+    """Like _run_pytests but returns (passed, error message) for AgentLoop execution feedback."""
+    src = (setup + "\n" if setup else "") + code + "\n" + tests + "\nprint('ALL_PASS')\n"
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+        f.write(src); path = f.name
+    try:
+        r = subprocess.run([sys.executable, path], capture_output=True, text=True, timeout=timeout)
+        if "ALL_PASS" in r.stdout: return (True, "ok")
+        err = (r.stderr or r.stdout).strip().splitlines()
+        return (False, "\n".join(err[-4:]) if err else "the code failed its tests")
+    except subprocess.TimeoutExpired:
+        return (False, "the code timed out (possible infinite loop)")
+    except Exception as e:
+        return (False, f"could not run the code: {e}")
+    finally:
+        try: os.unlink(path)
+        except Exception: pass
+
+
+class MBPPTask(Task):
+    """REAL code scenario (MBPP, 974 problems) — a genuinely different DOMAIN from SQL, same harness/protocol.
+    Verifier = the problem's own unit tests. Tests the GENERALIZATION of the agent-loop lever beyond SQL."""
+    id = "mbpp-code"
+    def __init__(self, path="/tmp/yogi_mbpp/mbpp.jsonl"):
+        self.path = path
+    def examples(self):
+        D = [json.loads(l) for l in open(self.path)]
+        return [{"text": d["text"], "tests": "\n".join(d["test_list"]),
+                 "setup": d.get("test_setup_code", ""), "first": d["test_list"][0], "gold": d["code"]} for d in D]
+    def split(self, seed=0):
+        ex = self.examples(); random.Random(seed).shuffle(ex); return ex[80:], ex[:80]   # train, held-out n=80
+    def context(self, ex):
+        return f"{ex['text']}\nYour function must pass this test:\n{ex['first']}"
+    def instruction(self): return "Write the Python function. Output only a ```python ...``` block. /no_think"
+    def extract(self, raw):
+        raw = raw.split('</think>')[-1]; m = re.findall(r'```(?:python)?\s*(.*?)```', raw, re.S); return (m[-1] if m else raw).strip()
+    def verify(self, pred, ex): return _run_pytests_msg(pred, ex['tests'], ex.get('setup', ''))[0]
+    def feedback(self, pred, ex): return _run_pytests_msg(pred, ex['tests'], ex.get('setup', ''))
     def gold(self, ex): return ex['gold']
 
 
@@ -170,6 +216,11 @@ if __name__ == "__main__":
     # Code: gold solutions must pass their own unit tests (unit-test verifier works)
     ct = CodeTask(); okc = sum(ct.verify(ct.gold(ex), ex) for ex in ct.examples())
     results.append(("CodeTask (Python, unit-test verifier)", okc, len(ct.examples())))
+    try:
+        mb = MBPPTask(); mhel = mb.split(0)[1][:10]; okmb = sum(mb.verify(mb.gold(ex), ex) for ex in mhel)
+        results.append(("MBPPTask (REAL code, unit-test verifier)", okmb, len(mhel)))
+    except Exception as e:
+        results.append(("MBPPTask", f"ERR {e}", 0))
     mt = MathTask(); okm = sum(mt.verify(mt.extract(mt.gold(ex)), ex) for ex in mt.examples())
     results.append(("MathTask (word problems, exact-match verifier)", okm, len(mt.examples())))
     at = ASCIIArtTask(); oka = sum(at.verify(at.gold(ex), ex) for ex in at.examples())

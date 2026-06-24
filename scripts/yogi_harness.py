@@ -27,6 +27,10 @@ class Task:
     def extract(self, raw):        return raw.strip()             # pull the answer from model output
     def verify(self, pred, ex):    raise NotImplementedError      # FREE deterministic verifier -> bool
     def gold(self, ex):            return ex.get("gold")          # for diagnostics
+    def feedback(self, pred, ex):                                  # for AgentLoop: (ok, diagnostic msg)
+        """Execute the prediction and return (passed, human-readable error/result). Override per task to give
+        RICH execution feedback (SQL error/rows, test failures) — that feedback IS the agent-loop lever."""
+        return (self.verify(pred, ex), "incorrect — revise your answer")
 
 
 # ---------------------------------------------------------------- Model runner (lazy MLX)
@@ -62,6 +66,26 @@ class OneShot(Method):
         if cap:                                   # RIGOR: truncated -> retry once at 2x before trusting a miss
             out, _ = model.gen(prompt, self.max_tokens * 2)
         return task.extract(out)
+
+
+class AgentLoop(Method):
+    """THE generalizable lever: solve, EXECUTE, observe the error/result, FIX. Task-agnostic (uses task.feedback).
+    This is the 37->48 jump on SQL; the sweep tests whether the same lever lifts OTHER domains (code, ...)."""
+    name = "agent-loop"; max_tokens = 512; rounds = 2
+    def _gen(self, model, prompt):
+        out, cap = model.gen(prompt, self.max_tokens)
+        if cap: out, _ = model.gen(prompt, self.max_tokens * 2)   # RIGOR: truncation guard
+        return out
+    def solve(self, ex, task, model):
+        base = task.context(ex) + "\n" + task.instruction()
+        pred = task.extract(self._gen(model, base))
+        for _ in range(self.rounds):
+            ok, msg = task.feedback(pred, ex)
+            if ok: return pred
+            fix = (base + f"\n\nYour previous attempt:\n{pred}\n\nWhen executed it FAILED:\n{msg}\n"
+                   "Correct the mistake and output the fixed answer.")
+            pred = task.extract(self._gen(model, fix))
+        return pred
 
 
 # ---------------------------------------------------------------- Eval runner (rigor baked in)
