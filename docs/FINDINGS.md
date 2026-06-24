@@ -1769,3 +1769,18 @@ runtime INFORMATION, not more text. Implication for the next bold lever: it must
 runtime environment, not add context. Next: AUTONOMOUS TOOL INVENTION via reusable VIEWS — the 8B invents
 pre-joined/pre-aggregated SQL views from the foreign keys (read-only TEMP views, safe), then queries the
 simpler schema directly (attacks the #1 failure, joins). Verified-select vs base 48%. HOLD remote pushes.
+
+## 2026-06-24 — autonomous view invention BACKFIRED (22% vs base 48%): unverified self-toolmaking is harmful
+
+invent+tools (8B invents pre-joined views, kept if they merely RUN; items[0:80]): 18/80 (22%) — a -26pt
+REGRESSION below base 48% and even one-shot 37%. The 8B invented 10 plausible views that EXECUTED but were
+SEMANTICALLY WRONG (wrong joins/columns), then preferentially USED them and trusted them -> systematically
+wrong answers. CRITICAL LESSON (sharpens the productization + safety thesis): autonomous self-toolmaking by a
+weak model is ACTIVELY HARMFUL unless the verifier gates the tool's END-TASK CORRECTNESS, not just that it
+runs. My protocol kept any runnable view (execution-check only) -> disaster. The DGM/Voyager discipline (keep
+a tool ONLY if it raises benchmark accuracy) + Yogi's closed-surface verified-selection is EXACTLY what
+prevents this failure mode. This is a strong cautionary result: the moat is verified-selection rigor, not the
+ability to generate tools. Next diagnostic: FRONTIER-designed views (correct abstractions, capped salary) — if
+correct views HELP where self-invented ones HURT, the bottleneck was view CORRECTNESS not the concept (and
+frontier-designed abstractions are a productizable salary lever); if not, views dont help the weak model.
+HOLD remote pushes.
