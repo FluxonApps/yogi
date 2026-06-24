@@ -1734,3 +1734,14 @@ The confirmed win remains the BASE toolset (interactive FKs+VALUES+run/fix, 48% 
 is a DIFFERENT lever, not more tools: self-consistency OVER the tool-agent (voting was flat over one-shot
 33->33 because correct wasnt the majority; over the 48% tool-agent the correct answer is more frequent, so
 majority may push higher — tests whether the two levers COMPOSE).
+
+## 2026-06-24 — self-consistency over tool-agent: marginal (47% vs 45%, +1/40) -> base near-optimal; pivot to decomposition
+
+SC over the 48% tool-agent (n=40, R=3): single 18/40 (45%), SC@3 19/40 (47%) = +1, within noise. Voting does
+NOT compose: the tool-agent fails the SAME hard questions across rollouts (consistent errors, no diversity to
+exploit). THREE levers now all marginal/worse over the base interactive toolset (richer tools v2 = 37% HURT;
+LIKEFIND = +1/80; SC = +1/40) -> ~45-48% is the local TOOL-ASSISTED ceiling for expansion/composition; the
+base (FKs+VALUES+run/fix) is near-optimal. The remaining ~52% are hard COMPOSITION queries (multi-join,
+nested aggregation) the 8B mis-structures even with values+FKs. Pivot to levers that target STRUCTURE:
+plan-then-solve decomposition (DIN-SQL-style) on top of the tools; then the very-novel frontiers (autonomous
+local tool invention, Voyager self-grown verified template library). Confirm any win at n>=80. HOLD remote pushes.
