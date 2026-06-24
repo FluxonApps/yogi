@@ -2146,3 +2146,13 @@ RICHNESS is secondary here. Caveat: BIRD's available feedback is weak ("ran but 
 richer signals (code tracebacks/test diffs) could matter more on code — untested at n>=80 here. But the robust,
 transferable core is: a correctness signal driving resample-on-failure, not feedback prose. (Consistent with
 verifier-as-moat: it is the correctness SIGNAL that pays, and even an inexpensive binary one suffices.)
+
+## 2026-06-25 — rounds-scaling: verifier-gated retry SATURATES by round 2 (plateau ~50, near oracle) = fast verified resampling
+
+BIRD n=80: one-shot 38, retry@2 49 (+11), retry@4 50 (+1), retry@6 50 (+0). The verifier-gated retry captures
+~all its gain in the FIRST retry pass and plateaus at ~50% — just under the pass@k oracle (~52-55). So the
+agent-loop is VERIFIED RESAMPLING toward the reachable ceiling, and the reachable-via-resampling wins are found
+fast (2 rounds suffices; more rounds are wasted). This UNIFIES the agent-loop with pass@k under one mechanism
+(verifier-gated resampling, capped at the oracle) and gives a concrete deployment rule: set rounds=2. Combined
+with the feedback ablation (content adds nothing), the agent-loop reduces to "resample while the verifier says
+wrong, ~2x." Added to local-model-laws.md Law 4.
