@@ -1745,3 +1745,15 @@ base (FKs+VALUES+run/fix) is near-optimal. The remaining ~52% are hard COMPOSITI
 nested aggregation) the 8B mis-structures even with values+FKs. Pivot to levers that target STRUCTURE:
 plan-then-solve decomposition (DIN-SQL-style) on top of the tools; then the very-novel frontiers (autonomous
 local tool invention, Voyager self-grown verified template library). Confirm any win at n>=80. HOLD remote pushes.
+
+## 2026-06-24 — decompose+tools = 52% (best yet, +3 over base 48%, +15 over one-shot): planning helps hard queries
+
+Plan-then-solve decomposition on the interactive tool base (items[0:80]): 42/80 (52%) vs base tools 39/80
+(48%) vs one-shot 30/80 (37%). BEST result of the thrust; lead held at every checkpoint (11,21,31,42). +3 over
+base is within n=80 noise but consistently >= base, and clearly > one-shot (+15) — explicit planning fixes
+some hard multi-join/nested-composition queries. Stack so far (all zero-salary, local): one-shot 37% ->
+interactive tools 48% -> +decompose 52%. The gains beyond the interactive base are small (each lever +1..+3),
+so the local tool-assisted ceiling is ~48-52% and refinements give marginal in-band gains. Next very-novel
+lever: VOYAGER-style verified-example LIBRARY — retrieve similar solved (question, SQL) pairs and few-shot
+them into the tool-agent (concrete structural templates for similar queries, which in-context planning alone
+can't provide). HOLD remote pushes (local commits only).
