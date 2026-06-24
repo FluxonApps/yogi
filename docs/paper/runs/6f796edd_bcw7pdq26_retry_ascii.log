@@ -1,0 +1,8 @@
+Law 4: rounds-scaling added
+   92cbb1e..3f0ba27  main -> main
+ahead: 0  GPU: 0
+py ok
+=== launch retry_ascii (GPU free? 0) ===
+=== RETRY mechanism on SPATIAL (ASCII shapes, n=24) ===
+  one-shot 10/24 (42%) -> retry@2 10/24 (42%)  delta +0
+  Retry generalizes to spatial iff retry@2 > one-shot (verifier-gated resampling is domain-general).
