@@ -2029,3 +2029,18 @@ PRODUCT: the self-evolving TOOLSPACE LAYER (harness: SQL/code/math/ASCII, verifi
 RECURRING METHOD LESSON (encode forever): eval-truncation false-negatives bit ~6x — generous max_tokens +
   verify the answer token before recording ANY kill; diagnose-before-kill; calibrate task difficulty (too-easy
   saturates, too-hard/verbose truncates); n>=80 to confirm; verified-selection is both rule and moat.
+
+## 2026-06-24 — CROSS-TASK GENERALIZATION: harness/agent-loop generalize STRUCTURALLY; benefit scales with headroom×fixability
+
+Added MBPPTask (real code, 974 probs) + a GENERIC AgentLoop (solve->execute->observe->fix, task.feedback hook).
+Harness now spans 5 task types via ONE interface (CPU self-test: gold verifies 5/5). Generalization sweep
+(n=80): MBPP one-shot 56/80 (70%), MBPP agent-loop 57/80 (71%) -> delta +1. Contrast: BIRD/SQL agent-loop
+delta was +11 (37->48). FINDING: the agent-loop lever GENERALIZES IN KIND (same harness drives code), but its
+MAGNITUDE scales with (one-shot headroom x error-fixability): big where the model is WEAK-but-fixable
+(SQL 37->48), small where it is already STRONG (MBPP code 70->71; the residual failures are hard-unfixable).
+CROSS-TASK MAP (qwen3-8b-4bit, one-shot): GSM8K reasoning ~100% (saturated), MBPP code 70% (+1 loop),
+ASCII spatial ~50%, BIRD SQL 37% (+11 loop / 53% full stack). The 8B is STRONG on code+reasoning, WEAK on
+heterogeneous-domain SQL + spatial — and scaffolding pays off exactly where it is weak-but-fixable. So the
+LEVER-MAP is domain-independent in STRUCTURE (harness+verifier+agent-loop port everywhere = the product), and
+the BENEFIT is predictable from base accuracy (inverse). Next: confirm on a LOWER-base code task (HumanEval)
+that the agent-loop DOES lift code when headroom exists.
