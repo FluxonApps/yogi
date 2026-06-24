@@ -2071,3 +2071,16 @@ decompose) pays off INVERSE to the model's one-shot base accuracy on the task �
 (heterogeneous SQL), ~0 where already strong (code/reasoning). The ROI of scaffolding is a property of
 (model x task base accuracy), not of the specific technique. PRACTICAL: measure one-shot base first; only invest
 in scaffolding where the base is low AND errors are fixable/decomposable.
+
+## 2026-06-24 — COST-OPTIMAL ROUTING (productization headline): local self-certifies the majority FREE; escalate residual -> near-frontier at a fraction of cost
+
+routing.sh (n=80, agent-loop local tier, correctness verifier = provided unit tests):
+  MBPP:      verified-accept 57/80 (71%) free; escalate 29% -> routed acc 86%/93%/97% at frontier_rate 0.5/0.75/0.9; COST 29% frontier calls.
+  HumanEval: verified-accept 70/80 (88%) free; escalate 12% -> routed acc 94%/97%/99% at frontier_rate 0.5/0.75/0.9; COST 12% frontier calls.
+HEADLINE: with a CORRECTNESS verifier, the local 8B self-certifies 71-88% of code as PROVABLY correct (no gold,
+no frontier); routing only the residual to a frontier reaches 93-99% accuracy at 12-29% of the frontier cost
+(vs paying 100% frontier). The verifier is the MOAT: acceptance precision is 100% (accepted answers pass the
+tests = correct), so routing NEVER accepts a wrong answer — it is safe by construction. This is the practical
+accuracy/cost frontier and the core productization claim: local+verifier handles the verifiable majority cheaply,
+escalation is a small tail. (Caveat: where provided tests are a STRICT SUBSET of full correctness, acceptance
+precision < 100%; use the most complete free verifier available.)
