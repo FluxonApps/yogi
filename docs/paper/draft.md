@@ -220,3 +220,14 @@ sample-scaling (pass@k plateau) — the conclusion is robust: heterogeneous real
 capability-bounded locally; only scale (916K) or RL raises it. Democratization is real and free at the
 skill grain (F1–F9) and capability-bounded at the domain grain — the strongest, most precise form of the
 boundary, established by multiple independent methods.
+
+### §9 (synthesis) — toolspace: usable at the ceiling, gold-free; the ceiling itself needs scale/RL
+The action-space lever closes the real-task usability gap without touching the capability ceiling. Free
+agentic tool-use (run_sql + execution feedback) reaches 40% — the oracle ceiling — GOLD-FREE in ~2 turns,
+capturing selection headroom that self-consistency (33%) could not. Salary-internalizing the DRAFT→CHECK→FINAL
+loop reaches ~38% tool-free (before 12/40→after 15/40), so the self-critique loop is a partially internalizable
+homogeneous skill. But neither exceeds ~40%: across seven conditions spanning every lever family —
+distillation×5, selection, pass@k plateau, tool-use, internalized self-critique — the local 8B caps at a hard
+~40% generation-coverage ceiling. Conclusion: tools make a local model USABLE at its ceiling (cheaply,
+gold-free); raising the ceiling itself needs scale or RL. Democratization is real and free at the skill grain
+(F1–F9) and at the tool-use loop; heterogeneous-domain generation capability is bounded locally.

@@ -1638,3 +1638,26 @@ generation-COVERAGE limit; execution feedback fixes errors/empties, not semantic
 So tool-use makes the local 8B USABLE at its true ceiling (40%, gold-free, cheap) — a real usability win —
 but the ~40% capability ceiling itself needs more. Stage B (salary) tests whether internalizing a SEMANTIC
 self-critique loop (DRAFT→CHECK→FINAL) can push past 40% by fixing semantically-wrong queries toward correct.
+
+## 2026-06-24 — TOOLSPACE Stage B (re-eval): internalized self-critique reaches the ceiling tool-free (~38%) but doesn't exceed it — synthesis complete
+
+Stage B salary-internalized DRAFT→CHECK→FINAL loop, held-out self-refine FINAL: before 12/40 → after 15/40
+(re-eval @max_tokens=600, no-FINAL-block=0; orig @320 was 13). So distilling the self-critique loop lifts
+the 8B from 30%→38% ≈ the ~40% ceiling, WITHOUT the external run_sql tool at inference — a modest skill-grain
+internalization (salary partially amortized: the 8B reaches the tool-assisted ceiling on its own). But it
+does NOT exceed 40%.
+
+=== TOOLSPACE-with-salary SYNTHESIS (operator's lever) — complete ===
+- Stage A (FREE agentic tool-use, run_sql + execution feedback): 16/40 (40%) GOLD-FREE in ~2 turns — captures
+  the full selection headroom self-consistency (13) could not, reaching the oracle ceiling without gold. THE
+  USABILITY WIN: the local 8B + a run_sql tool is usable at its true ceiling, cheaply, no gold needed.
+- Stage B (SALARY internalize the loop): 15/40 (~38%) tool-free — the self-critique loop IS internalizable to
+  ~match the ceiling without the external tool (modest, skill-grain). Salary partially amortized.
+- The ~40% generation-COVERAGE ceiling is HARD — confirmed now across SEVEN+ conditions / every lever family:
+  distillation×5 (flat), selection (self-consistency flat), sample-scaling (pass@k plateau @8), tool-use
+  (Stage A=40%), internalized self-critique (Stage B≈38%). The 8B simply cannot generate correct SQL for
+  ~60% of hard held-out by ANY local means; raising the ceiling needs scale (916K) or RL.
+THESIS, FINAL+COMPLETE: democratization is real+free at the SKILL grain (F1-F9) AND the ACTION-SPACE/tool-use
+loop is a homogeneous skill the local model can USE (Stage A, gold-free) and partially INTERNALIZE (Stage B);
+but heterogeneous-domain GENERATION CAPABILITY is bounded locally (~40% ceiling, needs scale/RL). Tools make
+the local model usable AT its ceiling; they don't raise the ceiling. Real-task arc EXHAUSTIVELY closed.

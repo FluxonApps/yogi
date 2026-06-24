@@ -1,0 +1,14 @@
+c85aed8 TOOLSPACE Stage A: agentic tool-use reaches oracle ceiling (40%) GOLD-FREE in 2 turns — selection solved, capability ceiling holds
+=== GPU free? (must be 0) ===
+0
+=== launch Stage B (salary ~64 claude calls + memory-safe LoRA, ~50min) ===
+  teacher 16/64 -> 13 verified self-refine traces
+  teacher 32/64 -> 25 verified self-refine traces
+  teacher 48/64 -> 35 verified self-refine traces
+  teacher 64/64 -> 48 verified self-refine traces
+TOOLSPACE traces (salary=64 claude calls): 48 verified DRAFT-CHECK-FINAL
+SALARY_SPENT=64
+HELD-OUT self-refine FINAL before: 12/40
+=== TOOLSPACE-with-SALARY RESULT (held-out self-refine FINAL, n=40) ===
+  before 12/40 -> after 13/40  (vs one-shot 13/40, oracle 16/40)
+  INTERNALIZED LOOP ✓ iff after >> before AND > 40% — the homogeneous tool-use skill crosses the capability ceiling.
