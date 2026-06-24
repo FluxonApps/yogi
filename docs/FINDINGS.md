@@ -2215,3 +2215,16 @@ PRACTICAL: measure pass@k reachable headroom (cheap: ~8 temp samples + verify) t
 inference gain before building; then pick a lever whose retry approximates fresh sampling (avoid anchoring on a
 broken attempt) to realize it. Bounded throughout by Law 1 (reachability). NEXT: directly test anchoring —
 MBPP fresh-retry (MinimalLoop) vs rich-feedback (AgentLoop): does fresh retry capture more of MBPP's +12?
+
+## 2026-06-25 — anchoring REJECTED; the realization gap is RESAMPLE BUDGET x per-item probability (cleaner unification)
+
+MBPP anchoring test (n=80): one-shot 70, fresh-retry (MinimalLoop) 71 (+1), rich-feedback (AgentLoop) 71 (+1),
+anchoring penalty +0. So rich "fix the broken code" feedback does NOT anchor — fresh and rich are identical.
+The hypothesis is REJECTED. Better explanation for why retry@2 realizes only +1 of MBPP's +12 reachable:
+RESAMPLE BUDGET x per-item success probability. pass@8 = 8 independent draws (captures +12); retry@2 = ~3 draws
+and captures +1 because MBPP's reachable residual has LOW per-sample success (needs ~8 draws to hit), whereas
+SQL's reachable is HIGH per-sample (retry@2 captures +11 of +20, saturates by round 2 — see rounds-scaling).
+UNIFIED, simpler law: the agent-loop IS verified resampling; realized gain = the reachable headroom captured
+within the round budget, and the capture rate ~ per-item resample probability. Set rounds by that probability:
+SQL needs ~2 (high prob), MBPP would need ~8 (low prob). Prediction (testing): MBPP retry@8 -> approaches +12.
+This corrects the earlier anchoring guess and tightens "agent-loop = verified resampling, budget-limited."
