@@ -103,7 +103,7 @@ honesty for a better-looking number; never trade safety for novelty.)
 - **Frontier baseline 75%** (same n=40). Remaining gap = base generation capability (needs scale ~900k / RL,
   out of local-cheap scope).
 - **Skill grain works free** (F1-F9, up to ~98%); domain grain capability-bounded locally.
-- **Stack (zero-salary, local, n=80):** one-shot 37 -> tools 48 -> decompose 52 -> embedding few-shot 53 (BEST); combined(all three)=52 SATURATES (levers overlap). Weight-update HURTS (TTT 32, distill flat). Ceiling ~53%, likely GENERATION-bound. Views/lexical-retrieval/self-consistency dont help.
+- **Stack (zero-salary, local, n=80):** one-shot 37 -> tools 48 -> decompose 52 -> embedding few-shot 53 (BEST); combined(all three)=52 SATURATES (levers overlap). Weight-update HURTS (TTT 32, distill flat). Ceiling ~53% (oracle ~55%) ROBUSTLY GENERATION-bound (temp AND structural diversity both cap oracle 55%). Inference-time pushing EXHAUSTED -> pivot to BREADTH (verifier-internalization on no-verifier task) + containment theorem. Views/lexical-retrieval/self-consistency dont help.
 
 ## 8. RE-VALIDATION TODOs + BOLD-LEVER QUEUE (keep pushing)
 
