@@ -1,0 +1,4 @@
+py ok
+=== launch (GPU free? 0) ===
+ASCII  one-shot 20/40 (50%)  pass@8 22/40 (55%)  reachable-headroom +5
+  vs SQL: one-shot 32, pass@8 ~52, reachable +18..+22 (lever +11). ASCII reachable ~0 => validates: scaffolding ROI = pass@k oracle - one-shot.

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+AssertionError: old block not found
+py ok
+=== re-run (GPU free? 0) ===
+SQL/BIRD  one-shot 13/40 (32%)  pass@8 22/40 (55%)  reachable-headroom +22
+Traceback (most recent call last):
+  File "<stdin>", line 50, in <module>
+  File "<stdin>", line 50, in <genexpr>
+  File "<stdin>", line 44, in a_oneshot
+  File "<stdin>", line 36, in <lambda>
+KeyError: 'n+2'
