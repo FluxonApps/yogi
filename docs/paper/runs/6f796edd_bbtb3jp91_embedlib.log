@@ -1,0 +1,14 @@
+numpy ok
+py ok
+=== GPU free? ===
+0
+=== launch embedding-library (n=80, ~50min, zero salary) ===
+embedding library + test questions via nomic-embed...
+library embedded; loading qwen...
+  20/80: embed-library 9
+  40/80: embed-library 20
+  60/80: embed-library 30
+  80/80: embed-library 43
+=== EMBEDDING LIBRARY + TOOLS (nomic-embed retrieval, K=3, items[0:80], n=80, zero salary) ===
+  embed-library 43/80 (53%)   vs base 39/80(48%) decompose 42/80(52%) lexical-lib 39/80(48%) one-shot 30/80(37%)
+  RETRIEVAL HELPS ✓ iff > 48% — better retrieval beats the lexical null (else: in-context examples arent the lever).
