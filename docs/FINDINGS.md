@@ -1903,3 +1903,18 @@ recommendation: does ITERATED on-policy reward-gated self-improvement lift BIRD 
 where ONE-SHOT distillation was flat? (RL should sharpen the model onto its own verified-correct generations,
 raising ACHIEVABLE toward REACHABLE. If it compounds round-over-round -> RL is the local ceiling lever; if flat
 -> even iterated RL-lite needs full GRPO/scale.)
+
+## 2026-06-24 — RLVR-lite (iterated rejection-FT) PLATEAUS at 37% (base 32): doesn't move the generation ceiling; needs the GRPO negative signal
+
+RLVR-lite on BIRD (K=4, R=3): base 13/40 (32%) -> R1 15/40 (37%) -> R2 15/40 (37%) -> R3 15/40 (37%); correct
+traces grew 36->52->71 but held-out FLAT after R1. CONFIRMED: iterated reward-gated rejection-FT gives a
+one-time bump to the MODAL-ACHIEVABLE rate (~37% = the one-shot level) then plateaus, far below the 55% oracle.
+It sharpens onto already-reachable correct outputs; it cannot shift the mode onto new-correct queries. This is
+consistent with distillation/TTT-flat: ALL weight-update variants (SFT, distill, TTT, rejection-FT) plateau at
+the modal-achievable rate on generation-bound BIRD. The missing ingredient vs real RLVR is the NEGATIVE signal
+(GRPO down-weights wrong AND up-weights right; rejection-FT only up-weights right). PATTERN forming: local
+self-improvement (any weight-update) recovers the ACHIEVABLE rate but does not reach NEW-correct where the task
+is generation-bound. PREDICTION (the reachability law, to test): RLVR-lite should COMPOUND on a HIGH-reachability
+task (skill-grained, where the answer is in-distribution) — that contrast is the generalizable finding + the
+productization boundary. NEXT: (a) GRPO-lite if feasible on 16GB (the negative signal); (b) cross-task RLVR on a
+reachable task to confirm the reachability law.
