@@ -309,3 +309,25 @@ What did NOT help, and the lessons:
 Practical upshot, unchanged and reinforced: for a local model, spend on the agent loop, a free verifier, good
 retrieval, and decomposition before spending on a bigger model or fine-tuning. The remaining gap to frontier
 is base capability, which needs scale or RL (out of the local-cheap scope).
+
+---
+
+## Addendum 3 (final): the unified lever-map for local self-improvement
+
+Across many methods on a 4-bit 8B (zero-salary, local), two levers separate cleanly:
+
+- **Inference-time scaffolding works and is robust.** An agent loop (run + read error + fix) plus
+  decomposition plus embedding-retrieved examples lifts a hard task from 37% to ~53%, with no training and no
+  forgetting. Verified-selection (keep a tool only if it raises end-task accuracy) is the discipline that
+  makes it reliable; piling on tools or letting the model invent unverified ones *lowers* accuracy.
+- **Weight-update self-improvement is fragile locally.** Distillation, test-time fine-tuning, and iterated
+  reward-gated fine-tuning all either stayed flat or *regressed* (catastrophic forgetting from narrow
+  fine-tuning) — even on reachable tasks, even with gentle settings. It compounds only in a carefully
+  engineered regime (a teacher plus heavy replay to prevent forgetting, on a homogeneous skill).
+- **The hard boundary is reachability.** No method produces a correct answer the model can't already reach in
+  its sampling distribution; generation-bound tasks cap at that ceiling. Raising the ceiling itself needs
+  scale or RL beyond a local laptop.
+
+Practical takeaway, reinforced: for a local model, **invest in the agent loop + a free verifier + good
+retrieval before fine-tuning** — fine-tuning is the fragile, easy-to-regress lever, while scaffolding is the
+robust one.

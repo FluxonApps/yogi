@@ -1,0 +1,11 @@
+gentle SFT: iters ~1 epoch (<=60), LR 5e-5
+bash ok
+   3615265..49ea23d  main -> main
+=== GPU free? relaunch gentle ===
+0
+ROUND 0 (base) held-out: 7/12 (58%)  [ASCII shapes, reachable-not-saturated, truncation-free]
+ROUND 1: +21 new correct (21 total) -> held-out 6/12 (50%)
+ROUND 2: +1 new correct (22 total) -> held-out 5/12 (41%)
+ROUND 3: +0 new correct (22 total) -> held-out 5/12 (41%)
+=== RLVR-LITE on ASCII (reachable-not-saturated, K=4, R=3) ===
+  base 7/12 -> rounds above. REACHABILITY LAW SEALED iff held-out COMPOUNDS (vs BIRD plateau 37) => RL compounds where reachable.
