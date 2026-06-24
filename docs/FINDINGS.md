@@ -1840,3 +1840,16 @@ agent (sample N, any-correct) — if oracle >> 53% a selector/search/ensemble co
 BIRD ceiling is definitively generation-bound and inference-time ceiling-pushing is exhausted (pivot to the
 breadth/productization axis: verifier-internalization on a no-free-verifier task; + the containment theorem).
 HOLD remote pushes.
+
+## 2026-06-24 — oracle headroom (best agent, R=4): single 52 / SC 55 / oracle 55 — TEMPERATURE diversity exhausted
+
+Oracle-headroom of the best agent (embed-retrieval + tools, 4 temp rollouts, n=40): single 21/40 (52%),
+self-consistency 22/40 (55%), ORACLE(any-of-4) 22/40 (55%). oracle ~= SC ~= single (+1..+3, within n=40 noise)
+-> TEMPERATURE sampling gives almost NO headroom; self-consistency already captures the little there is. The
+BIRD ceiling is generation-bound UNDER TEMPERATURE. Research-grounded reframe (arxiv 2510.01218 / TypedThinker
+2410.01952 / Diverse-Beam): "temperature scaling alone fails to improve diversity — surface variants, not
+different reasoning strategies." So the open attack is STRUCTURAL diversity: force candidates into different
+SQL FORMS (subquery / explicit-JOIN / CTE / step-by-step) and check (1) does typed-ORACLE expand past ~55%
+(structural beats temp) and (2) does typed-self-consistency (agreement ACROSS diverse derivations, unlike
+trivially-agreeing temp samples) select it gold-free. Launching typed_diversity.sh. If typed-oracle >> 55%,
+the ceiling was a DIVERSITY-MODE limit, not pure capability — a genuinely novel result.
