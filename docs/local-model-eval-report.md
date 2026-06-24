@@ -331,3 +331,38 @@ Across many methods on a 4-bit 8B (zero-salary, local), two levers separate clea
 Practical takeaway, reinforced: for a local model, **invest in the agent loop + a free verifier + good
 retrieval before fine-tuning** — fine-tuning is the fragile, easy-to-regress lever, while scaffolding is the
 robust one.
+
+---
+
+## Addendum 4: cross-task generalization and cost-optimal routing
+
+The harness was extended to a generic agent loop (solve → execute → observe failure → fix) and run across
+seven verifiable task types through one interface. Two findings:
+
+**The scaffolding payoff is inverse to base accuracy (the "headroom law").** The agent loop and decomposition
+both help a lot where the model is weak but its errors are fixable, and almost nothing where it is already
+strong — across tasks, within a task, and across levers:
+
+| Task (verifier) | One-shot | Agent-loop | Decompose |
+|---|---:|---:|---:|
+| SQL / BIRD (execution) | 37% | 48% (+11) | 45% (+7) |
+| Code / MBPP (unit tests) | 70% | 71% (+1) | 69% (−1) |
+| Code / HumanEval (unit tests) | 84% | 86% (+2) | — |
+| Reasoning / GSM8K (exact) | ~100% | saturated | — |
+| Structured extraction / JSON (parse) | ~100% | saturated | — |
+
+A 4-bit 8B is already strong on clean structured, reasoning, and code tasks; scaffolding earns its cost only on
+genuinely weak domains (heterogeneous multi-table SQL, spatial generation). Profile one-shot base first.
+
+**Cost-optimal routing (the practical accuracy/cost frontier).** With a *correctness* verifier (unit tests at
+inference), the local model self-certifies — accept any answer that passes the tests (provably correct, no
+gold, no frontier call) and escalate only the rest:
+
+| Task | Self-certified locally (free) | Escalated | Routed accuracy (frontier≈0.75) | Frontier cost |
+|---|---:|---:|---:|---:|
+| MBPP | 71% | 29% | 93% | 29% |
+| HumanEval | 88% | 12% | 97% | 12% |
+
+The verifier is the moat: acceptance is safe by construction (accepted answers pass the tests, so a wrong
+answer is never accepted). You reach near-frontier accuracy while paying the frontier for only a small residual.
+That is the build-vs-buy decision with numbers: local + verifier for the verifiable majority, escalate the tail.
