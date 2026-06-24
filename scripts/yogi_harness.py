@@ -88,6 +88,20 @@ class AgentLoop(Method):
         return pred
 
 
+class Decompose(Method):
+    """Second inference-time lever, task-agnostic: PLAN the steps, then answer using the plan. Tests whether the
+    decompose lever (SQL 48->52) follows the same headroom law as the agent-loop across domains."""
+    name = "decompose"; max_tokens = 640
+    def solve(self, ex, task, model):
+        ctx = task.context(ex)
+        plan, _ = model.gen(ctx + "\nBriefly outline the steps to solve this. Do NOT give the final answer yet. /no_think", 256)
+        plan = plan.split('</think>')[-1].strip()[:600]
+        final = ctx + f"\n\nApproach:\n{plan}\n\n" + task.instruction()
+        out, cap = model.gen(final, self.max_tokens)
+        if cap: out, _ = model.gen(final, self.max_tokens * 2)        # RIGOR: truncation guard
+        return task.extract(out)
+
+
 # ---------------------------------------------------------------- Eval runner (rigor baked in)
 def evaluate(task, method, model, n=80, seed=0, verbose=True):
     _, held = task.split(seed)
