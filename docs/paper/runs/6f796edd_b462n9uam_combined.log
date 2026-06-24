@@ -1,0 +1,12 @@
+py ok
+=== GPU free? ===
+0
+=== launch combined agent (n=80, ~50min, zero salary) ===
+embedding...
+  20/80: combined 11
+  40/80: combined 21
+  60/80: combined 31
+  80/80: combined 42
+=== COMBINED AGENT (retrieval + decompose + tools, items[0:80], n=80, zero salary) ===
+  combined 42/80 (52%)   vs embed-lib 43/80(53%) decompose 42/80(52%) tools 39/80(48%) one-shot 30/80(37%)
+  CUMULATIVE WIN ✓ iff combined > 53% — the inference-time levers compose into the headline local ceiling.
