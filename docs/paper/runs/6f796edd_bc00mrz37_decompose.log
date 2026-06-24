@@ -1,0 +1,11 @@
+py ok
+=== GPU free? ===
+0
+=== launch decompose+tools (n=80, ~60min, zero salary) ===
+  20/80: decompose+tools 11
+  40/80: decompose+tools 21
+  60/80: decompose+tools 31
+  80/80: decompose+tools 42
+=== DECOMPOSE + TOOLS — plan-then-solve on interactive base (items[0:80], n=80, zero salary) ===
+  decompose+tools 42/80 (52%)   vs  base tools 39/80 (48%)  one-shot 30/80 (37%)
+  PUSHES CEILING ✓ iff > 39/80 — explicit planning fixes the hard composition (multi-join/nested) queries.
