@@ -1,0 +1,16 @@
+py ok
+=== GPU free? ===
+0
+=== launch TTT-per-DB (6 LoRAs + 2 eval passes, ~55min, zero salary) ===
+  [toxicology] TTT LoRA trained on 16 pairs
+  [california_schools] TTT LoRA trained on 15 pairs
+  [debit_card_specializing] TTT LoRA trained on 14 pairs
+  [student_club] TTT LoRA trained on 21 pairs
+  [superhero] TTT LoRA trained on 23 pairs
+  [financial] TTT LoRA trained on 12 pairs
+eval base one-shot...
+eval TTT one-shot (per-DB adapters)...
+=== TTT-PER-DATABASE one-shot (items[0:80], n=80, 6 adapters, zero salary) ===
+  base one-shot 30/80 (37%)   TTT one-shot 26/80 (32%)
+  vs in-context best: embed-library 43/80 (53%), decompose 42/80 (52%), tools 39/80 (48%)
+  TTT (GRADIENT) HELPS ✓ iff TTT >> base one-shot; BEATS in-context iff TTT > 53%.
