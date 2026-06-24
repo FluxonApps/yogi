@@ -1570,3 +1570,17 @@ Boundary HARDENED across 5 conditions + a 2x-scale point. NEXT (different lever,
 best-of-N + execution self-consistency at INFERENCE (CogniSQL: +9.7% from best-of-6) — runtime compute,
 gold-free selector (majority executed result-set across N samples). Tests whether the local 8B is USABLE
 on real BIRD via test-time compute (distinct from weight-internalization, which is robustly bounded).
+
+## 2026-06-24 — best-of-N self-consistency FLAT (13→13/40) — the constraint is SELECTION, not latent capability
+
+Best-of-8 + execution self-consistency (gold-free majority result-set): one-shot 13/40 → self-consistency
+13/40 (FLAT — no lift). BUT the earlier scaffold-cross (sample-6 with an ORACLE selector = keep if any
+sample matches gold) was 23/48 (~48%), far above one-shot. So the 8B's latent capability is REAL (a correct
+SQL often appears among samples) — but self-consistency CANNOT surface it because the correct answer is a
+MINORITY (the 8B's diverse wrong answers + the greedy-modal wrong answer dominate the vote). Re-running with
+an explicit ORACLE best-of-N counter to quantify the latent-vs-selectable gap on this exact held-out.
+IMPLICATION: on hard heterogeneous SQL the binding constraint is SELECTION/VERIFICATION, not generation —
+the 8B can produce a correct answer but can neither generate it reliably one-shot NOR select it from samples
+without gold. This points precisely at VERIFIER-INTERNALIZATION (distill a learned selector that picks the
+correct candidate among N) as the lever that would make test-time compute usable — now MOTIVATED BY DATA,
+not just principle.

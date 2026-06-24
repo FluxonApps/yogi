@@ -36,17 +36,18 @@ m,t=load(STU)
 def gen(q,sample): 
     kw={"sampler":samp} if sample else {}
     return generate(m,t,prompt=t.apply_chat_template([{"role":"user","content":prompt(q)}],add_generation_prompt=True,tokenize=False),max_tokens=200,verbose=False,**kw)
-one=0; bon=0
+one=0; bon=0; orc=0
 for q in test:
     gold=key(run_sql(q['db_id'],q['SQL']))
     # one-shot greedy
     if key(run_sql(q['db_id'],exsql(gen(q,False))))==gold and gold is not None: one+=1
     # best-of-N self-consistency: N samples -> majority NON-NULL executed result-set
     res=[key(run_sql(q['db_id'],exsql(gen(q,True)))) for _ in range(N)]
+    if gold is not None and any(r==gold for r in res): orc+=1   # ORACLE: any sample correct (latent capability)
     res=[r for r in res if r is not None]
     if res:
         maj=collections.Counter(res).most_common(1)[0][0]
-        if maj==gold and gold is not None: bon+=1
+        if maj==gold and gold is not None: bon+=1   # self-consistency (gold-free majority)
 print(f"\n=== BEST-OF-{N} SELF-CONSISTENCY (held-out n={len(test)}, runtime compute, zero salary) ===",flush=True)
 print(f"  one-shot {one}/{len(test)}  ->  best-of-{N} {bon}/{len(test)}",flush=True)
 print(f"  USABLE-VIA-TEST-TIME-COMPUTE ✓ iff best-of-N >> one-shot (the 8B's latent capability surfaced).",flush=True)
