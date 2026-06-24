@@ -70,9 +70,9 @@ for rnd in range(1,R+1):
     del m,t
     d=f"{W}/data"; open(f"{d}/train.jsonl","w").write("\n".join(json.dumps(x) for x in traces)+"\n")
     open(f"{d}/valid.jsonl","w").write("\n".join(json.dumps(x) for x in traces[:max(3,len(traces)//6)])+"\n")
-    ad=f"{W}/adapter_r{rnd}"; os.makedirs(ad,exist_ok=True); it=min(300,max(100,len(traces)*5))
+    ad=f"{W}/adapter_r{rnd}"; os.makedirs(ad,exist_ok=True); it=min(60,max(20,len(traces)))   # GENTLE: ~1 epoch, prevent forgetting
     r=subprocess.run([sys.executable,"-m","mlx_lm.lora","--model",STU,"--train","--data",d,"--batch-size","1",
-      "--num-layers","8","--iters",str(it),"--learning-rate","1e-4","--max-seq-length","512","--grad-checkpoint","--adapter-path",ad],capture_output=True,text=True)
+      "--num-layers","8","--iters",str(it),"--learning-rate","5e-5","--max-seq-length","512","--grad-checkpoint","--adapter-path",ad],capture_output=True,text=True)
     if not os.path.exists(f"{ad}/adapters.safetensors"): print(f"R{rnd} LoRA FAILED:\n"+(r.stderr or r.stdout)[-400:]); break
     adapter=ad; acc=evalheld(adapter)
     print(f"ROUND {rnd}: +{newc} new correct ({len(traces)} total) -> held-out {acc}/{n} ({100*acc//n}%)",flush=True)
