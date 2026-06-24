@@ -102,6 +102,28 @@ class Decompose(Method):
         return task.extract(out)
 
 
+class Combined(Method):
+    """Lever COMPOSITION: decompose (plan) THEN agent-loop (execute->observe->fix) on the plan-augmented prompt.
+    Tests whether two inference-time levers STACK on a weak-base task (toward the full-stack ceiling)."""
+    name = "decompose+loop"; max_tokens = 640; rounds = 2
+    def _gen(self, model, prompt):
+        out, cap = model.gen(prompt, self.max_tokens)
+        if cap: out, _ = model.gen(prompt, self.max_tokens * 2)
+        return out
+    def solve(self, ex, task, model):
+        ctx = task.context(ex)
+        plan, _ = model.gen(ctx + "\nBriefly outline the steps to solve this. Do NOT give the final answer yet. /no_think", 256)
+        plan = plan.split('</think>')[-1].strip()[:600]
+        base = ctx + f"\n\nApproach:\n{plan}\n\n" + task.instruction()
+        pred = task.extract(self._gen(model, base))
+        for _ in range(self.rounds):
+            ok, msg = task.feedback(pred, ex)
+            if ok: return pred
+            fix = base + f"\n\nYour previous attempt:\n{pred}\n\nWhen executed it FAILED:\n{msg}\nCorrect the mistake and output the fixed answer."
+            pred = task.extract(self._gen(model, fix))
+        return pred
+
+
 # ---------------------------------------------------------------- Eval runner (rigor baked in)
 def evaluate(task, method, model, n=80, seed=0, verbose=True):
     _, held = task.split(seed)
