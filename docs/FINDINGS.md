@@ -2156,3 +2156,16 @@ fast (2 rounds suffices; more rounds are wasted). This UNIFIES the agent-loop wi
 (verifier-gated resampling, capped at the oracle) and gives a concrete deployment rule: set rounds=2. Combined
 with the feedback ablation (content adds nothing), the agent-loop reduces to "resample while the verifier says
 wrong, ~2x." Added to local-model-laws.md Law 4.
+
+## 2026-06-25 — BOUNDARY on the retry mechanism: it needs resample-SPREAD, not just headroom (spatial retry FLAT)
+
+Retry generalization to spatial (ASCII shapes, n=24): one-shot 10/24 (42%) -> retry@2 10/24 (42%) = +0 (FLAT).
+Contrast BIRD SQL where retry@2 gave +11. BOUNDARY: verifier-gated retry (=verified resampling) helps IFF the
+task has SAMPLING SPREAD containing correct answers (pass@k oracle > one-shot). SQL has it (oracle ~55 >> 37,
+temp produces correct query variants). ASCII has HEADROOM (42%, room to 100) but NO spread — spatial errors are
+SYSTEMATIC (the model redraws the same wrong shape; resampling returns the same error), so retry cannot surface
+a correct variant. REFINEMENT: headroom (Law 2) is necessary but NOT sufficient for the RETRY lever; the
+operative condition is resample-spread. Different error types need different levers: resampling for
+spread-errors (SQL), a GENERATION-CHANGING lever (decompose/plan) for systematic errors (spatial) — testing
+next. This sharpens the agent-loop characterization: it is fast verified resampling (retry not content, rounds=2)
+that pays off only where correct answers live in the sampling distribution.
