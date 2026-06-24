@@ -154,3 +154,27 @@ instead.
 One honest limit: this is one task, one benchmark, a difficulty slice, modest n. Treat the numbers as a
 worked example and the framework as the reusable part. Run your own task through section 2 before trusting any
 single accuracy, including these.
+
+---
+
+## 8. Cross-task generalization: the lever-map measured across domains
+
+The same harness (one Task interface + a generic agent loop + a free verifier) was run across six verifiable
+task types. Two things generalize and one varies predictably:
+
+| Task (verifier) | One-shot | Agent-loop | Benefit |
+|---|---:|---:|---|
+| SQL / BIRD (execution vs gold) | 37% | 48% | **+11** |
+| Code / MBPP (unit tests) | 70% | 71% | +1 |
+| Code / HumanEval (unit tests) | 84% | 86% | +2 |
+| Reasoning / GSM8K (exact match) | ~100% | — | saturated |
+
+- **What generalizes (structure):** the harness, the free verifier, and the agent loop port to any verifiable
+  domain unchanged. That portability is the asset.
+- **What varies (benefit):** the agent loop's payoff is **inverse to the model's one-shot accuracy** on the
+  task. It is large where the model is weak but its errors are fixable (heterogeneous SQL) and near-zero where
+  the model is already strong (code, reasoning). Don't pay for scaffolding where the base model already wins.
+- **Verifier taxonomy matters for routing.** A *correctness* verifier (unit tests available at inference) lets
+  the local model self-certify answers with no gold — so you can accept the verified-correct locally for free
+  and escalate only the residual to a powerful model, reaching near-frontier accuracy at a fraction of the
+  cost. An *execution-only* signal ("the query ran") can't certify correctness, so it only catches hard errors.

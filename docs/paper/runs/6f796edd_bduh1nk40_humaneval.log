@@ -1,0 +1,10 @@
+=== HumanEval gold-verify (CPU, 10 problems) ===
+HumanEval gold verifies 10/10 (verifier works)
+committed
+bash ok
+=== launch (GPU free? 0) ===
+loading model once...
+=== GENERALIZATION confirm: agent-loop on LOWER-base code (HumanEval) ===
+  HumanEval one-shot    67/80 (84%)
+  HumanEval agent-loop  69/80 (86%)
+  agent-loop delta = +2 pts (MBPP was +1 @70% base; SQL +11 @37% base). Confirms headroom-dependence.
