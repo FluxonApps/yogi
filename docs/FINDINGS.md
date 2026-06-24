@@ -1974,3 +1974,21 @@ PRODUCTIZATION: the self-evolving toolspace LAYER (task-agnostic via the harness
 verifier-gated; safe-by-construction). It works on reachable + verifiable tasks; the boundary is reachability.
 NEXT (future, higher-EV): GRPO-lite (mlx-lm-lora) to push the generation-bound case via the negative signal;
 cross-task sweep on REAL datasets (GSM8K/HumanEval) to map the law across task types.
+
+## 2026-06-24 — GSM8K saturated (12/12 base): the 8B is REACHABLE-strong, GENERATION-bound-limited (sharpens the law + cross-task map)
+
+GSM8K base cold @768tok: 12/12 correct, 0/12 truncation. The 8B (a strong reasoner) SATURATES GSM8K -> no
+headroom to test RLVR compounding there (a reachable task is already at ceiling). This is not a dead end: it
+SHARPENS the reachability law + the cross-task map:
+  CROSS-TASK MAP (qwen3-8b-4bit, one-shot unless noted):
+    GSM8K (reasoning, reachable)        ~100% (saturated)
+    code/math demos (easy)              ~100% (saturated)
+    ASCII art (spatial)                 ~50%
+    BIRD SQL (heterogeneous domain)     37% one-shot / 53% +tools / 55% oracle (GENERATION-bound)
+  PATTERN: the 8B is NOT capability-limited on reachable reasoning (GSM8K solved); its wall is specifically
+  HETEROGENEOUS-DOMAIN GENERATION COVERAGE (BIRD), where the correct output is out-of-distribution for ~45%.
+  So self-improvement compounds/saturates on reachable tasks and plateaus on generation-bound ones — the
+  reachability law, now triangulated across reasoning (GSM8K), skill (F1-9), spatial (ASCII), and domain (BIRD).
+IMPLICATION: the remaining levers to move the BIRD-style ceiling (GRPO / scale) are predicted-CAPPED by
+reachability (GRPO sharpens the policy but cannot reach out-of-distribution answers; it would also cap ~oracle)
+or out-of-local-scope (scale/bigger base raises reachability itself). The local lever space is MAPPED.
