@@ -1723,3 +1723,14 @@ to ~48%. This supersedes the earlier "hard ~40% ceiling across every lever" — 
 STATIC context (one-shot, sampling, fine-tuning, static rich-schema); INTERACTIVE exploration crosses it. The
 toolspace/action-space lever is the real democratization mechanism for a sub-frontier local model. v2 lesson
 stands: tools must be verified-SELECTED, not expanded (richer toolset hurt the weak model). Report updated.
+
+## 2026-06-24 — toolspace evolution: candidate LIKEFIND neutral (50% vs base 48%, +1/80) -> pruned; base near-optimal
+
+Verified-selection candidate 1, base + LIKEFIND (fuzzy value->column) on items[0:80]: 40/80 (50%) vs base
+(FKs+VALUES+run/fix) 39/80 (48%) = +1 question, within noise (binomial std ~4.4 at n=80). No measurable
+benefit -> PRUNE (keep only tools that clearly raise accuracy). With v2 (richer tools = 37%, hurt), the
+pattern is clear: tool-by-tool EXPANSION beyond the minimal base gives noise-level changes for the weak 8B.
+The confirmed win remains the BASE toolset (interactive FKs+VALUES+run/fix, 48% vs one-shot 37%). Next push
+is a DIFFERENT lever, not more tools: self-consistency OVER the tool-agent (voting was flat over one-shot
+33->33 because correct wasnt the majority; over the 48% tool-agent the correct answer is more frequent, so
+majority may push higher — tests whether the two levers COMPOSE).
