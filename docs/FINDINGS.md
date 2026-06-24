@@ -2112,3 +2112,14 @@ Robust, multi-grain law: inference-time scaffolding's ROI is inversely proportio
 accuracy on the instance class — it converts fixable headroom into accuracy, and there is little to convert
 where the model is already strong. (Per-stratum n=32/40 < 80; the +3 vs +12 contrast is large + directional;
 aggregate BIRD was n=80.)
+
+## 2026-06-25 — lever composition: scaffolding levers STACK sub-additively (BIRD decompose+loop 50)
+
+BIRD n=80: one-shot 30/80 (38%), decompose 36/80 (45%, +7), agent-loop 37/80 (46%, +8), decompose+loop
+40/80 (50%, +12). Combining decompose + agent-loop reaches 50 — ABOVE either single lever, toward the ~53
+full-stack (which also added retrieval). But +12 < +7+8=+15, so the levers STACK SUB-ADDITIVELY: they partly
+overlap in the fixable headroom they convert (some errors a plan would fix are also fixed by execution
+feedback). PRACTICAL: scaffolding levers compose and are worth stacking on a weak-base task, but with
+diminishing returns — budget for the strongest single lever first (agent-loop), then add a second for a
+smaller marginal gain. Completes the headroom picture: across tasks, across levers, within-task, AND in
+composition.
