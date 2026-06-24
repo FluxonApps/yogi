@@ -366,3 +366,41 @@ gold, no frontier call) and escalate only the rest:
 The verifier is the moat: acceptance is safe by construction (accepted answers pass the tests, so a wrong
 answer is never accepted). You reach near-frontier accuracy while paying the frontier for only a small residual.
 That is the build-vs-buy decision with numbers: local + verifier for the verifiable majority, escalate the tail.
+
+---
+
+## Addendum 5: what the agent loop actually is (mechanism, fully reduced)
+
+A series of ablations reduced the "agent loop" to a simple object, with a practical deployment rule.
+
+**It's retrying, not the feedback.** Replacing the rich execution feedback ("this test failed: <trace>") with
+a generic "that was wrong, try again" changed nothing — on SQL, retry-only gained +11 while rich feedback gained
++8 (the verbose error slightly *hurt* a small model). The lever is the verifier's accept/reject signal that
+gates a retry, not the error prose.
+
+**It's verified resampling, bounded by a measurable ceiling.** The gain a model can get from *any* inference
+lever is bounded by its **reachable headroom** = pass@k oracle − one-shot (a few temperature samples + the
+verifier). Measured across four tasks (n=40), realized gain ≤ reachable headroom in every case, and raw
+headroom (100 − one-shot) is *not* predictive:
+
+| Task | one-shot | pass@8 | reachable headroom | realized lever |
+|---|---:|---:|---:|---:|
+| SQL/BIRD | 32% | ~52% | +20 | +11 |
+| ASCII (spatial) | 50% | 55% | +5 | +0 |
+| MBPP (code) | 78% | 90% | +12 | +1..+2 |
+| HumanEval | 85% | 88% | +2 | +2 |
+
+ASCII has lots of raw headroom but ~none reachable (its errors are systematic, not resample-fixable) — so no
+lever helps; it's a capability ceiling, route or scale instead.
+
+**Sequential retry ≠ best-of-N.** Sequential retries are *correlated* (the model repeats similar errors on a
+hard item). On SQL that's fine (its correct answers have high per-sample probability — retry@2 captures most).
+On MBPP it isn't: retry saturates at +2 even at 8 rounds, while verifier-selected best-of-8 (independent
+samples) reaches +12. So for low-probability reachable headroom, use **independent best-of-N selected by the
+verifier**, not sequential retry — same verifier, much better coverage.
+
+**Deployment rule.** Take ~8 temperature samples + verify. The spread (oracle − one-shot) is your achievable
+inference gain. If a 2-round retry already captures it, ship that (cheapest). If the spread is large but retry
+saturates below it, switch to verifier-selected best-of-N. If the spread is ~0, no inference lever will help —
+route the hard items to a stronger model, or scale. The verifier is the one component that makes all of this
+measurable and safe.
