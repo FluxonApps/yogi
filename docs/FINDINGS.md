@@ -1700,3 +1700,15 @@ not the weights, raises the local model's effective ceiling. NOTE: supersedes th
 line in docs/local-model-eval-report.md (that report's agentic row was run/fix-only, weaker than full
 exploration) — report needs an addendum once the toolspace number stabilizes. Next: EVOLVE the toolspace
 (richer tools, verified-select) to push higher.
+
+## 2026-06-24 — TOOLSPACE v2 (richer tools) = 37%: ratchet does NOT hold naively; n=40 too noisy — confirm at n=80
+
+v2 (FKs+VALUES+FIND+PEEK, 2 explore rounds, avg 4.3 probes; n=40): 15/40 (37%) — BELOW v1's 19/40 (47%).
+Two honest reads: (a) RIGOR — on n=40 the toolspace band (37-47%) is within noise of ~40% (binomial std ~3
+at p=.4); v1's +3 over run/fix (16) was ~1 std, NOT a confirmed wall-crossing. (b) SIGNAL — richer tools
+HURT the weak 8B (more tools/rounds = distraction/longer context); the naive ratchet (more tools -> higher)
+FAILS. KEY IMPLICATION: a weak local model's toolspace must be VERIFIED-SELECTED (keep only tools that raise
+fitness, prune the rest — DGM/Voyager-style), not expanded. CORRECTION to the prior entry: the "BREAKTHROUGH"
+at 47% is PROMISING but UNCONFIRMED at n=40; v2 says be rigorous. Next: confirm the v1 config (FKs+VALUES+
+run/fix) vs one-shot on a FRESH n=80 slice (items[0:80], disjoint from the original n=40) — does interactive
+exploration robustly beat one-shot at larger n? That settles whether tools genuinely help.
