@@ -1712,3 +1712,14 @@ fitness, prune the rest — DGM/Voyager-style), not expanded. CORRECTION to the 
 at 47% is PROMISING but UNCONFIRMED at n=40; v2 says be rigorous. Next: confirm the v1 config (FKs+VALUES+
 run/fix) vs one-shot on a FRESH n=80 slice (items[0:80], disjoint from the original n=40) — does interactive
 exploration robustly beat one-shot at larger n? That settles whether tools genuinely help.
+
+## 2026-06-24 — TOOLSPACE WALL-CROSSING CONFIRMED at n=80: interactive tools 48% vs one-shot 37% (+11pts, robust)
+
+Fresh slice items[0:80] (disjoint from the original n=40), same model, zero salary: one-shot 30/80 (37%) vs
+v1-tools (FKs + sample VALUES + run/fix) 39/80 (48%). +9 questions, +11 points, lead held throughout
+(8>6, 18>13, 27>21, 39>30) — ~2 std on n=80, robust to the n=40 noise that made v1's 47% / v2's 37% look
+ambiguous. CONFIRMED: interactive tool exploration raises the local 8B's effective ceiling from ~37% one-shot
+to ~48%. This supersedes the earlier "hard ~40% ceiling across every lever" — that ceiling held only for
+STATIC context (one-shot, sampling, fine-tuning, static rich-schema); INTERACTIVE exploration crosses it. The
+toolspace/action-space lever is the real democratization mechanism for a sub-frontier local model. v2 lesson
+stands: tools must be verified-SELECTED, not expanded (richer toolset hurt the weak model). Report updated.
