@@ -1,0 +1,12 @@
+py ok
+=== GPU free? ===
+0
+=== launch SC-over-tool-agent (n=40, R=3, ~70min, zero salary) ===
+  10/40: single 3, SC 4
+  20/40: single 8, SC 9
+  30/40: single 14, SC 15
+  40/40: single 18, SC 19
+=== SELF-CONSISTENCY over TOOL-AGENT (items[0:40], n=40, R=3 rollouts, zero salary) ===
+  tool-agent single  18/40 (45%)
+  tool-agent + SC@3  19/40 (47%)
+  LEVERS COMPOSE ✓ iff SC >> single — voting over the tool-agent pushes past the ~48% single-run ceiling.
