@@ -1918,3 +1918,16 @@ is generation-bound. PREDICTION (the reachability law, to test): RLVR-lite shoul
 task (skill-grained, where the answer is in-distribution) — that contrast is the generalizable finding + the
 productization boundary. NEXT: (a) GRPO-lite if feasible on 16GB (the negative signal); (b) cross-task RLVR on a
 reachable task to confirm the reachability law.
+
+## 2026-06-24 — GRPO feasible on MLX (mlx-lm-lora/MLX-GRPO); next = test the REACHABILITY LAW (RLVR on a reachable task)
+
+Web-research: GRPO IS implementable locally (mlx-lm-lora has GRPO; Doriandarko/MLX-GRPO is a pure-MLX pipeline)
+— so the negative-signal lever is buildable, with a 16GB memory caveat for an 8B (policy+ref+rollouts). Noted
+as a future lever for the generation ceiling. HIGHER-VALUE + LOWER-RISK next: test the REACHABILITY LAW —
+RLVR-lite plateaued on BIRD because the correct query is UNREACHABLE (~55% oracle); the prediction is that the
+SAME RLVR-lite recipe COMPOUNDS on a HIGH-reachability task (the answer is in-distribution). Running it on a
+learnable operator task (x⊕y=3x+2y+7, cold-nonzero, fully reachable, held-out = extrapolation to larger
+operands). If it compounds (cold -> rounds rising -> high) while BIRD plateaued, the LAW holds: iterated
+reward-gated self-improvement compounds IFF the correct answer is reachable in the model's distribution — the
+generalizable finding + the productization boundary (where the ratchet works) unifying the F1-F9 skill-grain
+story with the RL frontier.
