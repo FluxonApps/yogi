@@ -2004,3 +2004,28 @@ RLVR-lite ASCII 58->33). REFINED LAW: self-improvement compounds where reachable
 NAIVE weight-update (no replay) FORGETS/degrades; INFERENCE-TIME scaffolding is the robust lever (no forgetting
 risk, raises achievable where reachable). Sealing test: RLVR-lite with GENTLE SFT (few iters) to prevent
 forgetting -> does retention protection turn the 58->33 degradation into compounding?
+
+## 2026-06-24 — gentle RLVR-lite STILL hurts ASCII (58->41): naive local weight-update is fragile; ARC COMPLETE -> final synthesis
+
+Gentle SFT (~1 epoch, LR 5e-5): base 58 -> R1 50 -> R2 41 -> R3 41. Still DECLINES (-17, vs -25 aggressive).
+Even retention-gentle RLVR-lite degrades a reachable task. ROBUST across the session: EVERY naive local
+weight-update HURT/plateaued (distill flat; TTT 37->32; RLVR-lite BIRD 37; ASCII 58->33/41). The ONLY
+weight-update that compounded was F1-F9 (teacher curation + F3 heavy-replay + skill-grained + reachable, 0->98).
+
+=== FINAL UNIFIED SYNTHESIS (the project's contribution) ===
+LEVER A — INFERENCE-TIME SCAFFOLDING (interactive tools + decompose + embedding-retrieval): ROBUSTLY raises
+  ACHIEVABLE toward the reachable ceiling (BIRD 37->53, gold-free, NO forgetting). Verified-selection is the
+  moat; abstraction layers / unverified self-toolmaking HURT (views 22, frontier-views 41 < base 48).
+LEVER B — WEIGHT-UPDATE self-improvement (distill/TTT/RLVR-lite): FRAGILE locally — forgets/overfits/plateaus
+  even on reachable tasks, even gentle. Compounds ONLY in the carefully-engineered regime (F1-F9: teacher +
+  F3 heavy-replay retention protection + skill grain + reachable).
+REACHABILITY: no lever reaches OUT-OF-DISTRIBUTION answers; generation-bound tasks (BIRD oracle ~55) cap
+  there; raising the reachability ceiling needs scale (~900k) or full GRPO (out of local-cheap scope).
+SAFETY: all inside the closed mutation surface (forbidden powers unrepresentable; 2026 literature: PAC-safe
+  iff bounded-capacity; SEVerA verified self-evolution).
+PRODUCT: the self-evolving TOOLSPACE LAYER (harness: SQL/code/math/ASCII, verifier-gated, safe-by-construction).
+  The robust, productizable democratization lever is INFERENCE-TIME scaffolding + verified-selection; weight-
+  update self-improvement is a fragile add-on needing the F3-protected regime. The boundary is REACHABILITY.
+RECURRING METHOD LESSON (encode forever): eval-truncation false-negatives bit ~6x — generous max_tokens +
+  verify the answer token before recording ANY kill; diagnose-before-kill; calibrate task difficulty (too-easy
+  saturates, too-hard/verbose truncates); n>=80 to confirm; verified-selection is both rule and moat.
