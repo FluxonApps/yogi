@@ -200,3 +200,12 @@ does not yield heterogeneous-domain generalization regardless of trace source (f
 generalizing to new instances of one rule) and is bounded at the DOMAIN grain (heterogeneous tasks need
 scale or RL).** Salary buys correct traces but not few-shot generalization, and did not amortize here — a
 crutch, not a frontier-push, by our economy=learning principle. A precise, multi-angle-tested boundary.
+
+### §9 (close) — the real-task boundary is capability, established across two lever families
+Beyond the five flat distillation conditions, we tested test-time compute on held-out BIRD (n=40):
+one-shot 13/40, self-consistency 13/40 (flat — gold-free voting captures nothing), oracle best-of-8 16/40
+(only +3 — the correct SQL is usually not even sampled). So the local 8B is capability-bounded on hard
+heterogeneous SQL (~33% one-shot, ~40% oracle ceiling); neither local-few-shot distillation nor test-time
+compute crosses it. The literature's wins raise capability via 916K-scale data or RL — outside the
+local-cheap-few-shot scope. Final: democratization is real and free at the SKILL grain (F1–F9) and bounded
+at the DOMAIN grain (capability-limited locally). A precise, multi-lever boundary, not a universal claim.

@@ -1,0 +1,12 @@
+=== current print line ===
+52:print(f"  one-shot {one}/{len(test)}  ->  best-of-{N} {bon}/{len(test)}",flush=True)
+=== after fix ===
+52:print(f"  one-shot {one}/{len(test)}  |  self-consistency {bon}/{len(test)}  |  ORACLE(any-of-{N}) {orc}/{len(test)}",flush=True)
+py ok
+d3e7af0 fix: bestofn print line now shows ORACLE(any-of-N) — prior run computed orc but printed old format
+=== GPU free? ===
+0
+=== re-run for the oracle number (~25min, zero salary) ===
+=== BEST-OF-8 SELF-CONSISTENCY (held-out n=40, runtime compute, zero salary) ===
+  one-shot 13/40  |  self-consistency 13/40  |  ORACLE(any-of-8) 16/40
+  USABLE-VIA-TEST-TIME-COMPUTE ✓ iff best-of-N >> one-shot (the 8B's latent capability surfaced).

@@ -1584,3 +1584,27 @@ the 8B can produce a correct answer but can neither generate it reliably one-sho
 without gold. This points precisely at VERIFIER-INTERNALIZATION (distill a learned selector that picks the
 correct candidate among N) as the lever that would make test-time compute usable — now MOTIVATED BY DATA,
 not just principle.
+
+## 2026-06-24 — best-of-N oracle: latent ceiling is MODEST (40%) → the real-task boundary is CAPABILITY (arc closed)
+
+Best-of-8 (held-out n=40): one-shot 13/40 (33%) | self-consistency 13/40 (FLAT) | ORACLE(any-of-8) 16/40
+(40%). Two honest findings: (a) gold-free self-consistency captures NOTHING (correct answer, when present,
+isn't the majority — modal ≈ greedy); (b) even a PERFECT selector (oracle) only reaches 40% — the correct
+SQL is usually not even among 8 samples. So test-time compute has only modest headroom (+3, 33→40%), and
+verifier-internalization could capture at most the 13→16 gap (+3). The DEEPER bound is CAPABILITY: the
+local 8B's hard-heterogeneous-BIRD ceiling is ~40% even with oracle best-of-8.
+
+=== REAL-TASK ARC — CLOSED (complete, multi-lever, honest) ===
+Attacked the heterogeneous-task gap with TWO families of levers, exhaustively:
+  DISTILLATION (internalize generalization into weights) — 5 conditions, ALL flat:
+    free-answer(23) 11→10 · free-CoT(12) 5→6 · factored/SFSC(49) 9→9 · teacher-whole(50) 9→8 · teacher-2x(97) 10→11
+  TEST-TIME COMPUTE (use the model at inference) — limited headroom:
+    self-consistency FLAT (13→13) · oracle ceiling only 40% (16/40)
+ROOT CAUSE: not trace source/grain/form, not selection alone — the local 8B is CAPABILITY-BOUNDED on hard
+heterogeneous SQL (~33% one-shot, ~40% oracle). Neither local-few-shot distillation nor test-time compute
+crosses it. The literature's wins (SynSQL-916K, CogniSQL-RL) raise the CAPABILITY itself via scale/RL —
+genuinely outside the local-cheap-few-shot scope that is this project's contribution.
+THESIS, FINAL: democratization is real + free at the SKILL grain (one rule × many instances → generalizes:
+F1-F9), and bounded at the DOMAIN grain (heterogeneous real tasks are capability-limited locally; need
+scale/RL). Salary buys correct traces but not generalization and didn't amortize (crutch, not frontier-push).
+This is a precise, multi-lever-tested boundary — the credible spine of the real-task section.
