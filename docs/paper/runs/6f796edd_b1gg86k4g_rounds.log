@@ -1,0 +1,8 @@
+bash ok
+=== launch (GPU free? 0) ===
+=== ROUNDS SCALING (verifier-gated retry) on BIRD, n=80 ===
+  rounds=0 (one-shot) 38%
+  rounds=2  retry-loop 49%  (delta vs prev +11)
+  rounds=4  retry-loop 50%  (delta vs prev +1)
+  rounds=6  retry-loop 50%  (delta vs prev +0)
+  Retry-as-resampling iff acc rises with rounds toward the pass@k oracle (~52-55) then plateaus.

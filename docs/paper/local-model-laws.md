@@ -74,7 +74,7 @@ build-vs-buy frontier with numbers — local + verifier for the verifiable major
 **verifier taxonomy** matters: a *correctness* verifier enables this; an *execution-only* signal (a SQL query
 "ran" ≠ "is correct"; correctness needs gold) can only catch hard errors, not self-certify.
 
-*Mechanism (ablation, BIRD n=80): the loop's gain is the verifier-gated RETRY — one-shot 38 -> retry-only 49 (+11) -> rich-feedback 46 (-3 vs retry-only). The verifier's binary accept/reject signal that gates the resample is the lever; rich error prose is secondary (and can distract a small model). So even an inexpensive correctness signal suffices to drive the loop — richer feedback may help more on code tracebacks (untested here).*
+*Mechanism (ablation, BIRD n=80): the loop's gain is the verifier-gated RETRY — one-shot 38 -> retry-only 49 (+11) -> rich-feedback 46 (-3 vs retry-only). The verifier's binary accept/reject signal that gates the resample is the lever; rich error prose is secondary (and can distract a small model). So even an inexpensive correctness signal suffices to drive the loop — richer feedback may help more on code tracebacks (untested here). Rounds-scaling (BIRD): retry@2 49, @4 50, @6 50 — the loop saturates by round 2 (plateau ~50, just under the pass@k oracle), so it is verified RESAMPLING toward the reachable ceiling; deployment rule: rounds=2.*
 
 ## Law 5 — Selection is the discipline that makes the above safe
 
