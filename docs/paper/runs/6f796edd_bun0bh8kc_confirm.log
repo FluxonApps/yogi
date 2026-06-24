@@ -1,0 +1,11 @@
+63a1131 TOOLSPACE v2 (richer)=37% < v1 47%: naive ratchet fails (tools must be selected not expanded); n=40 noisy, confirm at n=80
+py ok
+=== launch confirmation (n=80, ~60min, zero salary) ===
+  20/80: one-shot 6, tools 8
+  40/80: one-shot 13, tools 18
+  60/80: one-shot 21, tools 27
+  80/80: one-shot 30, tools 39
+=== TOOLSPACE CONFIRMATION (fresh slice items[0:80], n=80, zero salary) ===
+  one-shot   30/80 (37%)
+  v1-tools   39/80 (48%)   (FKs + sample VALUES + run/fix)
+  TOOL BENEFIT REAL ✓ iff tools >> one-shot at this larger n (delta robust to n=40 noise).
