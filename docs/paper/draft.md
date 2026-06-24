@@ -231,3 +231,38 @@ distillation×5, selection, pass@k plateau, tool-use, internalized self-critique
 ~40% generation-coverage ceiling. Conclusion: tools make a local model USABLE at its ceiling (cheaply,
 gold-free); raising the ceiling itself needs scale or RL. Democratization is real and free at the skill grain
 (F1–F9) and at the tool-use loop; heterogeneous-domain generation capability is bounded locally.
+
+## 10. Cross-task generalization and the deployment frontier (the inference-time lever-map)
+
+§9 established the capability ceiling on one heterogeneous real task (BIRD). We now show the *levers* and
+their economics generalize across domains, via a single harness exposing seven verifiable task types
+(SQL/BIRD, code/MBPP, code/HumanEval, math/GSM8K, structured-extraction/JSON, ASCII shapes, in-repo demos)
+through one Task interface and one generic agent-loop. Full treatment in `local-model-laws.md`; the results:
+
+- **Structural generalization.** The harness, the free verifier, and the agent-loop (solve→execute→observe
+  →fix) port across all seven domains unmodified — that portability is the deployable asset, not any one
+  number.
+- **The headroom law (scaffolding ROI is inverse to base accuracy)**, confirmed at four grains: across tasks
+  (agent-loop delta vs one-shot base — SQL 37→48 +11; MBPP 70→71 +1; HumanEval 84→86 +2; GSM8K/JSON ~100
+  saturated), across levers (decompose: SQL 38→45 +7; MBPP 70→69 −1), within a task (BIRD by difficulty:
+  simple base-50 +3 vs moderate base-25 +12), and in composition. Scaffolding converts *fixable headroom*;
+  there is little to convert where the model is already strong.
+- **Levers stack sub-additively.** decompose+agent-loop on BIRD reaches 50% (n=80) > either single (45/46) >
+  one-shot (38), but +12 < +7+8 — they overlap in the headroom they fix. Add the strongest single lever
+  first, then a second for a smaller marginal gain; do not pile on (a richer toolset and unverified
+  self-invented tools both *lowered* accuracy).
+- **The verifier is the moat — safe, cost-optimal routing.** With a *correctness* verifier (tests at
+  inference) the local model self-certifies: accept test-passing answers (provably correct, no gold, no
+  frontier) and escalate the residual. MBPP 71% self-certified → 93% routed at 29% frontier cost; HumanEval
+  88% → 97% at 12% cost. Acceptance is safe by construction. A *verifier taxonomy* matters: correctness
+  verifiers enable this; execution-only signals ("it ran") cannot self-certify.
+- **Verified selection auto-adopts per task.** The same gold-free rule (keep a lever only if held-out acc >
+  base + noise margin) adopts agent-loop+decompose on weak-base SQL and prunes both on strong-base code —
+  the system learns where each lever earns its cost, with no human and no gold.
+
+This completes the real-task arc: §9 shows weight-update cannot move a generation-bound ceiling locally;
+§10 shows inference-time scaffolding *realizes the reachable accuracy* robustly across domains, with a
+predictable (base-accuracy-inverse) payoff, and that a correctness verifier turns the local model into a
+safe, cheap front tier — escalating only a small tail to a frontier — all inside the bounded, selection-gated
+mutation surface of §4. The reachability ceiling is the one thing none of this moves; that is what scale and
+RL on a larger machine are for.
