@@ -1,0 +1,17 @@
+py ok
+=== GPU free? ===
+0
+=== launch autonomous view invention (n=80, ~55min, zero salary) ===
+  invented views [toxicology]: ['atom_molecule_info', 'bond_molecule_connections']
+  invented views [california_schools]: []
+  invented views [debit_card_specializing]: ['customer_gasstation_info', 'customer_consumption_summary']
+  invented views [student_club]: ['event_member_info', 'budget_expense_member_info']
+  invented views [superhero]: ['superhero_attributes', 'superhero_powers']
+  invented views [financial]: ['client_district_info', 'account_with_client_details']
+  20/80: invent+tools 5
+  40/80: invent+tools 10
+  60/80: invent+tools 12
+  80/80: invent+tools 18
+=== AUTONOMOUS VIEW INVENTION + TOOLS (items[0:80], n=80, 10 views invented, zero salary) ===
+  invent+tools 18/80 (22%)   vs  base tools 39/80 (48%)  decompose 42/80 (52%)  one-shot 30/80 (37%)
+  SELF-INVENTION HELPS ✓ iff > 42/80 — the model's own invented abstractions beat hand-designed scaffolds.
