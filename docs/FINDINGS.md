@@ -1992,3 +1992,15 @@ SHARPENS the reachability law + the cross-task map:
 IMPLICATION: the remaining levers to move the BIRD-style ceiling (GRPO / scale) are predicted-CAPPED by
 reachability (GRPO sharpens the policy but cannot reach out-of-distribution answers; it would also cap ~oracle)
 or out-of-local-scope (scale/bigger base raises reachability itself). The local lever space is MAPPED.
+
+## 2026-06-24 — RLVR-lite HURT ASCII (58->33): naive rejection-FT FORGETS even on a reachable task -> refines the law (retention protection required)
+
+RLVR-lite on ASCII (reachable, base 58%): R1 33, R2 33, R3 33 — DEGRADED -25pts (R1 added 22 correct train
+traces but R2/R3 found 0 new = the SFT'd model got WORSE at generating). Cause: catastrophic forgetting /
+overfit (110 iters on 22 examples wiped general ASCII ability). UNIFIES with F3 (retention is the universal
+bottleneck): F1-F9 compounded ONLY with heavy-replay forgetting-protection. So across this session ALL naive
+local weight-update HURT or plateaued (distillation flat, TTT-per-DB 37->32, RLVR-lite BIRD plateau 37,
+RLVR-lite ASCII 58->33). REFINED LAW: self-improvement compounds where reachable AND retention-protected;
+NAIVE weight-update (no replay) FORGETS/degrades; INFERENCE-TIME scaffolding is the robust lever (no forgetting
+risk, raises achievable where reachable). Sealing test: RLVR-lite with GENTLE SFT (few iters) to prevent
+forgetting -> does retention protection turn the 58->33 degradation into compounding?
