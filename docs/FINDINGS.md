@@ -2198,3 +2198,20 @@ predicts whether ANY inference lever will pay off, before building scaffolding. 
 agent-loop captures <= the pass@k=8 reachable, so small reachable (ASCII +5) leaves ~nothing for a 2-round
 lever (+0); (b) +5 vs +0 is within n=40 noise. The robust claim is the cross-task ordering (SQL >> ASCII in
 both reachable-headroom and realized lever gain), with raw headroom NOT predictive.
+
+## 2026-06-25 — 4-task reachable-headroom table: reachable headroom is a valid CEILING; realization is lever-dependent
+
+Pass@8 oracles (n=40): SQL one-shot 32/pass@8 ~52 (reachable +20, lever +11); ASCII 50/55 (+5, +0);
+MBPP 78/90 (+12, +1); HumanEval 85/88 (+2, +2). TWO-PART LAW (precise + honest):
+  (1) CEILING: realized lever gain <= REACHABLE headroom (pass@k oracle - one-shot) for ALL 4 tasks
+      (11<=20, 0<=5, 1<=12, 2<=2). Reachable headroom is a valid UPPER BOUND on inference-lever gain.
+  (2) raw headroom (100-one-shot) is NOT predictive (ASCII raw 50 -> gain 0; HumanEval raw 15 -> gain 2).
+  (3) REALIZATION below the ceiling is LEVER-DEPENDENT: SQL captures ~half its spread (+11 of +20; its
+      verifier-gated retry behaves like fresh resampling); MBPP captures almost NONE (+1 of +12) — the
+      rich "fix this broken code" feedback ANCHORS on the failed attempt instead of resampling fresh
+      (consistent with the BIRD ablation where rich feedback was -3 vs plain retry). HumanEval's ceiling is
+      tiny (+2) and fully captured.
+PRACTICAL: measure pass@k reachable headroom (cheap: ~8 temp samples + verify) to UPPER-BOUND the achievable
+inference gain before building; then pick a lever whose retry approximates fresh sampling (avoid anchoring on a
+broken attempt) to realize it. Bounded throughout by Law 1 (reachability). NEXT: directly test anchoring —
+MBPP fresh-retry (MinimalLoop) vs rich-feedback (AgentLoop): does fresh retry capture more of MBPP's +12?
