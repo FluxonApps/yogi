@@ -21,3 +21,7 @@
 *.swp
 .yogi/
 .venv-mlx/
+
+# python bytecode
+__pycache__/
+*.pyc

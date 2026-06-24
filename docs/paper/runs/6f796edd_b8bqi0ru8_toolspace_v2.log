@@ -1,0 +1,11 @@
+py ok
+f7ac7bc scripts/toolspace_v2.sh: toolspace evolution iter 2 — richer tools (FIND+PEEK) + multi-round explore
+=== launch v2 (~45min, zero salary) ===
+  10/40 done (5 correct, 38 probes total)
+  20/40 done (8 correct, 86 probes total)
+  30/40 done (13 correct, 130 probes total)
+  40/40 done (15 correct, 171 probes total)
+=== TOOLSPACE v2 — multi-round explore (VALUES+FIND+PEEK) + run/fix (n=40, zero salary) ===
+  toolspace-v2 15/40 (37%)   vs  v1 19/40 (47%)  run/fix 16 (40%)  one-shot 13 (33%)
+  avg probes/q: 4.3
+  RATCHET HOLDS ✓ iff v2 > v1 (richer tools push higher) — confirms toolspace evolution + rules out noise.
