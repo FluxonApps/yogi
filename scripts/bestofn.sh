@@ -49,6 +49,6 @@ for q in test:
         maj=collections.Counter(res).most_common(1)[0][0]
         if maj==gold and gold is not None: bon+=1   # self-consistency (gold-free majority)
 print(f"\n=== BEST-OF-{N} SELF-CONSISTENCY (held-out n={len(test)}, runtime compute, zero salary) ===",flush=True)
-print(f"  one-shot {one}/{len(test)}  ->  best-of-{N} {bon}/{len(test)}",flush=True)
+print(f"  one-shot {one}/{len(test)}  |  self-consistency {bon}/{len(test)}  |  ORACLE(any-of-{N}) {orc}/{len(test)}",flush=True)
 print(f"  USABLE-VIA-TEST-TIME-COMPUTE ✓ iff best-of-N >> one-shot (the 8B's latent capability surfaced).",flush=True)
 PY
