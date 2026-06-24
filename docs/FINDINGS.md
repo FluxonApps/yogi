@@ -1931,3 +1931,15 @@ operands). If it compounds (cold -> rounds rising -> high) while BIRD plateaued,
 reward-gated self-improvement compounds IFF the correct answer is reachable in the model's distribution — the
 generalizable finding + the productization boundary (where the ratchet works) unifying the F1-F9 skill-grain
 story with the RL frontier.
+
+## 2026-06-24 — reachability run was a FALSE ZERO (eval-truncation again); operator too easy -> redesign
+
+The operator RLVR run reported base 0/40 held-out — DIAGNOSED as the recurring eval-truncation bug (rigor #2):
+at max_tokens=120 the model's step-by-step reasoning is cut BEFORE "Answer:", so extraction fails -> false 0.
+At max_tokens=300 the BASE model solves 4/4 including large operands (13⊕11=68, 15⊕17=86 correct). So (a)
+truncation bit again (the /no_think didn't suppress reasoning; raise max_tokens + re-eval before any kill),
+and (b) the operator 3x+2y+7 is TOO EASY (base ~100% with enough tokens) -> no headroom to test compounding.
+REDESIGN: harder reachable operator f(x,y,z)=3x+2y+4z+5 with 2-digit operands (cold nonzero-but-not-saturated,
+multi-term arithmetic the 8B sometimes slips), max_tokens=300, train + held-out same 2-digit distribution
+(held-out = unseen instances = clean generalization, not a harder-arithmetic confound). Re-running to test the
+reachability law (does RLVR-lite compound where reachable-but-not-saturated?).
