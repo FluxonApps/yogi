@@ -1853,3 +1853,26 @@ SQL FORMS (subquery / explicit-JOIN / CTE / step-by-step) and check (1) does typ
 (structural beats temp) and (2) does typed-self-consistency (agreement ACROSS diverse derivations, unlike
 trivially-agreeing temp samples) select it gold-free. Launching typed_diversity.sh. If typed-oracle >> 55%,
 the ceiling was a DIVERSITY-MODE limit, not pure capability — a genuinely novel result.
+
+## 2026-06-24 — typed STRUCTURAL diversity: oracle 55% = temp oracle 55% -> ceiling ROBUSTLY generation-bound (BIRD thrust consolidated)
+
+typed_diversity (K=4 SQL forms: subquery/JOIN/CTE/step-by-step; n=40): single(forced-subquery) 13/40 (32%),
+typed-ORACLE 22/40 (55%), typed-self-consistency 20/40 (50%). DECISIVE: typed-oracle (55%) == temp-oracle
+(55%, from the R=4 best-agent run) -> STRUCTURAL diversity reaches the SAME correct queries as temperature,
+NOT more. The ~55% oracle is a hard GENERATION-REACHABILITY ceiling: for ~45% of hard BIRD the correct SQL is
+not in the model's distribution under ANY inference-time diversity. typed-SC (50%) captured 20/22 of the oracle
+(a decent gold-free cross-derivation selector) but did not beat the 53% best. Inference-time ceiling-pushing
+is EXHAUSTED.
+
+=== TOOLSPACE-THRUST SYNTHESIS (BIRD, local 4-bit Qwen3-8B, zero-salary, consolidated) ===
+HEADLINE: inference-time scaffolding lifts the local 8B from 37% (one-shot) to ~53% (+16pts, +43% rel), free.
+WHAT HELPS (inference-time): interactive tool loop run/fix (48), in-context decomposition (52), embedding-
+retrieved few-shot (53). They OVERLAP (combined 52, saturates) -> ~53% is the achievable ceiling, ~55% oracle.
+WHAT DOESN'T: weight-update at local scale HURTS (TTT 32, distillation flat) ; abstraction layers / views
+HURT even when frontier-correct (41) ; lexical retrieval flat ; temp & structural diversity both cap oracle
+at ~55% ; self-consistency (temp) flat. UNVERIFIED self-toolmaking BACKFIRES (self-invented views 22).
+THE MOAT: verified-selection (keep a tool/candidate only if it raises end-task accuracy). THE LIMIT: the
+remaining gap to frontier (75%) is BASE GENERATION capability -> needs scale (~900k) or RL (out of local scope).
+PRODUCT: the self-evolving toolspace LAYER (task-agnostic via the new harness, verifier-gated, safe-by-closed-
+surface). NEXT AXIS (not capped by the generation ceiling): BREADTH = verifier-internalization (a learned
+local verifier extends the ratchet beyond execution-verifiable domains) + the capability-containment theorem.
