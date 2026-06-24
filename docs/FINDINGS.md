@@ -1686,3 +1686,17 @@ Tools make the local model usable AT its ceiling; only scale/RL raise the ceilin
 Claude one-shot, execution-verified on the SAME n=40 held-out (items[130:170]) used for every local-model
 row. frontier 30/40 (75%) vs local 8B one-shot 13/40 (33%), 8B+tool 16/40 (40%). Folded into the shareable
 report (docs/local-model-eval-report.{md,pdf}), replacing the prior ~78% estimate. scripts/frontier_baseline.sh.
+
+## 2026-06-24 — TOOLSPACE BREAKTHROUGH: interactive exploration CROSSES the 40% wall (47%)
+
+toolspace v1 (FKs proactive + on-demand sample VALUES + run/fix, interactive; held-out n=40, zero salary):
+**19/40 (47%)** — vs agentic run/fix-only 16/40 (40%), static rich-schema 15/40 (37%), one-shot 13/40 (33%).
+Model used avg 3.5 sample-value probes/question (it genuinely explored). FIRST lever in the whole arc to
+exceed 40%. REFINES the prior "hard ~40% capability ceiling" conclusion: the ~40% was the ceiling GIVEN
+STATIC CONTEXT (one-shot, sampling, fine-tuning, static rich-schema all capped there). INTERACTIVE tool
+EXPLORATION — the model investigating values/joins before committing — surfaces information it was guessing
+wrong, and crosses it. This is the toolspace-evolution thesis landing: the action space (interactive tools),
+not the weights, raises the local model's effective ceiling. NOTE: supersedes the "every lever caps at 40%"
+line in docs/local-model-eval-report.md (that report's agentic row was run/fix-only, weaker than full
+exploration) — report needs an addendum once the toolspace number stabilizes. Next: EVOLVE the toolspace
+(richer tools, verified-select) to push higher.
