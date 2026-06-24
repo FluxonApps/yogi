@@ -1784,3 +1784,17 @@ ability to generate tools. Next diagnostic: FRONTIER-designed views (correct abs
 correct views HELP where self-invented ones HURT, the bottleneck was view CORRECTNESS not the concept (and
 frontier-designed abstractions are a productizable salary lever); if not, views dont help the weak model.
 HOLD remote pushes.
+
+## 2026-06-24 — frontier-designed CORRECT views = 41% < base 48%: views are NOT the weak model's lever (regardless of correctness)
+
+frontier_views+tools (frontier designed 10 correct pre-joined views across 5 DBs; items[0:80]): 33/80 (41%)
+vs base 39/80 (48%), decompose 42/80 (52%), self-invent 18/80 (22%), one-shot 30/80 (37%). DIAGNOSTIC ANSWER:
+correctness matters SOME (41% > self-invent 22%) but even CORRECT views underperform NO views (41% < 48%).
+So the abstraction layer itself hurts the weak 8B (it must juggle base tables + views and chooses poorly);
+the bottleneck was not only view correctness — VIEWS/abstraction layers are not this model's lever, period.
+Salary-via-views does not even reach base, so there is nothing to amortize. This consolidates the pattern:
+only INTERACTIVE feedback (run/fix, 48%) and IN-CONTEXT DECOMPOSE (52%) help; every abstraction/context lever
+(static rich-schema, retrieved examples (lexical), self-views, frontier-views) is flat-or-harmful. Remaining
+genuine re-validation: retrieved-example library with EMBEDDING retrieval (concrete templates != abstraction;
+lexical null may be the weak retriever). Then consolidate the headline local ceiling (tools+decompose ~52%).
+HOLD remote pushes.
