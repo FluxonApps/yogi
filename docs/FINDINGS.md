@@ -2185,3 +2185,16 @@ it). ASCII one-shot 42, oracle ~42 (retry/decompose flat -> oracle≈one-shot) -
 +0. This is cleaner and more predictive than "inverse to base accuracy": MEASURE pass@k spread (a few temp
 samples + verifier) to predict whether ANY inference lever will help, before building scaffolding. Spatial here
 is generation-bound like heterogeneous SQL was — a capability ceiling, not a lever-choice problem.
+
+## 2026-06-25 — reachable-headroom law VALIDATED with measured oracles (SQL vs ASCII)
+
+Pass@8 oracles (n=40): SQL/BIRD one-shot 32%, pass@8 50-55% -> reachable-headroom +18..+22 (measured lever
++11). ASCII one-shot 50%, pass@8 55% -> reachable-headroom +5 (measured lever +0). The ORDERING and magnitude
+match: scaffolding ROI tracks REACHABLE headroom (pass@k oracle - one-shot), NOT raw headroom — ASCII has raw
+headroom 50% but only +5 reachable, hence ~0 lever gain; SQL has +18..22 reachable, hence +11. VALIDATED:
+  scaffolding ROI ~ reachable headroom = pass@k oracle - one-shot   (bounded by Law 1 reachability).
+PRACTICAL PREDICTOR (cheap, pre-build): take ~8 temperature samples + verify; reachable = oracle - one-shot
+predicts whether ANY inference lever will pay off, before building scaffolding. Nuances (honest): (a) a 2-round
+agent-loop captures <= the pass@k=8 reachable, so small reachable (ASCII +5) leaves ~nothing for a 2-round
+lever (+0); (b) +5 vs +0 is within n=40 noise. The robust claim is the cross-task ordering (SQL >> ASCII in
+both reachable-headroom and realized lever gain), with raw headroom NOT predictive.
