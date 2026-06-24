@@ -1,0 +1,13 @@
+directives Section 7 updated
+py ok
+=== GPU free? ===
+0
+=== launch oracle-headroom (n=40, R=4, ~60min, zero salary) ===
+embedding...
+  10/40: single 5 sc 5 oracle 5
+  20/40: single 9 sc 9 oracle 9
+  30/40: single 15 sc 15 oracle 15
+  40/40: single 21 sc 22 oracle 22
+=== ORACLE HEADROOM of best agent (embed+tools, R=4, items[0:40], n=40) ===
+  single 21/40 (52%)  self-consistency 22/40 (55%)  ORACLE(any-of-4) 22/40 (55%)
+  HEADROOM EXISTS iff ORACLE >> ~53% (a selector/verifier/search could push it); else GENERATION-bound (ceiling reached).
