@@ -111,15 +111,58 @@ Re-validate (NOT safely validated — don't treat as ceilings):
 3. Self-invented views (22% backfire) — execution-only validation; re-test with CORRECTNESS-gated
    verified-selection (keep a view only if it raises val accuracy; prune wrong ones).
 
-Bold-lever queue (one per iteration, web-research first):
-- Frontier-designed CORRECT views (running) — concept-vs-correctness + salary lever.
-- AMORTIZATION: after frontier tools, can the local model self-propose CORRECT ones? (decay = productization test).
-- Verified-selection self-invention done right (TODO #3).
-- Library with embedding retrieval (TODO #2).
-- Iterative self-invention rounds with verified-selection (DGM/Voyager archive across rounds).
-- Combine proven winners (tools+decompose) confirmed at large n = headline local ceiling.
+Bold-lever queue (one per iteration, web-research first; CURRENT priority order):
+- [DONE] Frontier-designed views = 41% < base 48% -> views are NOT the lever regardless of correctness.
+- [RUNNING] Library with EMBEDDING retrieval (TODO #2) — if flat, in-context examples arent the lever.
+- **NEXT: TTT per-database (Section 9 #1)** — gradient adaptation per DB; directly attacks the proven
+  in-context-learning weakness; top pick.
+- Execution-guided search / decoding (Section 9 #2) — verified search, attacks the generation ceiling.
+- Verifier-internalization / self-PRM (Section 9 #3) — breadth beyond execution-verifiable + denser signal.
+- Combine proven winners (interactive tools + decompose) confirmed at large n = headline local ceiling.
+- Then: diverse-strategy verified ensemble; verified self-curriculum; cost-optimal verified routing (Section 9).
+
+## 9. NOVEL RESEARCH / INVENTION BACKLOG (web-researched 2026-06-24; do not forget)
+
+Ranked by EV against our findings (weak in-context learning; generation-bound; only interactive feedback
+helps). Web-research each before building; isolate; confirm n>=80; verified-select; local commit only.
+
+TIER 1 (run these first):
+1. **Test-time training (TTT), per-database (TOP PICK).** Fine-tune a tiny throwaway LoRA on each DB's solved
+   (question, SQL) pairs, load it for that DB, combine with the tool-agent. Bypasses the in-context-learning
+   weakness with GRADIENT updates (library/few-shot were flat). ARC: ~6x from per-instance LoRA. Feasible
+   per-DB (cheap). Anchors: arxiv 2411.07279, MarkTechPost TTT-ARC.
+2. **Execution-guided decoding / verified search.** Guide GENERATION with the verifier: prune partial queries
+   whose partial-execution is invalid; beam-search over valid-by-construction queries. Search, not free
+   generation -> attacks the generation ceiling. Anchors: arxiv 1807.03100 (execution-guided decoding),
+   ExeSQL 2025.findings-emnlp.1320.
+3. **Verifier-internalization / self-generated process reward model.** Distill a LOCAL verifier (from
+   execution outcomes + a little frontier judgment) that scores partial/candidate SQL without executing ->
+   denser step-level signal AND free gating beyond execution-verifiable domains (the productization breadth).
+   Anchors: ReST-MCTS*/PRM survey, SRT (majority-vote-as-proxy, arxiv 2505.21444), ReVeal/MR-RLVR.
+
+TIER 2:
+4. **Capability-containment theorem for the EVOLVING toolspace (the publishable differentiator).** Prove the
+   verified-selected toolspace keeps the reachable behavior set inside SafeSet (decidable because the surface
+   is closed). Literature frame now exists: bounded-capacity <=> PAC-safe (arxiv 2510.04399), SEVerA verified
+   self-evolution / zero violations (arxiv 2603.25111), Two-Gate (validation-margin + capacity-cap) guardrail.
+5. **Verified self-curriculum.** Model generates its own problems at the edge of ability (verified-solvable but
+   currently-failed), TTT/distills on them to raise the floor. Curriculum by verified difficulty (vs flat
+   self-distill which was flat).
+6. **Diverse-strategy verified ensemble.** Heterogeneous agents (tool / decompose / TTT / exec-guided) propose;
+   free verifier selects. Diversity is what homogeneous self-consistency lacked (it was flat).
+7. **Cost-optimal verified routing (productization experiment).** Router trained on the FREE verifier signal
+   (self-consistency spread, execution-confidence) decides per query: local / more-compute / escalate to
+   frontier. No labels; maps+optimizes the accuracy-vs-cost frontier.
+
+TIER 3 (lower priority): activation steering as a "tool" (e.g. a verify-your-joins steering vector);
+cross-domain tool/skill transfer (does a verified tool generalize across DBs?); clean salary-amortization
+study (frontier-dependence decay across rounds on a SKILL = validates salary-as-one-time-ignition).
+
+KEY REFRAME: the 2025 literature VALIDATES Yogi's core bets — PAC-safe iff bounded-capacity (= closed mutation
+surface) and "safe self-improvement is bounded by the evaluation infrastructure" (= the free verifier). So the
+safety theorem is now stateable rigorously, and the verifier is both the moat and the breadth limit.
 
 ---
 
-*This file is the loop's operating system. Read + print Sections 1-6 every iteration; keep 7-8 current; append
-new directives/learnings as they are earned.*
+*This file is the loop's operating system. Read + print Sections 1-6 every iteration; keep 7-9 current; append
+new directives/learnings + novel inventions as they are earned.*
