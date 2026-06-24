@@ -1,0 +1,13 @@
+=== GPU free? ===
+1
+py ok
+3d157a3 scripts/agentic_sql.sh: toolspace/action-space lever Stage A — run_sql tool + execution-feedback refine
+=== launch agentic Stage A (T=5, ~30-40min, zero salary) ===
+  10/40 done (avg turns 1.1)
+  20/40 done (avg turns 1.6)
+  30/40 done (avg turns 1.9)
+  40/40 done (avg turns 2.0)
+=== AGENTIC SQL — run_sql tool + execution-feedback refine (held-out n=40, T=5, zero salary) ===
+  agentic 16/40 (40%)   vs   one-shot 13/40 (33%)   oracle best-of-8 16/40 (40%)
+  avg turns used: 2.0/5
+  ACTION-SPACE CROSSES CEILING ✓ iff agentic > 40% (iteration+feedback beats blind sampling's ceiling).
