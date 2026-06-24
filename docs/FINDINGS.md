@@ -1625,3 +1625,16 @@ distillation (5 conditions flat), test-time-compute selection (self-consistency 
 local means. Raising it needs 916K-scale data or RL (raise capability) — outside the local-cheap scope.
 Thesis stands, sharpened to the strongest form: democratization is real+free at the SKILL grain (F1-F9),
 and CAPABILITY-bounded at the DOMAIN grain locally. Real-task arc EXHAUSTIVELY + definitively closed.
+
+## 2026-06-24 — TOOLSPACE Stage A: agentic tool-use reaches the oracle ceiling GOLD-FREE (selection solved; capability ceiling holds)
+
+Agentic run_sql + execution-feedback refine (held-out n=40, T=5, zero salary, avg 2.0 turns): agentic 16/40
+(40%) vs one-shot 13/40 (33%) vs self-consistency 13/40 (33%) vs oracle best-of-8 16/40 (40%). FINDING: the
+action-space lever (execution feedback) CAPTURES THE FULL SELECTION HEADROOM (33→40%) that gold-free
+self-consistency could NOT — and does it GOLD-FREE in ~2 turns (vs oracle needing gold + 8 samples). So the
+"selection" sub-gap is SOLVED for free by tool-use. BUT agentic = oracle = 40%: it REACHES but does not
+EXCEED the capability ceiling — the 60% it misses are queries the 8B never generates correctly (a
+generation-COVERAGE limit; execution feedback fixes errors/empties, not semantically-wrong-but-running SQL).
+So tool-use makes the local 8B USABLE at its true ceiling (40%, gold-free, cheap) — a real usability win —
+but the ~40% capability ceiling itself needs more. Stage B (salary) tests whether internalizing a SEMANTIC
+self-critique loop (DRAFT→CHECK→FINAL) can push past 40% by fixing semantically-wrong queries toward correct.
