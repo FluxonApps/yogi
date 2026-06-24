@@ -1,0 +1,10 @@
+   b842d5e..c37a9b3  main -> main
+ahead: 0
+bash ok
+=== launch (GPU free? 0) ===
+=== MBPP ROUNDS SCALING (budget interpretation; reachable@8=+12) n=80 ===
+  rounds=0 (one-shot) 70%
+  rounds=2  retry 71% (delta vs base +1)
+  rounds=4  retry 72% (delta vs base +2)
+  rounds=8  retry 72% (delta vs base +2)
+  Budget interpretation holds iff MBPP retry climbs toward +12 with rounds (vs SQL saturating at 2).
