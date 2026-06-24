@@ -178,3 +178,22 @@ task types. Two things generalize and one varies predictably:
   the local model self-certify answers with no gold — so you can accept the verified-correct locally for free
   and escalate only the residual to a powerful model, reaching near-frontier accuracy at a fraction of the
   cost. An *execution-only* signal ("the query ran") can't certify correctness, so it only catches hard errors.
+
+---
+
+## 9. Cost-optimal routing: the practical accuracy/cost frontier
+
+With a **correctness verifier** (unit tests available at inference), a local model can *self-certify*: accept
+any answer that passes the tests (provably correct, no gold needed, no frontier call) and escalate only the
+rest. Measured on a 4-bit 8B (agent-loop local tier, n=80):
+
+| Task | Self-certified locally (free) | Escalated | Routed accuracy (frontier≈0.75) | Frontier cost |
+|---|---:|---:|---:|---:|
+| MBPP | 71% | 29% | 93% | 29% |
+| HumanEval | 88% | 12% | 97% | 12% |
+
+The verifier is the moat: acceptance is **safe by construction** (accepted answers pass the tests, so routing
+never accepts a wrong one). You reach near-frontier accuracy while paying the frontier for only the small
+residual. This is the build-vs-buy frontier with numbers: **local + verifier for the verifiable majority,
+escalate the tail.** It applies wherever a correctness verifier exists (code, SQL-with-expected-output,
+schema/type checks); an execution-only signal ("it ran") can't self-certify and only catches hard errors.

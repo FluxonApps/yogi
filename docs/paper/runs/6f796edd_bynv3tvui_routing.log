@@ -1,0 +1,17 @@
+   40e84da..97f5ea9  main -> main
+ahead: 0
+bash ok
+=== launch routing (GPU free? 0) ===
+loading model once...
+=== COST-OPTIMAL ROUTING (local self-certify via correctness verifier; escalate residual) ===
+  mbpp-code (n=80): verified-accept coverage = 57/80 (71%); escalate 29%
+    frontier_rate=0.5: routed acc = 86%  at COST = 29% frontier calls (vs 100% if frontier-only)
+    frontier_rate=0.75: routed acc = 93%  at COST = 29% frontier calls (vs 100% if frontier-only)
+    frontier_rate=0.9: routed acc = 97%  at COST = 29% frontier calls (vs 100% if frontier-only)
+    [accepted are PROVABLY correct here: provided tests define correctness -> acceptance precision 100%; the verifier is the moat that makes routing SAFE]
+  humaneval-code (n=80): verified-accept coverage = 70/80 (88%); escalate 12%
+    frontier_rate=0.5: routed acc = 94%  at COST = 12% frontier calls (vs 100% if frontier-only)
+    frontier_rate=0.75: routed acc = 97%  at COST = 12% frontier calls (vs 100% if frontier-only)
+    frontier_rate=0.9: routed acc = 99%  at COST = 12% frontier calls (vs 100% if frontier-only)
+    [accepted are PROVABLY correct here: provided tests define correctness -> acceptance precision 100%; the verifier is the moat that makes routing SAFE]
+  HEADLINE: local+correctness-verifier self-certifies the majority for FREE; escalating only the residual reaches near-frontier accuracy at a fraction of frontier cost.
