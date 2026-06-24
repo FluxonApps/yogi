@@ -90,6 +90,7 @@ honesty for a better-looking number; never trade safety for novelty.)
 3. **Zero salary by default;** spend (claude -p) only when structurally needed, capped + deliberate, and
    measure amortization.
 4. `STUDENT=mlx-community/Qwen3-8B-4bit`; `HF_HUB_DISABLE_PROGRESS_BARS=1`.
+6. **Use the STANDARD HARNESS for new experiments:** `scripts/yogi_harness.py` (Task / Method / evaluate / verified_select) + `scripts/yogi_tasks.py` (BIRDTask SQL, CodeTask Python — proves it's generic beyond SQL). A new lever = a small Method; a new domain = a small Task (any free verifier). Rigor guards (truncation re-check, n<80 warning, verified-selection) are BAKED IN. Stop copy-pasting run()/schema()/load() (was duplicated 28-38x and caused the recurring truncation/grep bugs).
 5. Every iteration: append `docs/FINDINGS.md`, archive run log to `docs/paper/runs/`, refresh
    `.yogi/status.txt` (NOW/PHASE), commit LOCAL. Run autonomously; do not ask permission.
 
