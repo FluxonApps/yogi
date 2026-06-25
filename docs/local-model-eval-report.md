@@ -404,3 +404,24 @@ inference gain. If a 2-round retry already captures it, ship that (cheapest). If
 saturates below it, switch to verifier-selected best-of-N. If the spread is ~0, no inference lever will help —
 route the hard items to a stronger model, or scale. The verifier is the one component that makes all of this
 measurable and safe.
+
+---
+
+## Addendum 6: the deployable local tier (putting it together)
+
+Composing the validated pieces into one pipeline — one-shot → retry@2 → verifier-selected best-of-N → escalate
+the residual — and accepting any output that passes the task's own tests (provably correct, no gold, no frontier
+call). Measured on a 4-bit 8B, n=80:
+
+| Task | one-shot | local tier (self-certified) | cost (gens/item) | escalated |
+|---|---:|---:|---:|---:|
+| MBPP | 70% | 75% | 2.9 | 25% |
+| HumanEval | 84% | 90% | 2.0 | 10% |
+
+The accuracy lift over one-shot is modest — reachable headroom is hard to realize, and sequential retry stalls
+(best-of-N's independent samples do the residual work: HumanEval +5 from best-of-N, +0 from retry). The point
+of the pipeline is not a big accuracy jump; it is **safe self-certification plus cost-routing**: the local model
+certifies the verifiable majority as *guaranteed correct* (a wrong answer can't pass the tests, so it's never
+accepted) at two-to-three generations per item, and flags a clean 10–25% tail to escalate to a stronger model.
+That is the deployable accuracy/cost/safety frontier for a local model with a correctness verifier — and it
+requires one (an execution-only "it ran" signal can't self-certify).

@@ -1,0 +1,13 @@
+GPU free: 0
+py ok
+=== launch (GPU free? 0) ===
+=== DEPLOYABLE LOCAL-TIER PIPELINE (self-certify via correctness verifier; escalate residual) ===
+  mbpp-code (n=80):
+    one-shot baseline      56/80 (70%)  cost 1.0 gens/item
+    LOCAL-TIER self-certified 60/80 (75%)  cost 2.9 gens/item  escalate 25%
+    accepted-by-stage: 1shot=56 retry=2 bestN=2 escalate=20  [accepted are PROVABLY correct: tests pass]
+  humaneval-code (n=80):
+    one-shot baseline      67/80 (84%)  cost 1.0 gens/item
+    LOCAL-TIER self-certified 72/80 (90%)  cost 2.0 gens/item  escalate 10%
+    accepted-by-stage: 1shot=67 retry=0 bestN=5 escalate=8  [accepted are PROVABLY correct: tests pass]
+  The local tier self-certifies the majority (provably correct, no gold/frontier) and flags a small tail to escalate — the accuracy/cost frontier of the deployable product.
