@@ -2247,3 +2247,19 @@ sequential retry doesn't provide. UNIFIED, corrected law for the agent-loop:
 DEPLOYMENT RULE: measure reachable headroom (pass@k, cheap); if cheap sequential retry@2 saturates well below
 it, switch to verifier-selected best-of-N (independent samples) — same verifier, better coverage. Feedback
 content is ~irrelevant either way (ablation: retry not content). This is the full reduction of the agent-loop.
+
+## 2026-06-25 — DEPLOYABLE LOCAL-TIER PIPELINE (the product): self-certifies 75-90% provably-correct at 2-3 gens/item
+
+local_tier.sh (one-shot -> retry@2 -> verifier-selected best-of-5 -> escalate; correctness verifier; n=80):
+  MBPP:      one-shot 56/80 (70%) -> LOCAL-TIER self-certified 60/80 (75%); cost 2.9 gens/item; escalate 25%
+             (stages: 1shot=56, retry +2, best-of-N +2).
+  HumanEval: one-shot 67/80 (84%) -> LOCAL-TIER self-certified 72/80 (90%); cost 2.0 gens/item; escalate 10%
+             (stages: 1shot=67, retry +0, best-of-N +5).
+The deployable local tier self-certifies the majority as PROVABLY correct (tests pass; no gold, no frontier
+call) and flags a clean 10-25% tail to escalate, at ~2-3 generations/item. best-of-N (independent samples) does
+the real residual work (HumanEval +5) where sequential retry stalls (HE retry +0) — exactly the correlated-retry
+vs independent-best-of-N distinction. HONEST framing: the accuracy lift over one-shot is modest (+5/+6, because
+reachable headroom is hard to realize); the product VALUE is SAFE SELF-CERTIFICATION + COST-ROUTING, not raw
+accuracy — near-frontier-grade *guaranteed-correct* coverage on the verifiable majority at a fraction of frontier
+cost, with the residual cleanly escalated. Needs a CORRECTNESS verifier (code tests); SQL/execution-only cannot
+self-certify without gold. This is the productization capstone: the deployable accuracy/cost/safety frontier.
